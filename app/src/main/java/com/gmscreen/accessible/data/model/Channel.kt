@@ -11,8 +11,20 @@ data class Channel(
     val videoPid: Int = 0,
     val audioPid: Int = 0,
     val pmtPid: Int = 0,
-    var realChannelNum: Int = 0
+    var realChannelNum: Int = 0,
+    var satelliteName: String = "",
+    var frequency: Int = 0
 ) {
+    val channelNumber: Int get() = realChannelNum
+    val satelliteId: Int get() = satIndex
+    val isScrambled: Boolean get() = isLocked
+    val serviceType: Int get() = if (isRadio) 2 else 1
+
+    fun toSatIpUrl(stbIp: String): String {
+        val pids = listOf(0, pmtPid, videoPid, audioPid).filter { it > 0 }.joinToString(",")
+        return "rtsp://$stbIp:554/?src=1&pids=$pids"
+    }
+
     fun getDisplayName(indexInFiltered: Int, keepGlobalNum: Boolean): String {
         val num = if (keepGlobalNum && realChannelNum > 0) realChannelNum else indexInFiltered
         val typeLabel = if (isRadio) "رادیو" else "کانال"
