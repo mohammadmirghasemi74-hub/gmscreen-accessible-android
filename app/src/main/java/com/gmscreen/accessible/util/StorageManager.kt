@@ -90,7 +90,7 @@ object StorageManager {
         sb.append("#EXTM3U\n")
         for (ch in channels) {
             sb.append("#EXTINF:-1,${ch.serviceName}\n")
-            sb.append("rtsp://$hostIp:554/live?freq=${ch.frequency}&pids=${ch.videoPid},${ch.audioPid}\n")
+            sb.append("${ch.toSatIpUrl(hostIp)}\n")
         }
         file.writeText(sb.toString(), Charsets.UTF_8)
         return file

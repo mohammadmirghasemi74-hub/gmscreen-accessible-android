@@ -267,7 +267,7 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
                     4 -> showChannelInfoDialog(channel)
                     5 -> {
                         val ip = repository.connectedIp.value
-                        val url = "rtsp://$ip:554/live?freq=${channel.frequency}&pids=${channel.videoPid},${channel.audioPid}"
+                        val url = channel.toSatIpUrl(ip)
                         val clip = ClipData.newPlainText("Stream URL", url)
                         val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         cm.setPrimaryClip(clip)
@@ -292,7 +292,7 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             وضعیت رمزگذاری: ${if (channel.isScrambled) "شبکه کارتی (Scrambled $)" else "رایگان (FTA)"}
             شناسه تصویر (Video PID): ${channel.videoPid}
             شناسه صدا (Audio PID): ${channel.audioPid}
-            شناسه ساعت (PCR PID): ${channel.pcrPid}
+            شناسه جدول (PMT PID): ${channel.pmtPid}
         """.trimIndent()
 
         MaterialAlertDialogBuilder(requireContext())
