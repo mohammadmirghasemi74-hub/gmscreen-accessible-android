@@ -8,6 +8,10 @@ object RcuKey {
     const val RIGHT = 4
     const val OK = 5
 
+    // Aliases for channel next/prev
+    const val CH_NEXT = DOWN
+    const val CH_PREV = UP
+
     // Menus
     const val MENU = 6
     const val EXIT = 7
