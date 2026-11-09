@@ -4,16 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dark_bg"
-    android:padding="16dp">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <!-- Status Card -->
+        <!-- Connection Status Card -->
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
@@ -42,93 +42,161 @@
                     android:id="@+id/txtStbModel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="مدل رسیور: شناسایی نشده"
+                    android:layout_marginTop="6dp"
+                    android:text="مدل رسیور: متصل نیست"
                     android:textColor="@color/text_secondary"
                     android:textSize="15sp"
                     android:focusable="true" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDisconnect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/btn_disconnect"
+                    android:textColor="@color/white"
+                    android:visibility="gone"
+                    app:backgroundTint="@color/accent_red"
+                    app:cornerRadius="8dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Auto Discover Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAutoDiscover"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_marginBottom="16dp"
-            android:text="@string/btn_auto_discover"
-            android:textSize="16sp"
-            android:textColor="@color/white"
-            app:backgroundTint="@color/primary"
-            app:cornerRadius="8dp" />
-
-        <!-- Discovered devices container -->
-        <TextView
-            android:id="@+id/lblDiscovered"
+        <!-- Discovered STBs Card -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="@string/discovered_devices_title"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="12dp"
+            app:strokeColor="@color/divider"
+            app:strokeWidth="1dp">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/lblDiscovered"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/discovered_devices_title"
+                    android:textColor="@color/text_primary"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:id="@+id/containerDiscovered"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/txtNoDevices"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="هنوز رسیوری جست‌وجو نشده است. لطفاً دکمه جست‌وجو در پایین صفحه را بزنید."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="15sp"
+                        android:gravity="center"
+                        android:padding="12dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Manual IP Expandable Card (Initially Hidden) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardManualIp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="12dp"
+            app:strokeColor="@color/primary"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ورود دستی آدرس IP رسیور"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColorHint="@color/text_secondary"
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/primary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtIpAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/hint_ip_address"
+                        android:inputType="textUri"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnConnectManual"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/btn_connect_manual"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    app:backgroundTint="@color/primary"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Bottom Actions Area -->
         <LinearLayout
-            android:id="@+id/containerDiscovered"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginBottom="16dp" />
+            android:gravity="center"
+            android:layout_marginTop="8dp">
 
-        <!-- Manual IP Section -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/layoutIp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:hint="@string/hint_ip_address"
-            android:textColorHint="@color/text_secondary"
-            app:boxBackgroundColor="@color/card_bg"
-            app:boxStrokeColor="@color/primary"
-            app:boxCornerRadiusTopStart="8dp"
-            app:boxCornerRadiusTopEnd="8dp"
-            app:boxCornerRadiusBottomStart="8dp"
-            app:boxCornerRadiusBottomEnd="8dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edtIpAddress"
+            <!-- Center Search Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAutoDiscover"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number|numberDecimal"
-                android:digits="0123456789."
-                android:textColor="@color/text_primary"
-                android:textSize="18sp"
-                android:singleLine="true" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_height="58dp"
+                android:text="@string/btn_auto_discover"
+                android:contentDescription="دکمه جست‌وجوی خودکار رسیور در شبکه وای‌فای"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:icon="@android:drawable/ic_menu_search"
+                app:iconGravity="textStart"
+                app:backgroundTint="@color/accent_green"
+                app:cornerRadius="12dp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnConnectManual"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginBottom="12dp"
-            android:text="@string/btn_connect_manual"
-            android:textSize="16sp"
-            android:textColor="@color/white"
-            app:backgroundTint="@color/accent_green"
-            app:cornerRadius="8dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDisconnect"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="قطع اتصال رسیور"
-            android:textSize="16sp"
-            android:textColor="@color/white"
-            android:visibility="gone"
-            app:backgroundTint="@color/accent_red"
-            app:cornerRadius="8dp" />
+            <!-- Corner Toggle for Manual IP -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnToggleManualIp"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:text="اتصال با آدرس IP رسیور (پیشرفته)"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

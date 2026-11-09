@@ -5,12 +5,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.gmscreen.accessible.R
+import com.gmscreen.accessible.ui.fragment.BackupFragment
 import com.gmscreen.accessible.ui.fragment.ChannelsFragment
 import com.gmscreen.accessible.ui.fragment.ConnectionFragment
+import com.gmscreen.accessible.ui.fragment.RecordFragment
 import com.gmscreen.accessible.ui.fragment.RemoteFragment
 import com.gmscreen.accessible.ui.fragment.SettingsFragment
 import com.gmscreen.accessible.ui.fragment.VoiceFragment
@@ -18,60 +19,86 @@ import com.gmscreen.accessible.util.AccessibilityHelper
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var topToolbar: MaterialToolbar
-    private lateinit var tabLayout: TabLayout
+    private lateinit var btnActiveTab: MaterialButton
     private lateinit var viewPager: ViewPager2
+
+    private val tabTitles = listOf(
+        "اتصال به رسیور",
+        "کانال‌ها و پخش زنده",
+        "ریموت کنترل رسیور",
+        "ضبط و PVR",
+        "دستورات صوتی هوشمند",
+        "بکاپ و پشتیبان‌گیری",
+        "تنظیمات و راهنما"
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        topToolbar = findViewById(R.id.topToolbar)
-        tabLayout = findViewById(R.id.tabLayout)
+        btnActiveTab = findViewById(R.id.btnActiveTab)
         viewPager = findViewById(R.id.viewPager)
 
-        setSupportActionBar(topToolbar)
-
-        setupViewPagerAndTabs()
+        setupViewPager()
+        setupTabSelectorDialog()
     }
 
-    private fun setupViewPagerAndTabs() {
+    private fun setupViewPager() {
         val fragments: List<Fragment> = listOf(
             ConnectionFragment(),
             ChannelsFragment(),
             RemoteFragment(),
+            RecordFragment(),
             VoiceFragment(),
+            BackupFragment(),
             SettingsFragment()
         )
 
-        val tabTitles = listOf(
-            getString(R.string.tab_connection),
-            getString(R.string.tab_channels),
-            getString(R.string.tab_remote),
-            getString(R.string.tab_voice),
-            getString(R.string.tab_settings)
-        )
-
-        val adapter = object : FragmentStateAdapter(this) {
+        val pagerAdapter = object : FragmentStateAdapter(this) {
             override fun getItemCount(): Int = fragments.size
             override fun createFragment(position: Int): Fragment = fragments[position]
         }
 
-        viewPager.adapter = adapter
-        viewPager.offscreenPageLimit = 4 // Keep all 5 tabs in memory to prevent reload or focus loss
-
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = tabTitles[position]
-            tab.contentDescription = "سربرگ ${position + 1} از ۵: ${tabTitles[position]}"
-        }.attach()
+        viewPager.adapter = pagerAdapter
+        viewPager.offscreenPageLimit = 6 // Keep all tabs alive to maintain state and zero lag
 
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                val title = tabTitles[position]
-                topToolbar.subtitle = title
-                AccessibilityHelper.announce(topToolbar, "ورود به سربرگ $title")
+                updateActiveTabUi(position)
             }
         })
+
+        updateActiveTabUi(0)
+    }
+
+    private fun setupTabSelectorDialog() {
+        btnActiveTab.setOnClickListener {
+            val currentIndex = viewPager.currentItem
+            MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.dialog_select_tab_title))
+                .setSingleChoiceItems(tabTitles.toTypedArray(), currentIndex) { dialog, which ->
+                    switchToTab(which)
+                    dialog.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+    }
+
+    fun switchToTab(position: Int) {
+        if (position in tabTitles.indices) {
+            viewPager.setCurrentItem(position, true)
+            updateActiveTabUi(position)
+            val title = tabTitles[position]
+            AccessibilityHelper.announce(btnActiveTab, "انتقال به سربرگ $title")
+        }
+    }
+
+    private fun updateActiveTabUi(position: Int) {
+        val title = tabTitles.getOrElse(position) { "سربرگ" }
+        val buttonText = "سربرگ فعال: $title (برای تغییر کلیک کنید)"
+        btnActiveTab.text = buttonText
+        btnActiveTab.contentDescription = "سربرگ فعال: $title. برای تغییر سربرگ دو بار ضربه بزنید"
     }
 }

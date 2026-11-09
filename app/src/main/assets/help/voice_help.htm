@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>راهنمای جامع فرامین صوتی هوشمند GM Screen</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+        line-height: 1.8;
+        color: #222;
+        background-color: #fafafa;
+        margin: 20px;
+        padding: 0;
+        max-width: 950px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    h1 {
+        color: #0b5394;
+        border-bottom: 2px solid #0b5394;
+        padding-bottom: 8px;
+        font-size: 22px;
+    }
+    h2 {
+        color: #16537e;
+        margin-top: 28px;
+        border-bottom: 1px dashed #ccc;
+        padding-bottom: 6px;
+        font-size: 18px;
+    }
+    .box {
+        background-color: #eaf2f8;
+        border-right: 5px solid #0b5394;
+        padding: 14px 18px;
+        margin: 16px 0;
+        border-radius: 6px;
+    }
+    .box-smart {
+        background-color: #f1f8e9;
+        border-right: 5px solid #2e7d32;
+        padding: 14px 18px;
+        margin: 16px 0;
+        border-radius: 6px;
+    }
+    .box-warning {
+        background-color: #fff8e1;
+        border-right: 5px solid #f57f17;
+        padding: 12px 16px;
+        margin: 16px 0;
+        border-radius: 6px;
+    }
+    .cmd-item {
+        background: #fff;
+        border: 1px solid #d0d7de;
+        padding: 12px 16px;
+        margin: 10px 0;
+        border-radius: 6px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .cmd-title {
+        font-weight: bold;
+        color: #0b5394;
+        font-size: 15px;
+        margin-bottom: 6px;
+    }
+    .cmd-phrases {
+        color: #1a1a1a;
+        margin-top: 4px;
+    }
+    .phrase-tag {
+        display: inline-block;
+        background-color: #f1f8e9;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+        padding: 3px 10px;
+        margin: 3px 4px;
+        border-radius: 4px;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    kbd {
+        background-color: #e8e8e8;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-family: Consolas, monospace;
+        font-weight: bold;
+        color: #990000;
+    }
+    .footer {
+        margin-top: 40px;
+        text-align: center;
+        font-size: 13px;
+        color: #666;
+        border-top: 1px solid #e1e4e8;
+        padding-top: 15px;
+    }
+</style>
+</head>
+<body>
+
+<h1>راهنمای جامع فرامین صوتی هوشمند (Voice Control Manual)</h1>
+
+<div class="box">
+    <strong>راهنمای کاربردی برای استفاده بهینه کاربران نابینا و کم‌بینا:</strong>
+    <ul>
+        <li>کلید میانبر پیش‌فرض برای شنیدن دستور صوتی: <kbd>Ctrl+Alt+V</kbd></li>
+        <li>با فشردن کلید، صدای آکوستیک ملایم صعودی (دودید) پخش می‌شود؛ بلافاصله فرمان خود را شمرده، رسا و با آرامش بیان فرمایید. پس از پایان صحبت شما، صدای زنگ ملایم پایان دریافت (دیدود) شنیده شده و فرمان فوراً اجرا می‌گردد.</li>
+        <li><strong>شخصی‌سازی نامحدود:</strong> شما می‌توانید تمامی فرامین صوتی زیر را مطابق سلیقه خود تغییر دهید یا کلمات دلخواه به آن بیفزایید. کافی است از منوی تنظیمات (Alt+5)، گزینه «مدیریت و تنظیمات کلیدهای میانبر» را باز کرده و با کلید راست به سربرگ‌های <strong>«فرامین صوتی هوشمند»</strong> یا <strong>«نام‌های صوتی شبکه‌ها»</strong> بروید.</li>
+        <li>برای رفتن به هر شبکه بر اساس شماره، کافی است شماره کانال را بگویید؛ مانند: <em>«کانال ۱۲»</em> یا <em>«شبکه ۵»</em>.</li>
+    </ul>
+</div>
+
+<div class="box-warning">
+    <strong>نکته امنیتی بسیار مهم:</strong> جهت حفظ امنیت پایگاه داده و جلوگیری از پاک شدن تصادفی شبکه‌های رسیور در اثر سوء‌برداشت کلمات، دستور حذف کانال از طریق فرامین صوتی به طور کامل مسدود و غیرفعال است.
+</div>
+
+<div class="box-smart">
+    <h2 style="margin-top: 0; color: #1b5e20; border-bottom: none;">قابلیت‌های هوشمند و جملات محاوره‌ای جدید (Smart Voice Commands)</h2>
+    <p>در نسخه جدید، نرم‌افزار مجهز به هوش درک جملات طبیعی و محاوره‌ای فارسی است و علاوه بر دستورات کلیدی کوتاه، قادر است فرامین پیچیده را نیز مستقیماً تحلیل و اجرا کند:</p>
+    <ul>
+        <li><strong>۱. زمان‌بندی هوشمند ضبط خودکار کامپیوتر:</strong>
+            <br>تنها با گفتن یک جمله، ضبط خودکار را بر اساس ساعت و شبکه تنظیم کنید. نرم‌افزار به صورت خودکار ساعت، دقیقه، نوع ضبط (صوتی یا ویدیو) و نام شبکه را تشخیص می‌دهد:
+            <ul>
+                <li><em>«ساعت ۱۴ ضبط صوتی رو برای کانال ifilm شروع کن»</em></li>
+                <li><em>«پرشیانا ست میکس رو در ساعت 2 ضبط کن»</em></li>
+                <li><em>«ساعت 20:30 ضبط ویدیویی شبکه نسیم»</em></li>
+                <li><em>«ساعت هشت ضبط کانال ورزش»</em></li>
+                <li><em>«ساعت 14 و نیم ضبط صوتی شبکه ifilm»</em></li>
+                <li><em>«فردا ساعت 15 ضبط کانال نسیم»</em></li>
+            </ul>
+        </li>
+        <li style="margin-top: 8px;"><strong>۲. حذف و لغو هوشمند زمان‌بندی‌های ضبط:</strong>
+            <br>می‌توانید هر یک از ضبط‌های تنظیم‌شده را بر اساس ساعت شروع به سادگی لغو فرمایید:
+            <ul>
+                <li><em>«ضبط ساعت ۲ رو حذف کن»</em> یا <em>«ضبط ساعت دو رو حذف کن»</em></li>
+                <li><em>«حذف ضبط ساعت ۱۴»</em> یا <em>«لغو ضبط ساعت هشت»</em></li>
+                <li><em>«حذف تمام ضبط‌های کامپیوتر»</em> یا <em>«حذف همه ضبط‌ها»</em></li>
+            </ul>
+        </li>
+        <li style="margin-top: 8px;"><strong>۳. تعویض مستقیم شبکه با نام دلخواه یا عنوان ماهواره‌ای:</strong>
+            <br>به جای جستجو یا تایپ، نام شبکه را بگویید تا رسیور فوراً روی آن شبکه قرار گیرد:
+            <ul>
+                <li><em>«برو به شبکه ایران اینترنشنال»</em> یا <em>«برو به کانال اینترنشنال»</em></li>
+                <li><em>«برو به شبکه پرشیانا ست میکس»</em> یا <em>«شبکه پرشیانا میکس»</em></li>
+                <li><em>«برو به شبکه ifilm»</em> یا <em>«برو به کانال آی فیلم»</em></li>
+                <li><em>«شبکه نسیم رو بیار»</em></li>
+                <li><em>«کانال ورزش رو باز کن»</em></li>
+                <li><em>«شبکه سه»</em></li>
+            </ul>
+        </li>
+        <li style="margin-top: 8px;"><strong>۴. مدیریت و تعریف نام‌های صوتی دلخواه برای کانال‌ها (سربرگ سوم تنظیمات):</strong>
+            <br>اگر کانال جدیدی جستجو کردید یا مایلید نام صوتی دلخواهی برای یک شبکه مشخص کنید، کافی است به <strong>«مدیریت کلیدهای میانبر و فرامین صوتی»</strong> (سربرگ سوم: نام‌های صوتی شبکه‌ها) بروید:
+            <ul>
+                <li><strong>ویرایش نام صوتی کانال:</strong> روی هر کانال کلید Enter را بزنید و نام‌های فارسی گفتاری دلخواه آن را تایپ فرمایید.</li>
+                <li><strong>افزودن نام صوتی برای کانال جدید:</strong> با انتخاب کانال از لیست کشویی و نوشتن نام‌های صوتی، شبکه جدید فوراً شناخته می‌شود.</li>
+                <li><strong>شناسایی خودکار با یک کلیک:</strong> با فشردن دکمه «بررسی و شناسایی خودکار همه کانال‌ها»، تمامی شبکه‌های رسیور اسکن شده و نام‌های فارسی استاندارد به آن‌ها اختصاص می‌یابد.</li>
+            </ul>
+        </li>
+    </ul>
+</div>
+<h2>1. گروه پخش زنده و استریم</h2>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: پخش زنده تصویر در کامپیوتر</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">پخش زنده</span>
+        <span class="phrase-tag">شروع پخش</span>
+        <span class="phrase-tag">پخش تصویر</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: توقف و بستن پخش زنده در کامپیوتر</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">توقف پخش</span>
+        <span class="phrase-tag">قطع پخش</span>
+        <span class="phrase-tag">بستن پخش</span>
+    </div>
+</div>
+<h2>2. گروه ضبط در کامپیوتر</h2>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: شروع یا توقف ضبط ویدیویی در کامپیوتر</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">ضبط کانال</span>
+        <span class="phrase-tag">ضبط ویدیو</span>
+        <span class="phrase-tag">شروع ضبط</span>
+        <span class="phrase-tag">توقف ضبط</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: شروع یا توقف ضبط صوتی در کامپیوتر</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">ضبط صدا</span>
+        <span class="phrase-tag">ضبط صوتی</span>
+        <span class="phrase-tag">شروع ضبط صدا</span>
+        <span class="phrase-tag">توقف ضبط صدا</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: باز کردن پوشه ذخیره فایل‌های ضبط در ویندوز</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">باز کردن پوشه ضبط</span>
+        <span class="phrase-tag">پوشه ضبط</span>
+        <span class="phrase-tag">برو به پوشه ضبط</span>
+        <span class="phrase-tag">فایل‌های ضبط شده</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: تعریف زمان‌بندی جدید برای ضبط خودکار</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">زمان‌بندی جدید</span>
+        <span class="phrase-tag">تایمر ضبط</span>
+        <span class="phrase-tag">زمان‌بندی ضبط</span>
+    </div>
+</div>
+<h2>3. گروه جابجایی و انتخاب کانال‌ها</h2>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: رفتن به کانال بعدی</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">کانال بعد</span>
+        <span class="phrase-tag">کانال بعدی</span>
+        <span class="phrase-tag">شبکه بعد</span>
+        <span class="phrase-tag">شبکه بعدی</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: رفتن به کانال قبلی</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">کانال قبل</span>
+        <span class="phrase-tag">کانال قبلی</span>
+        <span class="phrase-tag">شبکه قبل</span>
+        <span class="phrase-tag">شبکه قبلی</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: بازگشت به کانال قبلی دیده شده (Recall)</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">کانال قبل‌تر</span>
+        <span class="phrase-tag">شبکه قبلی رسیور</span>
+        <span class="phrase-tag">برگشت کانال</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: تغییر حالت به شبکه‌های تلویزیونی</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">حالت تلویزیون</span>
+        <span class="phrase-tag">شبکه تلویزیونی</span>
+        <span class="phrase-tag">تلویزیون</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: تغییر حالت به شبکه‌های رادیویی</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">حالت رادیو</span>
+        <span class="phrase-tag">شبکه رادیویی</span>
+        <span class="phrase-tag">رادیو</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: به‌روزرسانی و بارگذاری مجدد لیست شبکه‌ها</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">به‌روزرسانی شبکه‌ها</span>
+        <span class="phrase-tag">لیست کانال‌ها</span>
+        <span class="phrase-tag">تازه‌سازی کانال‌ها</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: رفتن به کادر جستجوی کانال</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">جستجوی کانال</span>
+        <span class="phrase-tag">یافتن کانال</span>
+        <span class="phrase-tag">جستجوی شبکه</span>
+    </div>
+</div>
+<h2>4. گروه کنترل صدا و تصویر</h2>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: افزایش صدای رسیور</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">صدا زیاد</span>
+        <span class="phrase-tag">صدای بیشتر</span>
+        <span class="phrase-tag">افزایش صدا</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: کاهش صدای رسیور</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">صدا کم</span>
+        <span class="phrase-tag">صدای کمتر</span>
+        <span class="phrase-tag">کاهش صدا</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: قطع یا وصل صدای رسیور (میوت)</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">قطع صدا</span>
+        <span class="phrase-tag">وصل صدا</span>
+        <span class="phrase-tag">بی‌صدا</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: تغییر باند صدا و زبان فیلم</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">تغییر صدا</span>
+        <span class="phrase-tag">باند صدا</span>
+        <span class="phrase-tag">زبان فیلم</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: روشن یا خاموش کردن زیرنویس شبکه</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">زیرنویس</span>
+        <span class="phrase-tag">نمایش زیرنویس</span>
+        <span class="phrase-tag">قطع زیرنویس</span>
+    </div>
+</div>
+<h2>5. گروه منوها و ابزارهای ریموت</h2>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: جدول و راهنمای برنامه‌ها (EPG)</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">جدول برنامه‌ها</span>
+        <span class="phrase-tag">راهنمای جدول</span>
+        <span class="phrase-tag">ای پی جی</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: اطلاعات و مشخصات برنامه در حال پخش (Info)</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">مشخصات برنامه</span>
+        <span class="phrase-tag">اطلاعات شبکه</span>
+        <span class="phrase-tag">اینفو</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: باز کردن منوی اصلی رسیور</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">منوی رسیور</span>
+        <span class="phrase-tag">باز کردن منو</span>
+        <span class="phrase-tag">منو</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: دکمه تأیید ریموت کنترل (OK)</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">تأیید</span>
+        <span class="phrase-tag">اوکی</span>
+        <span class="phrase-tag">انتخاب</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: خروج و بستن پنجره‌ها (Exit)</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">خروج</span>
+        <span class="phrase-tag">بستن پنجره</span>
+        <span class="phrase-tag">برگشت</span>
+    </div>
+</div>
+<h2>6. گروه دکمه‌های رنگی ریموت</h2>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: دکمه قرمز ریموت کنترل</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">دکمه قرمز</span>
+        <span class="phrase-tag">کلید قرمز</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: دکمه سبز ریموت کنترل</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">دکمه سبز</span>
+        <span class="phrase-tag">کلید سبز</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: دکمه زرد ریموت کنترل</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">دکمه زرد</span>
+        <span class="phrase-tag">کلید زرد</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: دکمه آبی ریموت کنترل</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">دکمه آبی</span>
+        <span class="phrase-tag">کلید آبی</span>
+    </div>
+</div>
+<h2>7. گروه ابزارهای برنامه و حافظه فلش</h2>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: استعلام وضعیت زنده رسیور و برنامه</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">وضعیت رسیور</span>
+        <span class="phrase-tag">وضعیت دستگاه</span>
+        <span class="phrase-tag">وضعیت برنامه</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: مشخصات سخت‌افزاری و مدل رسیور</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">مشخصات رسیور</span>
+        <span class="phrase-tag">اطلاعات دستگاه</span>
+        <span class="phrase-tag">مدل رسیور</span>
+    </div>
+</div>
+
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: کتابچه راهنمای جامع کاربری نرم‌افزار</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">کتابچه راهنما</span>
+        <span class="phrase-tag">راهنمای نرم‌افزار</span>
+        <span class="phrase-tag">راهنمای کاربری</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: راهنمای کامل فرامین صوتی</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">راهنمای صوتی</span>
+        <span class="phrase-tag">فرامین صوتی</span>
+        <span class="phrase-tag">دستورات صوتی</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: قطع صدای گوینده برنامه (سکوت فوری)</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">ساکت شو</span>
+        <span class="phrase-tag">قطع صدای برنامه</span>
+        <span class="phrase-tag">سکوت</span>
+    </div>
+</div>
+<h2>8. گروه مدیریت پاور و استندبای</h2>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: روشن یا خاموش کردن رسیور (پاور)</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">خاموش کردن رسیور</span>
+        <span class="phrase-tag">روشن کردن رسیور</span>
+        <span class="phrase-tag">پاور</span>
+    </div>
+</div>
+<h2>9. گروه ابزارهای هوشمند</h2>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: اطلاعات شبکه در حال پخش</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">اطلاعات کانال فعلی</span>
+        <span class="phrase-tag">کانال فعلی چیست</span>
+        <span class="phrase-tag">شبکه فعلی</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: روشن کردن بیدارباش و شنیدن پیوسته</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">روشن کردن بیدارباش</span>
+        <span class="phrase-tag">فعال کردن شنیدن پیوسته</span>
+        <span class="phrase-tag">بیدارباش روشن</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: خاموش کردن بیدارباش و شنیدن پیوسته</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">خاموش کردن بیدارباش</span>
+        <span class="phrase-tag">غیرفعال کردن شنیدن پیوسته</span>
+        <span class="phrase-tag">بیدارباش خاموش</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: شروع یا توقف ضبط روی فلش رسیور</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">ضبط رسیور</span>
+        <span class="phrase-tag">ضبط روی فلش</span>
+        <span class="phrase-tag">شروع ضبط رسیور</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: صفر کردن شمارنده فایل‌های ضبط</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">صفر کردن شمارنده</span>
+        <span class="phrase-tag">ریست شمارنده ضبط</span>
+        <span class="phrase-tag">شمارنده ضبط صفر</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: پاکسازی فایل‌های پوشه ضبط کامپیوتر</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">پاکسازی فایل‌های ضبط</span>
+        <span class="phrase-tag">حذف فایل‌های ضبط</span>
+        <span class="phrase-tag">پاک کردن پوشه ضبط</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: کوچک کردن پنجره برنامه به نوار وظیفه</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">کوچک کردن پنجره</span>
+        <span class="phrase-tag">مینیمایز برنامه</span>
+        <span class="phrase-tag">پنهان کردن پنجره</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: بستن و خروج از برنامه</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">بستن برنامه</span>
+        <span class="phrase-tag">خروج از برنامه</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: ورود به بخش تنظیمات برنامه و رسیور</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">باز کردن تنظیمات</span>
+        <span class="phrase-tag">تنظیمات برنامه</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: جستجو و اتصال مجدد به رسیور</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">اتصال به رسیور</span>
+        <span class="phrase-tag">جستجوی رسیور</span>
+        <span class="phrase-tag">اتصال مجدد</span>
+    </div>
+</div>
+<div class="cmd-item">
+    <div class="cmd-title">قابلیت: پشتیبان‌گیری خودکار از کانال‌ها روی فلش رسیور</div>
+    <div class="cmd-phrases">
+        <strong>عبارات قابل بیان:</strong>
+        <span class="phrase-tag">پیش‌فرض غیرفعال (کاربر می‌تواند در تنظیمات فرامین صوتی عبارت دلخواه اختصاص دهد)</span>
+    </div>
+</div>
+
+<div class="footer">
+    سامانه فرامین صوتی دسترس‌پذیر GM Screen Windows | طراحی و نظارت دسترس‌پذیری: <strong>م.م (M.M)</strong>
+</div>
+
+</body>
+</html>

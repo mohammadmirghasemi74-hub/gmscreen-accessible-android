@@ -5,13 +5,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
 import com.gmscreen.accessible.R
 import com.gmscreen.accessible.data.model.Channel
 
 class ChannelsAdapter(
     private var channels: List<Channel>,
     private val keepGlobalNumber: Boolean,
-    private val onChannelClick: (Channel) -> Unit
+    private val onChannelClick: (Channel) -> Unit,
+    private val onChannelLongClick: (Channel) -> Unit
 ) : RecyclerView.Adapter<ChannelsAdapter.ChannelViewHolder>() {
 
     fun updateChannels(newChannels: List<Channel>) {
@@ -31,7 +33,7 @@ class ChannelsAdapter(
         } else {
             position + 1
         }
-        holder.bind(ch, displayNum, onChannelClick)
+        holder.bind(ch, displayNum, onChannelClick, onChannelLongClick)
     }
 
     override fun getItemCount(): Int = channels.size
@@ -42,8 +44,14 @@ class ChannelsAdapter(
         private val txtDetails: TextView = itemView.findViewById(R.id.txtChannelDetails)
         private val badgeHd: TextView = itemView.findViewById(R.id.badgeHd)
         private val badgeLock: TextView = itemView.findViewById(R.id.badgeLock)
+        private val btnLivePlay: MaterialButton = itemView.findViewById(R.id.btnLivePlay)
 
-        fun bind(channel: Channel, displayNumber: Int, onClick: (Channel) -> Unit) {
+        fun bind(
+            channel: Channel,
+            displayNumber: Int,
+            onClick: (Channel) -> Unit,
+            onLongClick: (Channel) -> Unit
+        ) {
             txtNum.text = displayNumber.toString()
             txtName.text = channel.serviceName
 
@@ -51,20 +59,9 @@ class ChannelsAdapter(
             val freqText = if (channel.frequency > 0) "${channel.frequency} MHz" else ""
             txtDetails.text = if (freqText.isNotBlank()) "$satText • $freqText" else satText
 
-            if (channel.isHd) {
-                badgeHd.visibility = View.VISIBLE
-            } else {
-                badgeHd.visibility = View.GONE
-            }
+            badgeHd.visibility = if (channel.isHd) View.VISIBLE else View.GONE
+            badgeLock.visibility = if (channel.isScrambled) View.VISIBLE else View.GONE
 
-            if (channel.isScrambled) {
-                badgeLock.visibility = View.VISIBLE
-                badgeLock.text = "$"
-            } else {
-                badgeLock.visibility = View.GONE
-            }
-
-            // High priority: Accessible TalkBack content description
             val accessibilityDescription = buildString {
                 append("کانال ")
                 append(displayNumber)
@@ -76,11 +73,22 @@ class ChannelsAdapter(
                     append("، ماهواره ")
                     append(channel.satelliteName)
                 }
+                append(". برای گزینه‌ها انگشت را نگه دارید.")
             }
             itemView.contentDescription = accessibilityDescription
 
             itemView.setOnClickListener {
                 onClick(channel)
+            }
+
+            btnLivePlay.contentDescription = "پخش زنده کانال ${channel.serviceName}"
+            btnLivePlay.setOnClickListener {
+                onClick(channel)
+            }
+
+            itemView.setOnLongClickListener {
+                onLongClick(channel)
+                true
             }
         }
     }

@@ -1,32 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GM Screen دسترس‌پذیر</string>
+    
+    <!-- سربرگ‌ها (Tabs) -->
     <string name="tab_connection">اتصال</string>
     <string name="tab_channels">کانال‌ها</string>
-    <string name="tab_remote">ریموت</string>
-    <string name="tab_voice">فرمان صوتی</string>
-    <string name="tab_settings">تنظیمات</string>
+    <string name="tab_remote">ریموت کنترل</string>
+    <string name="tab_record">ضبط و PVR</string>
+    <string name="tab_voice">دستورات صوتی</string>
+    <string name="tab_backup">بکاپ و پشتیبان‌گیری</string>
+    <string name="tab_settings">تنظیمات و راهنما</string>
 
-    <!-- Connection -->
+    <string name="active_tab_format">سربرگ فعال: %s (برای تغییر ضربه بزنید)</string>
+    <string name="dialog_select_tab_title">انتخاب سربرگ برنامه</string>
+
+    <!-- سربرگ اتصال (Connection) -->
     <string name="stb_status_disconnected">وضعیت: رسیور متصل نیست</string>
-    <string name="stb_status_connecting">در حال اتصال به رسیور…</string>
+    <string name="stb_status_connecting">در حال برقراری اتصال به رسیور…</string>
     <string name="stb_status_connected">متصل به رسیور: %s</string>
-    <string name="btn_auto_discover">جستجوی خودکار رسیور در وای‌فای</string>
-    <string name="btn_connect_manual">اتصال دستی با آی‌پی</string>
-    <string name="hint_ip_address">آدرس آی‌پی رسیور (مثلاً 192.168.1.6)</string>
-    <string name="discovered_devices_title">رسیورهای کشف‌شده در شبکه:</string>
+    <string name="btn_auto_discover">جست‌وجوی خودکار رسیور در شبکه Wi-Fi</string>
+    <string name="btn_toggle_manual_ip">اتصال با آدرس IP دستی</string>
+    <string name="btn_connect_manual">اتصال به IP</string>
+    <string name="btn_disconnect">قطع اتصال از رسیور</string>
+    <string name="hint_ip_address">آدرس IP رسیور (مثال: 192.168.1.6)</string>
+    <string name="discovered_devices_title">رسیورهای پیدا شده در شبکه:</string>
 
-    <!-- Channels -->
+    <!-- سربرگ کانال‌ها (Channels) -->
     <string name="filter_satellites_all">همه ماهواره‌ها (عموم شبکه‌ها)</string>
     <string name="mode_tv">تلویزیون</string>
     <string name="mode_radio">رادیو</string>
-    <string name="search_channels_hint">جستجوی نام کانال…</string>
+    <string name="search_channels_hint">جست‌وجوی نام یا شماره کانال…</string>
+    <string name="btn_clear_search">پاک کردن متن جست‌وجو</string>
     <string name="btn_play_channel">پخش زنده</string>
     <string name="btn_stop_stream">توقف پخش زنده</string>
-    <string name="channel_count_info">%d شبکه یافت شد</string>
+    <string name="channel_count_info">%d کانال پیدا شد</string>
+    <string name="channel_menu_title">عملیات کانال: %s</string>
 
-    <!-- Remote -->
-    <string name="rcu_power">پاور رسیور</string>
-    <string name="rcu_mute">قطع و وصل صدا (میوت)</string>
+    <!-- سربرگ ریموت کنترل (Remote) -->
+    <string name="rcu_power">پاور رسیور (روشن/خاموش)</string>
+    <string name="rcu_mute">قطع/وصل صدا (Mute)</string>
     <string name="rcu_vol_up">افزایش صدا</string>
     <string name="rcu_vol_down">کاهش صدا</string>
     <string name="rcu_ch_next">کانال بعدی</string>
@@ -35,27 +47,54 @@
     <string name="rcu_down">جهت‌نمای پایین</string>
     <string name="rcu_left">جهت‌نمای چپ</string>
     <string name="rcu_right">جهت‌نمای راست</string>
-    <string name="rcu_ok">دکمه تأیید اوکی</string>
-    <string name="rcu_menu">منوی رسیور</string>
-    <string name="rcu_exit">خروج از منو</string>
+    <string name="rcu_ok">دکمه تأیید (OK)</string>
+    <string name="rcu_menu">منوی رسیور (Menu)</string>
+    <string name="rcu_exit">خروج از منو (Exit)</string>
     <string name="rcu_epg">راهنمای جدول برنامه‌ها (EPG)</string>
     <string name="rcu_info">مشخصات شبکه (Info)</string>
     <string name="rcu_recall">بازگشت به کانال قبلی (Recall)</string>
     <string name="rcu_tv_radio">تغییر حالت تلویزیون و رادیو</string>
-    <string name="rcu_red">دکمه قرمز: زبان و ترک صدا</string>
-    <string name="rcu_green">دکمه سبز: مدیا پلیر و فایل‌ها</string>
-    <string name="rcu_yellow">دکمه زرد: نسبت تصویر</string>
-    <string name="rcu_blue">دکمه آبی: لیست ماهواره‌ها</string>
+    <string name="rcu_sat">لیست ماهواره‌ها (SAT)</string>
+    <string name="rcu_fav">کانال‌های مورد علاقه (FAV)</string>
+    <string name="rcu_red">کلید قرمز: صدا و جستجو</string>
+    <string name="rcu_green">کلید سبز: رزولوشن و زیرنویس</string>
+    <string name="rcu_yellow">کلید زرد: ماشین زمان و فرمت</string>
+    <string name="rcu_blue">کلید آبی: تایمر و مکث</string>
+    <string name="rcu_rec">شروع ضبط (Record)</string>
+    <string name="rcu_stop">توقف (Stop)</string>
+    <string name="rcu_play">پخش (Play)</string>
+    <string name="rcu_pause">مکث (Pause)</string>
+    <string name="rcu_rew">عقب کشیدن (Rewind)</string>
+    <string name="rcu_ff">جلو بردن (Fast Forward)</string>
 
-    <!-- Voice -->
+    <!-- سربرگ ضبط و PVR -->
+    <string name="record_title">مدیریت ضبط و ذخیره‌سازی</string>
+    <string name="record_phone_section">ضبط زنده روی حافظه گوشی</string>
+    <string name="record_receiver_section">ضبط روی رسیور (فلش مموری PVR)</string>
+    <string name="btn_start_record_video">شروع ضبط تصویری روی گوشی (MP4)</string>
+    <string name="btn_start_record_audio">شروع ضبط صوتی روی گوشی (MP3)</string>
+    <string name="btn_stop_phone_record">توقف ضبط گوشی</string>
+    <string name="btn_stb_instant_record">شروع ضبط آنی رسیور روی فلش مموری</string>
+    <string name="btn_stb_stop_record">توقف ضبط رسیور</string>
+
+    <!-- سربرگ فرامین صوتی -->
     <string name="voice_btn_tap_to_speak">دکمه میکروفون: برای ضبط و اجرای فرمان صوتی ضربه بزنید</string>
-    <string name="voice_listening">گوش به زنگ… بفرمایید (مثلاً: جم سریز، صدا زیاد، شبکه ۳)</string>
+    <string name="voice_btn_help">راهنمای کامل دستورات صوتی</string>
+    <string name="voice_listening">گوش به زنگ… بفرمایید (مثال: جم سریز، صدا زیاد، شبکه ۳)</string>
+    <string name="voice_wake_word_switch">حالت بیدارباش صوتی (شنود پیوسته «جی ام اسکرین»)</string>
     <string name="voice_help_title">راهنمای نمونه فرامین صوتی فارسی:</string>
-    <string name="voice_help_text">«جم سریز»، «جم دراما»، «روبیکس»، «شبکه سه»، «کانال ورزش»، «صدا زیاد»، «میوت»، «خاموش رسیور»</string>
 
-    <!-- Settings -->
-    <string name="settings_keep_global_nums">حفظ شماره اصلی و سراسری کانال‌ها در زمان فیلتر ماهواره</string>
-    <string name="settings_haptic_feedback">لرزش و ویبره لمسی هنگام زدن دکمه‌های کنترل</string>
-    <string name="settings_sound_cues">پخش افکت‌های صوتی در تغییر کانال و اتصال</string>
-    <string name="settings_model_title">مشخصات رسیور متصل:</string>
+    <!-- سربرگ بکاپ -->
+    <string name="backup_title">پشتیبان‌گیری و صدور لیست کانال‌ها</string>
+    <string name="btn_backup_phone">پشتیبان‌گیری از کانال‌ها روی حافظه گوشی (JSON)</string>
+    <string name="btn_export_m3u">صدور فایل پلی‌لیست شبکه‌ها (M3U Playlist)</string>
+    <string name="btn_backup_stb_usb">پشتیبان‌گیری کانال‌ها روی فلش رسیور (SDX)</string>
+    <string name="backup_list_title">پشتیبان‌های ذخیره شده در پوشه gm screen android:</string>
+
+    <!-- تنظیمات -->
+    <string name="settings_title">دسته‌بندی‌های تنظیمات برنامه</string>
+    <string name="settings_keep_global_nums">حفظ شماره سراسری کانال‌های رسیور در فیلترها</string>
+    <string name="settings_haptic_feedback">لرزش و ویبره لمسی (Haptic Feedback) هنگام فشردن کلیدها</string>
+    <string name="settings_sound_cues">پخش افکت صوتی هنگام اتصال و اجرای فرامین</string>
+    <string name="settings_auto_announce">اعلام صوتی خودکار نام کانال هنگام جابجایی</string>
 </resources>

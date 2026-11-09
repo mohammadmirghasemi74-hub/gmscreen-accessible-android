@@ -4,20 +4,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dark_bg"
-    android:padding="12dp">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:padding="12dp">
 
-        <!-- Power & Mute Row -->
+        <!-- 1. Top Row: Power (Left) & Mute (Right) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="10dp">
+            android:layout_marginBottom="8dp">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnPower"
@@ -25,12 +25,13 @@
                 android:layout_height="56dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="6dp"
-                android:text="روشن/خاموش"
+                android:text="پاور (روشن/خاموش)"
                 android:contentDescription="@string/rcu_power"
                 android:textColor="@color/white"
-                android:textSize="15sp"
+                android:textSize="14sp"
+                android:textStyle="bold"
                 app:backgroundTint="@color/accent_red"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="10dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnMute"
@@ -41,348 +42,69 @@
                 android:text="بی‌صدا (Mute)"
                 android:contentDescription="@string/rcu_mute"
                 android:textColor="@color/black"
-                android:textSize="15sp"
+                android:textSize="14sp"
+                android:textStyle="bold"
                 app:backgroundTint="@color/accent_yellow"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="10dp" />
         </LinearLayout>
 
-        <!-- Recall & TV/Radio Row -->
+        <!-- 2. TV/Radio, SAT, FAV Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="10dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnRecall"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                android:text="بازگشت (Recall)"
-                android:contentDescription="@string/rcu_recall"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+            android:layout_marginBottom="12dp">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnTvRadio"
                 android:layout_width="0dp"
-                android:layout_height="52dp"
+                android:layout_height="48dp"
                 android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:text="تلویزیون / رادیو"
+                android:layout_marginEnd="4dp"
+                android:text="TV / Radio"
                 android:contentDescription="@string/rcu_tv_radio"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
                 app:strokeColor="@color/divider"
                 app:strokeWidth="1dp"
                 app:cornerRadius="8dp" />
-        </LinearLayout>
-
-        <!-- Menu, EPG, Info, Exit -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnMenu"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:text="منو"
-                android:contentDescription="@string/rcu_menu"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnExit"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
-                android:text="خروج"
-                android:contentDescription="@string/rcu_exit"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnEpg"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
-                android:text="EPG"
-                android:contentDescription="@string/rcu_epg"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnInfo"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:text="اینفو"
-                android:contentDescription="@string/rcu_info"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
-        </LinearLayout>
-
-        <!-- D-Pad Navigation Section -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/divider"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp"
-                android:gravity="center">
-
-                <!-- Up Button (کانال قبلی) -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnNavUp"
-                    android:layout_width="150dp"
-                    android:layout_height="56dp"
-                    android:text="▲ بالا (کانال قبل)"
-                    android:contentDescription="جهت‌نمای بالا: کانال قبلی"
-                    android:textColor="@color/white"
-                    android:textSize="14sp"
-                    app:backgroundTint="@color/primary"
-                    app:cornerRadius="8dp" />
-
-                <!-- Left, OK, Right Row -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:layout_marginTop="6dp"
-                    android:layout_marginBottom="6dp">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnNavLeft"
-                        android:layout_width="0dp"
-                        android:layout_height="56dp"
-                        android:layout_weight="1"
-                        android:text="◄ چپ (صدا -)"
-                        android:contentDescription="جهت‌نمای چپ: کاهش صدا"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        app:backgroundTint="@color/primary"
-                        app:cornerRadius="8dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnNavOk"
-                        android:layout_width="0dp"
-                        android:layout_height="56dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:text="تأیید (OK)"
-                        android:contentDescription="@string/rcu_ok"
-                        android:textColor="@color/white"
-                        android:textSize="15sp"
-                        android:textStyle="bold"
-                        app:backgroundTint="@color/accent_green"
-                        app:cornerRadius="8dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnNavRight"
-                        android:layout_width="0dp"
-                        android:layout_height="56dp"
-                        android:layout_weight="1"
-                        android:text="راست (صدا +) ►"
-                        android:contentDescription="جهت‌نمای راست: افزایش صدا"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        app:backgroundTint="@color/primary"
-                        app:cornerRadius="8dp" />
-                </LinearLayout>
-
-                <!-- Down Button (کانال بعدی) -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnNavDown"
-                    android:layout_width="150dp"
-                    android:layout_height="56dp"
-                    android:text="▼ پایین (کانال بعد)"
-                    android:contentDescription="جهت‌نمای پایین: کانال بعدی"
-                    android:textColor="@color/white"
-                    android:textSize="14sp"
-                    app:backgroundTint="@color/primary"
-                    app:cornerRadius="8dp" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Volume & Channel Rockers -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
-
-            <!-- Volume column -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginEnd="6dp">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnVolUp"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:text="صدا +"
-                    android:contentDescription="@string/rcu_vol_up"
-                    android:textColor="@color/white"
-                    app:backgroundTint="@color/card_bg"
-                    app:strokeColor="@color/divider"
-                    app:strokeWidth="1dp"
-                    app:cornerRadius="8dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnVolDown"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="6dp"
-                    android:text="صدا -"
-                    android:contentDescription="@string/rcu_vol_down"
-                    android:textColor="@color/white"
-                    app:backgroundTint="@color/card_bg"
-                    app:strokeColor="@color/divider"
-                    app:strokeWidth="1dp"
-                    app:cornerRadius="8dp" />
-            </LinearLayout>
-
-            <!-- Channel column -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginStart="6dp">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnChNext"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:text="کانال بعدی"
-                    android:contentDescription="@string/rcu_ch_next"
-                    android:textColor="@color/white"
-                    app:backgroundTint="@color/card_bg"
-                    app:strokeColor="@color/divider"
-                    app:strokeWidth="1dp"
-                    app:cornerRadius="8dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnChPrev"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="6dp"
-                    android:text="کانال قبلی"
-                    android:contentDescription="@string/rcu_ch_prev"
-                    android:textColor="@color/white"
-                    app:backgroundTint="@color/card_bg"
-                    app:strokeColor="@color/divider"
-                    app:strokeWidth="1dp"
-                    app:cornerRadius="8dp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Color Buttons -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnRed"
+                android:id="@+id/btnSat"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:text="قرمز"
-                android:contentDescription="@string/rcu_red"
+                android:layout_marginHorizontal="4dp"
+                android:text="SAT"
+                android:contentDescription="@string/rcu_sat"
                 android:textColor="@color/white"
-                app:backgroundTint="@color/accent_red"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
                 app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnGreen"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
-                android:text="سبز"
-                android:contentDescription="@string/rcu_green"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/accent_green"
-                app:cornerRadius="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnYellow"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
-                android:text="زرد"
-                android:contentDescription="@string/rcu_yellow"
-                android:textColor="@color/black"
-                app:backgroundTint="@color/accent_yellow"
-                app:cornerRadius="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnBlue"
+                android:id="@+id/btnFav"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:layout_marginStart="4dp"
-                android:text="آبی"
-                android:contentDescription="@string/rcu_blue"
+                android:text="FAV"
+                android:contentDescription="@string/rcu_fav"
                 android:textColor="@color/white"
-                app:backgroundTint="@color/accent_blue"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
                 app:cornerRadius="8dp" />
         </LinearLayout>
 
-        <!-- Numeric Keypad (0-9) -->
+        <!-- 3. Numeric Keypad (Exact Real Remote Layout) -->
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:columnCount="3"
             android:rowCount="4"
-            android:alignmentMode="alignMargins"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="14dp">
 
             <!-- 1, 2, 3 -->
             <com.google.android.material.button.MaterialButton
@@ -392,8 +114,9 @@
                 android:layout_columnWeight="1"
                 android:layout_margin="3dp"
                 android:text="1"
+                android:contentDescription="کلید ۱ ریموت"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
                 app:strokeColor="@color/divider"
                 app:strokeWidth="1dp"
@@ -406,8 +129,9 @@
                 android:layout_columnWeight="1"
                 android:layout_margin="3dp"
                 android:text="2"
+                android:contentDescription="کلید ۲ ریموت"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
                 app:strokeColor="@color/divider"
                 app:strokeWidth="1dp"
@@ -420,8 +144,9 @@
                 android:layout_columnWeight="1"
                 android:layout_margin="3dp"
                 android:text="3"
+                android:contentDescription="کلید ۳ ریموت"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
                 app:strokeColor="@color/divider"
                 app:strokeWidth="1dp"
@@ -435,8 +160,9 @@
                 android:layout_columnWeight="1"
                 android:layout_margin="3dp"
                 android:text="4"
+                android:contentDescription="کلید ۴ ریموت"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
                 app:strokeColor="@color/divider"
                 app:strokeWidth="1dp"
@@ -449,8 +175,9 @@
                 android:layout_columnWeight="1"
                 android:layout_margin="3dp"
                 android:text="5"
+                android:contentDescription="کلید ۵ ریموت"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
                 app:strokeColor="@color/divider"
                 app:strokeWidth="1dp"
@@ -463,8 +190,9 @@
                 android:layout_columnWeight="1"
                 android:layout_margin="3dp"
                 android:text="6"
+                android:contentDescription="کلید ۶ ریموت"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
                 app:strokeColor="@color/divider"
                 app:strokeWidth="1dp"
@@ -478,8 +206,9 @@
                 android:layout_columnWeight="1"
                 android:layout_margin="3dp"
                 android:text="7"
+                android:contentDescription="کلید ۷ ریموت"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
                 app:strokeColor="@color/divider"
                 app:strokeWidth="1dp"
@@ -492,8 +221,9 @@
                 android:layout_columnWeight="1"
                 android:layout_margin="3dp"
                 android:text="8"
+                android:contentDescription="کلید ۸ ریموت"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
                 app:strokeColor="@color/divider"
                 app:strokeWidth="1dp"
@@ -506,18 +236,29 @@
                 android:layout_columnWeight="1"
                 android:layout_margin="3dp"
                 android:text="9"
+                android:contentDescription="کلید ۹ ریموت"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
                 app:strokeColor="@color/divider"
                 app:strokeWidth="1dp"
                 app:cornerRadius="8dp" />
 
-            <!-- Spacer, 0, Spacer -->
-            <View
+            <!-- Recall (Left of 0), 0, Sleep/Exit (Right of 0) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRecall"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_columnWeight="1" />
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="Recall"
+                android:contentDescription="@string/rcu_recall"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDigit0"
@@ -526,18 +267,388 @@
                 android:layout_columnWeight="1"
                 android:layout_margin="3dp"
                 android:text="0"
+                android:contentDescription="کلید ۰ ریموت"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
                 app:strokeColor="@color/divider"
                 app:strokeWidth="1dp"
                 app:cornerRadius="8dp" />
 
-            <View
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSleep"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_columnWeight="1" />
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="Sleep"
+                android:contentDescription="تایمر خواب رسیور"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
         </GridLayout>
+
+        <!-- 4. Menu, EPG, Info, Exit Cluster -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="10dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMenu"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="3dp"
+                android:text="منو (Menu)"
+                android:contentDescription="@string/rcu_menu"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEpg"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="EPG"
+                android:contentDescription="@string/rcu_epg"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnInfo"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="Info"
+                android:contentDescription="@string/rcu_info"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnExit"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginStart="3dp"
+                android:text="خروج (Exit)"
+                android:contentDescription="@string/rcu_exit"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <!-- 5. Navigation Ring (Up, Down, Left, Right, OK) -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="16dp"
+            app:strokeColor="@color/divider"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="12dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnUp"
+                    android:layout_width="120dp"
+                    android:layout_height="54dp"
+                    android:text="▲ بالا"
+                    android:contentDescription="@string/rcu_up"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    app:backgroundTint="@color/secondary"
+                    app:cornerRadius="10dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginVertical="6dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnLeft"
+                        android:layout_width="100dp"
+                        android:layout_height="54dp"
+                        android:text="◄ چپ"
+                        android:contentDescription="@string/rcu_left"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        app:backgroundTint="@color/secondary"
+                        app:cornerRadius="10dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnOk"
+                        android:layout_width="90dp"
+                        android:layout_height="64dp"
+                        android:layout_marginHorizontal="12dp"
+                        android:text="OK"
+                        android:contentDescription="@string/rcu_ok"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/primary"
+                        app:cornerRadius="16dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnRight"
+                        android:layout_width="100dp"
+                        android:layout_height="54dp"
+                        android:text="راست ►"
+                        android:contentDescription="@string/rcu_right"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        app:backgroundTint="@color/secondary"
+                        app:cornerRadius="10dp" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDown"
+                    android:layout_width="120dp"
+                    android:layout_height="54dp"
+                    android:text="▼ پایین"
+                    android:contentDescription="@string/rcu_down"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    app:backgroundTint="@color/secondary"
+                    app:cornerRadius="10dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 6. Direct Volume & Channel Rockers -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnVolUp"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:text="صدا +"
+                android:contentDescription="@string/rcu_vol_up"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnVolDown"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="4dp"
+                android:text="صدا -"
+                android:contentDescription="@string/rcu_vol_down"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnChNext"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="4dp"
+                android:text="کانال +"
+                android:contentDescription="@string/rcu_ch_next"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnChPrev"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:text="کانال -"
+                android:contentDescription="@string/rcu_ch_prev"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <!-- 7. Four Color Keys (Red, Green, Yellow, Blue) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRed"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="3dp"
+                android:text="قرمز"
+                android:contentDescription="@string/rcu_red"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/accent_red"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGreen"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="3dp"
+                android:text="سبز"
+                android:contentDescription="@string/rcu_green"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/accent_green"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnYellow"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="3dp"
+                android:text="زرد"
+                android:contentDescription="@string/rcu_yellow"
+                android:textColor="@color/black"
+                app:backgroundTint="@color/accent_yellow"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBlue"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="3dp"
+                android:text="آبی"
+                android:contentDescription="@string/rcu_blue"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/secondary"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <!-- 8. Media & Recording Cluster -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRec"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="2dp"
+                android:text="● ضبط"
+                android:contentDescription="@string/rcu_rec"
+                android:textColor="@color/accent_red"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/accent_red"
+                app:strokeWidth="1dp"
+                app:cornerRadius="6dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStop"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="■ توقف"
+                android:contentDescription="@string/rcu_stop"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="6dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPlay"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="▶ پخش"
+                android:contentDescription="@string/rcu_play"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="6dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPause"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="❚❚ مکث"
+                android:contentDescription="@string/rcu_pause"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="6dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRew"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="◄◄"
+                android:contentDescription="@string/rcu_rew"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="6dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFf"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:text="►►"
+                android:contentDescription="@string/rcu_ff"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="6dp" />
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

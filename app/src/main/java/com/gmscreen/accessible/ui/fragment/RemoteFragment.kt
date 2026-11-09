@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
@@ -26,78 +25,64 @@ class RemoteFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_remote, container, false)
-        setupRemoteButtons(view)
+        setupButtons(view)
         return view
     }
 
-    private fun setupRemoteButtons(rootView: View) {
-        // Power & Mute
-        bindRemoteKey(rootView, R.id.btnPower, RcuKey.POWER, "پاور رسیور زده شد")
-        bindRemoteKey(rootView, R.id.btnMute, RcuKey.MUTE, "حالت بی‌صدا تغییر کرد")
+    private fun setupButtons(rootView: View) {
+        val keyMap = mapOf(
+            R.id.btnPower to Pair(RcuKey.POWER_TOGGLE, "پاور رسیور"),
+            R.id.btnMute to Pair(RcuKey.MUTE, "بی‌صدا"),
+            R.id.btnTvRadio to Pair(RcuKey.TV_RADIO, "تلویزیون و رادیو"),
+            R.id.btnSat to Pair(RcuKey.SATELLITE, "ماهواره"),
+            R.id.btnFav to Pair(RcuKey.FAVORITE, "کانال‌های دلخواه"),
+            R.id.btnDigit1 to Pair(RcuKey.KEY_1, "۱"),
+            R.id.btnDigit2 to Pair(RcuKey.KEY_2, "۲"),
+            R.id.btnDigit3 to Pair(RcuKey.KEY_3, "۳"),
+            R.id.btnDigit4 to Pair(RcuKey.KEY_4, "۴"),
+            R.id.btnDigit5 to Pair(RcuKey.KEY_5, "۵"),
+            R.id.btnDigit6 to Pair(RcuKey.KEY_6, "۶"),
+            R.id.btnDigit7 to Pair(RcuKey.KEY_7, "۷"),
+            R.id.btnDigit8 to Pair(RcuKey.KEY_8, "۸"),
+            R.id.btnDigit9 to Pair(RcuKey.KEY_9, "۹"),
+            R.id.btnDigit0 to Pair(RcuKey.KEY_0, "۰"),
+            R.id.btnRecall to Pair(RcuKey.RECALL, "بازگشت"),
+            R.id.btnSleep to Pair(RcuKey.SLEEP_TIMER, "تایمر خواب"),
+            R.id.btnMenu to Pair(RcuKey.MENU, "منو"),
+            R.id.btnEpg to Pair(RcuKey.EPG, "جدول برنامه‌ها"),
+            R.id.btnInfo to Pair(RcuKey.INFO, "مشخصات کانال"),
+            R.id.btnExit to Pair(RcuKey.EXIT, "خروج"),
+            R.id.btnUp to Pair(RcuKey.UP, "جهت بالا"),
+            R.id.btnDown to Pair(RcuKey.DOWN, "جهت پایین"),
+            R.id.btnLeft to Pair(RcuKey.LEFT, "جهت چپ"),
+            R.id.btnRight to Pair(RcuKey.RIGHT, "جهت راست"),
+            R.id.btnOk to Pair(RcuKey.OK, "تأیید"),
+            R.id.btnVolUp to Pair(RcuKey.VOL_UP, "افزایش صدا"),
+            R.id.btnVolDown to Pair(RcuKey.VOL_DOWN, "کاهش صدا"),
+            R.id.btnChNext to Pair(RcuKey.CH_NEXT, "کانال بعدی"),
+            R.id.btnChPrev to Pair(RcuKey.CH_PREV, "کانال قبلی"),
+            R.id.btnRed to Pair(RcuKey.RED, "قرمز"),
+            R.id.btnGreen to Pair(RcuKey.GREEN, "سبز"),
+            R.id.btnYellow to Pair(RcuKey.YELLOW, "زرد"),
+            R.id.btnBlue to Pair(RcuKey.BLUE, "آبی"),
+            R.id.btnRec to Pair(RcuKey.RECORD, "ضبط رسیور"),
+            R.id.btnStop to Pair(RcuKey.STOP, "توقف"),
+            R.id.btnPlay to Pair(RcuKey.PLAY, "پخش"),
+            R.id.btnPause to Pair(RcuKey.PAUSE, "مکث"),
+            R.id.btnRew to Pair(RcuKey.REWIND, "عقب"),
+            R.id.btnFf to Pair(RcuKey.FAST_FORWARD, "جلو")
+        )
 
-        // Recall & Mode
-        bindRemoteKey(rootView, R.id.btnRecall, RcuKey.RECALL, "کانال قبلی (Recall)")
-        bindRemoteKey(rootView, R.id.btnTvRadio, RcuKey.TV_RADIO, "تغییر حالت تلویزیون و رادیو")
-
-        // Menus
-        bindRemoteKey(rootView, R.id.btnMenu, RcuKey.MENU, "منوی اصلی رسیور")
-        bindRemoteKey(rootView, R.id.btnExit, RcuKey.EXIT, "خروج")
-        bindRemoteKey(rootView, R.id.btnEpg, RcuKey.EPG, "جدول برنامه‌ها EPG")
-        bindRemoteKey(rootView, R.id.btnInfo, RcuKey.INFO, "اطلاعات شبکه Info")
-
-        // D-Pad Navigation (Strict ALi hardware mapping)
-        // Up = Prev Channel (2), Down = Next Channel (1), Left = Vol- (3), Right = Vol+ (4), OK = (5)
-        bindRemoteKey(rootView, R.id.btnNavUp, RcuKey.UP, "کانال قبلی")
-        bindRemoteKey(rootView, R.id.btnNavDown, RcuKey.DOWN, "کانال بعدی")
-        bindRemoteKey(rootView, R.id.btnNavLeft, RcuKey.LEFT, "کاهش صدا")
-        bindRemoteKey(rootView, R.id.btnNavRight, RcuKey.RIGHT, "افزایش صدا")
-        bindRemoteKey(rootView, R.id.btnNavOk, RcuKey.OK, "تأیید")
-
-        // Volume & Channel Rockers
-        bindRemoteKey(rootView, R.id.btnVolUp, RcuKey.VOL_UP, "افزایش صدا")
-        bindRemoteKey(rootView, R.id.btnVolDown, RcuKey.VOL_DOWN, "کاهش صدا")
-        bindRemoteKey(rootView, R.id.btnChNext, RcuKey.CH_NEXT, "کانال بعدی")
-        bindRemoteKey(rootView, R.id.btnChPrev, RcuKey.CH_PREV, "کانال قبلی")
-
-        // Color buttons
-        bindRemoteKey(rootView, R.id.btnRed, RcuKey.RED, "دکمه قرمز: زبان و ترک صدا")
-        bindRemoteKey(rootView, R.id.btnGreen, RcuKey.GREEN, "دکمه سبز: مدیا پلیر")
-        bindRemoteKey(rootView, R.id.btnYellow, RcuKey.YELLOW, "دکمه زرد: نسبت تصویر")
-        bindRemoteKey(rootView, R.id.btnBlue, RcuKey.BLUE, "دکمه آبی: لیست ماهواره‌ها")
-
-        // Digits (0 to 9)
-        bindRemoteKey(rootView, R.id.btnDigit0, RcuKey.KEY_0, "صفر")
-        bindRemoteKey(rootView, R.id.btnDigit1, RcuKey.KEY_1, "یک")
-        bindRemoteKey(rootView, R.id.btnDigit2, RcuKey.KEY_2, "دو")
-        bindRemoteKey(rootView, R.id.btnDigit3, RcuKey.KEY_3, "سه")
-        bindRemoteKey(rootView, R.id.btnDigit4, RcuKey.KEY_4, "چهار")
-        bindRemoteKey(rootView, R.id.btnDigit5, RcuKey.KEY_5, "پنج")
-        bindRemoteKey(rootView, R.id.btnDigit6, RcuKey.KEY_6, "شش")
-        bindRemoteKey(rootView, R.id.btnDigit7, RcuKey.KEY_7, "هفت")
-        bindRemoteKey(rootView, R.id.btnDigit8, RcuKey.KEY_8, "هشت")
-        bindRemoteKey(rootView, R.id.btnDigit9, RcuKey.KEY_9, "نه")
-    }
-
-    private fun bindRemoteKey(rootView: View, viewId: Int, rcuKeyCode: Int, feedbackMessage: String) {
-        val button = rootView.findViewById<MaterialButton?>(viewId) ?: return
-
-        button.setOnClickListener {
-            // 1. Trigger haptic feedback
-            if (appConfig.hapticFeedbackEnabled) {
-                AccessibilityHelper.vibrateClick(requireContext())
-            }
-
-            // 2. Announce to TalkBack
-            AccessibilityHelper.announce(button, feedbackMessage)
-
-            // 3. Send key to STB in background
-            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                repository.sendRcuKey(rcuKeyCode)
-            }
-
-            // 4. CRITICAL: Prevent focus jumping - keep focus firmly on this button!
-            button.post {
-                button.requestFocus()
+        for ((viewId, info) in keyMap) {
+            val (keyCode, desc) = info
+            rootView.findViewById<MaterialButton?>(viewId)?.setOnClickListener { btn ->
+                if (appConfig.hapticFeedbackEnabled) {
+                    AccessibilityHelper.vibrateClick(requireContext())
+                }
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    repository.sendRcuKey(keyCode)
+                }
+                AccessibilityHelper.announce(btn, desc)
             }
         }
     }

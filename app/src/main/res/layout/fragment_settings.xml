@@ -4,163 +4,29 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dark_bg"
-    android:padding="16dp">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <!-- STB Info Card -->
-        <com.google.android.material.card.MaterialCardView
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/divider"
-            app:strokeWidth="1dp">
+            android:text="@string/settings_title"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_model_title"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/txtSettingsStbModel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="مدل رسیور: متصل نیست"
-                    android:textColor="@color/accent_yellow"
-                    android:textSize="16sp"
-                    android:focusable="true" />
-
-                <TextView
-                    android:id="@+id/txtSettingsStbIp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="آدرس آی‌پی: -"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
-                    android:focusable="true" />
-
-                <TextView
-                    android:id="@+id/txtSettingsStbChip"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="سخت‌افزار / چیپ‌ست: ALi Processor"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
-                    android:focusable="true" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Preference Options Card -->
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
+            android:id="@+id/containerSettingsList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/divider"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="تنظیمات رفتار برنامه و دسترس‌پذیری"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
-
-                <!-- Keep Global Channel Number on Filter -->
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/chkKeepGlobalNum"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_keep_global_nums"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:layout_marginBottom="8dp" />
-
-                <!-- Haptic Feedback -->
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/chkHaptic"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_haptic_feedback"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:layout_marginBottom="8dp" />
-
-                <!-- Sound Cues -->
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/chkSounds"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/settings_sound_cues"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- About Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/divider"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="درباره نرم‌افزار"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="GM Screen دسترس‌پذیر نسخه ۲.۱ اندروید\nویژه رسیورهای پردازنده ALi (مدیا استار، استارست و سایر برندها)\nطراحی و توسعه اختصاصی برای کاربران نابینا و کم‌بینا\nبرنامه‌نویس و توسعه‌دهنده: m.m"
-                    android:lineSpacingExtra="4dp"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
-                    android:focusable="true" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            android:orientation="vertical" />
 
     </LinearLayout>
 </ScrollView>

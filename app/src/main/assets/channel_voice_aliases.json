@@ -1,0 +1,4636 @@
+{
+  "00380172600005": {
+    "channel_name": "Iran International HD",
+    "aliases": [
+      "ایران اینترنشنال",
+      "ایران اینتر نشنال",
+      "اینتر نشنال",
+      "Iran International HD",
+      "شبکه Iran International HD",
+      "اینترنشنال"
+    ]
+  },
+  "00380171800025": {
+    "channel_name": "Omid Dana TV",
+    "aliases": [
+      "شبکه امید دانا",
+      "کانال امید دانا",
+      "امید دانا",
+      "امید دانا تیوی",
+      "Omid Dana TV",
+      "شبکه Omid Dana TV"
+    ]
+  },
+  "00380171600002": {
+    "channel_name": "Mellig TV",
+    "aliases": [
+      "Mellig TV",
+      "شبکه Mellig TV",
+      "ملیک تیوی",
+      "ملیک تی وی",
+      "ملیگ تیوی",
+      "ملیک",
+      "ملیگ"
+    ]
+  },
+  "00380131900010": {
+    "channel_name": "BBC Persia",
+    "aliases": [
+      "BBC Persia",
+      "شبکه BBC Persia"
+    ]
+  },
+  "00380131900007": {
+    "channel_name": "VoA Persian HD",
+    "aliases": [
+      "VoA Persian HD",
+      "شبکه VoA Persian HD"
+    ]
+  },
+  "00380131600062": {
+    "channel_name": "Toosheh TV",
+    "aliases": [
+      "Toosheh TV",
+      "شبکه Toosheh TV"
+    ]
+  },
+  "00380172600015": {
+    "channel_name": "ZED TV",
+    "aliases": [
+      "ZED TV",
+      "شبکه ZED TV"
+    ]
+  },
+  "00380171300017": {
+    "channel_name": "Persiana RAP",
+    "aliases": [
+      "Persiana RAP",
+      "شبکه Persiana RAP",
+      "پرشیانا رپ",
+      "شبکه پرشیانا رپ",
+      "کانال پرشیانا رپ"
+    ]
+  },
+  "00380170800013": {
+    "channel_name": "Persiana Music",
+    "aliases": [
+      "پرشیانا موزیک",
+      "Persiana Music",
+      "شبکه Persiana Music"
+    ]
+  },
+  "00380171300008": {
+    "channel_name": "Persiana SetMix",
+    "aliases": [
+      "Persiana SetMix",
+      "شبکه Persiana SetMix",
+      "پرشیانا ست میکس",
+      "پرشیانا میکس",
+      "پرشیانا ستمیکس",
+      "شبکه پرشیانا میکس"
+    ]
+  },
+  "00380170800014": {
+    "channel_name": "Persiana Nostalgia",
+    "aliases": [
+      "پرشیانا نوستالژی",
+      "پرشیانا نوستالژیا",
+      "Persiana Nostalgia",
+      "شبکه Persiana Nostalgia",
+      "شبکه پرشیانا نوستالژی"
+    ]
+  },
+  "00380170800023": {
+    "channel_name": "Persiana Folk",
+    "aliases": [
+      "Persiana Folk",
+      "شبکه Persiana Folk",
+      "پرشیانا فولک",
+      "پرشیانا سنتی",
+      "شبکه پرشیانا فولک"
+    ]
+  },
+  "00380171800018": {
+    "channel_name": "Radio Javan HD",
+    "aliases": [
+      "رادیو جوان",
+      "Radio Javan HD",
+      "شبکه Radio Javan HD"
+    ]
+  },
+  "00380171600029": {
+    "channel_name": "Radio Farda",
+    "aliases": [
+      "Radio Farda",
+      "شبکه Radio Farda"
+    ]
+  },
+  "00380171700816": {
+    "channel_name": "Navahang",
+    "aliases": [
+      "Navahang",
+      "شبکه Navahang"
+    ]
+  },
+  "00380171600001": {
+    "channel_name": "Avang TV",
+    "aliases": [
+      "Avang TV",
+      "شبکه Avang TV"
+    ]
+  },
+  "00380172000011": {
+    "channel_name": "PMC HD",
+    "aliases": [
+      "پی ام سی",
+      "PMC HD",
+      "شبکه PMC HD"
+    ]
+  },
+  "00380170700034": {
+    "channel_name": "Tapesh HD",
+    "aliases": [
+      "طپش",
+      "تپش",
+      "Tapesh HD",
+      "شبکه Tapesh HD"
+    ]
+  },
+  "00380132800016": {
+    "channel_name": "GEM TV+ HD",
+    "aliases": [
+      "GEM TV+ HD",
+      "شبکه GEM TV+ HD",
+      "جم تیوی پلاس",
+      "جم تی وی پلاس",
+      "شبکه جم تیوی پلاس",
+      "جم+"
+    ]
+  },
+  "00380132800019": {
+    "channel_name": "GEM SERIES+ HD",
+    "aliases": [
+      "GEM SERIES+ HD",
+      "شبکه GEM SERIES+ HD",
+      "جم سریز پلاس",
+      "جم سریال پلاس",
+      "شبکه جم سریز پلاس",
+      "جم سریز+"
+    ]
+  },
+  "00380132800017": {
+    "channel_name": "GEM DRAMA+ HD",
+    "aliases": [
+      "GEM DRAMA+ HD",
+      "شبکه GEM DRAMA+ HD",
+      "جم دراما پلاس",
+      "شبکه جم دراما پلاس",
+      "جم دراما+"
+    ]
+  },
+  "00380132800024": {
+    "channel_name": "GEM COMEDY",
+    "aliases": [
+      "GEM COMEDY",
+      "شبکه GEM COMEDY",
+      "جم کمدی",
+      "شبکه جم کمدی",
+      "کانال جم کمدی"
+    ]
+  },
+  "00380132100030": {
+    "channel_name": "GEM FILM",
+    "aliases": [
+      "GEM FILM",
+      "شبکه GEM FILM",
+      "جم فیلم",
+      "شبکه جم فیلم",
+      "کانال جم فیلم"
+    ]
+  },
+  "00250090800114": {
+    "channel_name": "iFILM",
+    "aliases": [
+      "آی فیلم",
+      "آیفیلم",
+      "کانال آی فیلم",
+      "iFILM",
+      "شبکه iFILM"
+    ]
+  },
+  "00380171200136": {
+    "channel_name": "IFILM DARI",
+    "aliases": [
+      "آی فیلم 2",
+      "آیفیلم 2",
+      "کانال آی فیلم 2",
+      "IFILM DARI",
+      "شبکه IFILM DARI",
+      "آی فیلم دری",
+      "آیفیلم دری"
+    ]
+  },
+  "00250090800112": {
+    "channel_name": "IRIB NAMAYESH",
+    "aliases": [
+      "شبکه نمایش",
+      "کانال نمایش",
+      "نمایش",
+      "IRIB NAMAYESH",
+      "شبکه IRIB NAMAYESH"
+    ]
+  },
+  "00250090800115": {
+    "channel_name": "TAMASHA",
+    "aliases": [
+      "شبکه تماشا",
+      "کانال تماشا",
+      "تماشا",
+      "TAMASHA",
+      "شبکه TAMASHA"
+    ]
+  },
+  "00380172000027": {
+    "channel_name": "Iran Film HD",
+    "aliases": [
+      "Iran Film HD",
+      "شبکه Iran Film HD"
+    ]
+  },
+  "00380172600008": {
+    "channel_name": "Iran International",
+    "aliases": [
+      "ایران اینترنشنال",
+      "ایران اینتر نشنال",
+      "اینترنشنال",
+      "Iran International",
+      "شبکه Iran International",
+      "اینتر نشنال"
+    ]
+  },
+  "00380172500013": {
+    "channel_name": "Iran International",
+    "aliases": [
+      "ایران اینترنشنال",
+      "ایران اینتر نشنال",
+      "اینترنشنال",
+      "Iran International",
+      "شبکه Iran International",
+      "اینتر نشنال"
+    ]
+  },
+  "00250093100130": {
+    "channel_name": "Iran International HD",
+    "aliases": [
+      "ایران اینترنشنال",
+      "ایران اینتر نشنال",
+      "اینترنشنال",
+      "Iran International HD",
+      "شبکه Iran International HD",
+      "اینتر نشنال"
+    ]
+  },
+  "00250093100136": {
+    "channel_name": "Iran International",
+    "aliases": [
+      "ایران اینترنشنال",
+      "ایران اینتر نشنال",
+      "اینترنشنال",
+      "Iran International",
+      "شبکه Iran International",
+      "اینتر نشنال"
+    ]
+  },
+  "00380171800003": {
+    "channel_name": "Radio Javan SD",
+    "aliases": [
+      "رادیو جوان",
+      "Radio Javan SD",
+      "شبکه Radio Javan SD"
+    ]
+  },
+  "00380132600101": {
+    "channel_name": "BBC Persia",
+    "aliases": [
+      "BBC Persia",
+      "شبکه BBC Persia"
+    ]
+  },
+  "00380171600003": {
+    "channel_name": "VOA Persian",
+    "aliases": [
+      "VOA Persian",
+      "شبکه VOA Persian"
+    ]
+  },
+  "00380131900012": {
+    "channel_name": "Radio Farda",
+    "aliases": [
+      "Radio Farda",
+      "شبکه Radio Farda"
+    ]
+  },
+  "00380131900001": {
+    "channel_name": "ZED TV",
+    "aliases": [
+      "ZED TV",
+      "شبکه ZED TV"
+    ]
+  },
+  "00380132100025": {
+    "channel_name": "GEM TV",
+    "aliases": [
+      "جم تی وی",
+      "جم",
+      "GEM TV",
+      "شبکه GEM TV",
+      "جم تیوی",
+      "شبکه جم تیوی",
+      "کانال جم"
+    ]
+  },
+  "00380132100021": {
+    "channel_name": "GEM SERIES",
+    "aliases": [
+      "جم سریز",
+      "جم سریال",
+      "GEM SERIES",
+      "شبکه GEM SERIES",
+      "شبکه جم سریز",
+      "کانال جم سریز"
+    ]
+  },
+  "00380132100034": {
+    "channel_name": "GEM DRAMA",
+    "aliases": [
+      "GEM DRAMA",
+      "شبکه GEM DRAMA",
+      "جم دراما",
+      "شبکه جم دراما",
+      "کانال جم دراما"
+    ]
+  },
+  "00380171700035": {
+    "channel_name": "Iran-e-Farda TV",
+    "aliases": [
+      "Iran-e-Farda TV",
+      "شبکه Iran-e-Farda TV"
+    ]
+  },
+  "00380172000028": {
+    "channel_name": "MBC Persia HD",
+    "aliases": [
+      "MBC Persia HD",
+      "شبکه MBC Persia HD"
+    ]
+  },
+  "00380171600008": {
+    "channel_name": "Persiana Sports HD",
+    "aliases": [
+      "Persiana Sports HD",
+      "شبکه Persiana Sports HD",
+      "پرشیانا اسپورت",
+      "پرشیانا ورزش",
+      "شبکه پرشیانا اسپورت"
+    ]
+  },
+  "00250090800103": {
+    "channel_name": "IRIB TV3",
+    "aliases": [
+      "شبکه سه",
+      "کانال سه",
+      "شبکه ۳",
+      "IRIB TV3",
+      "شبکه IRIB TV3"
+    ]
+  },
+  "00380170700001": {
+    "channel_name": "Nahade Azadi",
+    "aliases": [
+      "Nahade Azadi",
+      "شبکه Nahade Azadi"
+    ]
+  },
+  "00380170700004": {
+    "channel_name": "Derakhte Zendegi",
+    "aliases": [
+      "Derakhte Zendegi",
+      "شبکه Derakhte Zendegi"
+    ]
+  },
+  "00380170700007": {
+    "channel_name": "Meta Film HD",
+    "aliases": [
+      "Meta Film HD",
+      "شبکه Meta Film HD"
+    ]
+  },
+  "00380170700012": {
+    "channel_name": "PMC Planeta",
+    "aliases": [
+      "پی ام سی",
+      "PMC Planeta",
+      "شبکه PMC Planeta"
+    ]
+  },
+  "00380170700013": {
+    "channel_name": "Moallem TV",
+    "aliases": [
+      "Moallem TV",
+      "شبکه Moallem TV"
+    ]
+  },
+  "00380170700014": {
+    "channel_name": "4U Family",
+    "aliases": [
+      "4U Family",
+      "شبکه 4U Family"
+    ]
+  },
+  "00380170700015": {
+    "channel_name": "Iran Wire",
+    "aliases": [
+      "Iran Wire",
+      "شبکه Iran Wire"
+    ]
+  },
+  "00380170700017": {
+    "channel_name": "1TV",
+    "aliases": [
+      "1TV",
+      "شبکه 1TV"
+    ]
+  },
+  "00380170700019": {
+    "channel_name": "Afra Film HD",
+    "aliases": [
+      "Afra Film HD",
+      "شبکه Afra Film HD"
+    ]
+  },
+  "00380170700026": {
+    "channel_name": "PMC Royale",
+    "aliases": [
+      "پی ام سی",
+      "PMC Royale",
+      "شبکه PMC Royale"
+    ]
+  },
+  "00380170700027": {
+    "channel_name": "T2 HD",
+    "aliases": [
+      "T2 HD",
+      "شبکه T2 HD"
+    ]
+  },
+  "00380170700035": {
+    "channel_name": "Sun Music TV",
+    "aliases": [
+      "Sun Music TV",
+      "شبکه Sun Music TV"
+    ]
+  },
+  "00380170700036": {
+    "channel_name": "PMC SELECT",
+    "aliases": [
+      "پی ام سی",
+      "PMC SELECT",
+      "شبکه PMC SELECT"
+    ]
+  },
+  "00380170700039": {
+    "channel_name": "SETAREH TV HD",
+    "aliases": [
+      "SETAREH TV HD",
+      "شبکه SETAREH TV HD"
+    ]
+  },
+  "00380171600007": {
+    "channel_name": "Net TV",
+    "aliases": [
+      "Net TV",
+      "شبکه Net TV"
+    ]
+  },
+  "00380171600013": {
+    "channel_name": "Cinex",
+    "aliases": [
+      "Cinex",
+      "شبکه Cinex"
+    ]
+  },
+  "00380171600015": {
+    "channel_name": "Cafe Film",
+    "aliases": [
+      "Cafe Film",
+      "شبکه Cafe Film"
+    ]
+  },
+  "00380171600016": {
+    "channel_name": "FX 1 HD",
+    "aliases": [
+      "FX 1 HD",
+      "شبکه FX 1 HD"
+    ]
+  },
+  "00380171600021": {
+    "channel_name": "Gord Afarid TV",
+    "aliases": [
+      "Gord Afarid TV",
+      "شبکه Gord Afarid TV"
+    ]
+  },
+  "00380171600022": {
+    "channel_name": "Gord Afarid TV SD",
+    "aliases": [
+      "Gord Afarid TV SD",
+      "شبکه Gord Afarid TV SD"
+    ]
+  },
+  "00380171600023": {
+    "channel_name": "FX 2 HD",
+    "aliases": [
+      "FX 2 HD",
+      "شبکه FX 2 HD"
+    ]
+  },
+  "00380171600026": {
+    "channel_name": "DEJ TV",
+    "aliases": [
+      "DEJ TV",
+      "شبکه DEJ TV"
+    ]
+  },
+  "00380171600028": {
+    "channel_name": "SAMAD TV",
+    "aliases": [
+      "SAMAD TV",
+      "شبکه SAMAD TV"
+    ]
+  },
+  "00380171600031": {
+    "channel_name": "Cheshm e Oghab",
+    "aliases": [
+      "Cheshm e Oghab",
+      "شبکه Cheshm e Oghab"
+    ]
+  },
+  "00380171600005": {
+    "channel_name": "PULSE TV",
+    "aliases": [
+      "PULSE TV",
+      "شبکه PULSE TV"
+    ]
+  },
+  "00380170800001": {
+    "channel_name": "Persiana Family",
+    "aliases": [
+      "پرشیانا فمیلی",
+      "پرشیانا خانواده",
+      "Persiana Family",
+      "شبکه Persiana Family",
+      "پرشیانا فامیلی",
+      "شبکه پرشیانا فامیلی"
+    ]
+  },
+  "00380170800002": {
+    "channel_name": "TBN Nejat",
+    "aliases": [
+      "TBN Nejat",
+      "شبکه TBN Nejat"
+    ]
+  },
+  "00380170800003": {
+    "channel_name": "Persiana Cinema",
+    "aliases": [
+      "پرشیانا سینما",
+      "Persiana Cinema",
+      "شبکه Persiana Cinema",
+      "شبکه پرشیانا سینما",
+      "کانال پرشیانا سینما"
+    ]
+  },
+  "00380170800004": {
+    "channel_name": "Persiana Junior",
+    "aliases": [
+      "پرشیانا جونیور",
+      "پرشیانا کودک",
+      "Persiana Junior",
+      "شبکه Persiana Junior",
+      "شبکه پرشیانا جونیور"
+    ]
+  },
+  "00380170800005": {
+    "channel_name": "Persiana Iranian",
+    "aliases": [
+      "Persiana Iranian",
+      "شبکه Persiana Iranian",
+      "پرشیانا ایرانی",
+      "پرشیانا ایرانیان",
+      "شبکه پرشیانا ایرانی"
+    ]
+  },
+  "00380170800007": {
+    "channel_name": "Persiana Comedy",
+    "aliases": [
+      "پرشیانا کمدی",
+      "Persiana Comedy",
+      "شبکه Persiana Comedy",
+      "شبکه پرشیانا کمدی",
+      "کانال پرشیانا کمدی"
+    ]
+  },
+  "00380170800008": {
+    "channel_name": "Persiana Series",
+    "aliases": [
+      "Persiana Series",
+      "شبکه Persiana Series",
+      "پرشیانا سریز",
+      "پرشیانا سریال",
+      "شبکه پرشیانا سریز"
+    ]
+  },
+  "00380170800012": {
+    "channel_name": "Persiana Sports 2",
+    "aliases": [
+      "Persiana Sports 2",
+      "شبکه Persiana Sports 2",
+      "پرشیانا اسپورت ۲",
+      "پرشیانا اسپورت دو",
+      "پرشیانا ورزش ۲"
+    ]
+  },
+  "00380170800018": {
+    "channel_name": "Gold Star TV",
+    "aliases": [
+      "Gold Star TV",
+      "شبکه Gold Star TV"
+    ]
+  },
+  "00380170800019": {
+    "channel_name": "Persiana Documentary",
+    "aliases": [
+      "Persiana Documentary",
+      "شبکه Persiana Documentary",
+      "پرشیانا مستند",
+      "پرشیانا داکیومنتری",
+      "شبکه پرشیانا مستند"
+    ]
+  },
+  "00380170800020": {
+    "channel_name": "Persiana Teen",
+    "aliases": [
+      "Persiana Teen",
+      "شبکه Persiana Teen"
+    ]
+  },
+  "00380170800024": {
+    "channel_name": "Persiana Korea",
+    "aliases": [
+      "Persiana Korea",
+      "شبکه Persiana Korea",
+      "پرشیانا کره",
+      "پرشیانا کره ای",
+      "شبکه پرشیانا کره"
+    ]
+  },
+  "00380170800047": {
+    "channel_name": "4Kurd",
+    "aliases": [
+      "4Kurd",
+      "شبکه 4Kurd"
+    ]
+  },
+  "00380170800049": {
+    "channel_name": "Classic TV",
+    "aliases": [
+      "Classic TV",
+      "شبکه Classic TV"
+    ]
+  },
+  "00380171700001": {
+    "channel_name": "Kalameh Farsi TV",
+    "aliases": [
+      "Kalameh Farsi TV",
+      "شبکه Kalameh Farsi TV"
+    ]
+  },
+  "00380171700003": {
+    "channel_name": "Your Time TV HD",
+    "aliases": [
+      "Your Time TV HD",
+      "شبکه Your Time TV HD"
+    ]
+  },
+  "00380171700004": {
+    "channel_name": "Haray Radio",
+    "aliases": [
+      "Haray Radio",
+      "شبکه Haray Radio"
+    ]
+  },
+  "00380171700005": {
+    "channel_name": "MOJ TV",
+    "aliases": [
+      "MOJ TV",
+      "شبکه MOJ TV"
+    ]
+  },
+  "00380171700008": {
+    "channel_name": "Iran Wire",
+    "aliases": [
+      "Iran Wire",
+      "شبکه Iran Wire"
+    ]
+  },
+  "00380171700012": {
+    "channel_name": "ITN",
+    "aliases": [
+      "ITN",
+      "شبکه ITN"
+    ]
+  },
+  "00380171700021": {
+    "channel_name": "AVA Series",
+    "aliases": [
+      "AVA Series",
+      "شبکه AVA Series"
+    ]
+  },
+  "00380171700029": {
+    "channel_name": "Solh Sports",
+    "aliases": [
+      "Solh Sports",
+      "شبکه Solh Sports"
+    ]
+  },
+  "00380171700033": {
+    "channel_name": "Payam E Doost",
+    "aliases": [
+      "Payam E Doost",
+      "شبکه Payam E Doost"
+    ]
+  },
+  "00380171700038": {
+    "channel_name": "Kanal Jadid",
+    "aliases": [
+      "Kanal Jadid",
+      "شبکه Kanal Jadid"
+    ]
+  },
+  "00380171700041": {
+    "channel_name": "Khane Honarmandan",
+    "aliases": [
+      "Khane Honarmandan",
+      "شبکه Khane Honarmandan"
+    ]
+  },
+  "00380171700701": {
+    "channel_name": "Sharq Global TV",
+    "aliases": [
+      "Sharq Global TV",
+      "شبکه Sharq Global TV"
+    ]
+  },
+  "00380171700711": {
+    "channel_name": "Eslah TV",
+    "aliases": [
+      "Eslah TV",
+      "شبکه Eslah TV"
+    ]
+  },
+  "00380171700803": {
+    "channel_name": "OXIR TV",
+    "aliases": [
+      "OXIR TV",
+      "شبکه OXIR TV"
+    ]
+  },
+  "00380171700808": {
+    "channel_name": "Dunya naw TV - farah",
+    "aliases": [
+      "Dunya naw TV - farah",
+      "شبکه Dunya naw TV - farah"
+    ]
+  },
+  "00380171700809": {
+    "channel_name": "SL two",
+    "aliases": [
+      "SL two",
+      "شبکه SL two"
+    ]
+  },
+  "00380171700817": {
+    "channel_name": "AVA Family",
+    "aliases": [
+      "AVA Family",
+      "شبکه AVA Family"
+    ]
+  },
+  "00380171800001": {
+    "channel_name": "Navid TV",
+    "aliases": [
+      "Navid TV",
+      "شبکه Navid TV"
+    ]
+  },
+  "00380171800004": {
+    "channel_name": "Maah TV",
+    "aliases": [
+      "Maah TV",
+      "شبکه Maah TV"
+    ]
+  },
+  "00380171800005": {
+    "channel_name": "SL one",
+    "aliases": [
+      "SL one",
+      "شبکه SL one"
+    ]
+  },
+  "00380171800006": {
+    "channel_name": "Payam Aramesh HD",
+    "aliases": [
+      "Payam Aramesh HD",
+      "شبکه Payam Aramesh HD"
+    ]
+  },
+  "00380171800007": {
+    "channel_name": "Woman TV",
+    "aliases": [
+      "Woman TV",
+      "شبکه Woman TV"
+    ]
+  },
+  "00380171800008": {
+    "channel_name": "ICNET 3 HD",
+    "aliases": [
+      "ICNET 3 HD",
+      "شبکه ICNET 3 HD"
+    ]
+  },
+  "00380171800009": {
+    "channel_name": "ARKO TV",
+    "aliases": [
+      "ARKO TV",
+      "شبکه ARKO TV"
+    ]
+  },
+  "00380171800012": {
+    "channel_name": "Iran Republic TV",
+    "aliases": [
+      "Iran Republic TV",
+      "شبکه Iran Republic TV"
+    ]
+  },
+  "00380171800014": {
+    "channel_name": "Khane Film",
+    "aliases": [
+      "Khane Film",
+      "شبکه Khane Film"
+    ]
+  },
+  "00380171800015": {
+    "channel_name": "ICNET 1 HD",
+    "aliases": [
+      "ICNET 1 HD",
+      "شبکه ICNET 1 HD"
+    ]
+  },
+  "00380171800017": {
+    "channel_name": "Tamadon HD",
+    "aliases": [
+      "Tamadon HD",
+      "شبکه Tamadon HD"
+    ]
+  },
+  "00380171800020": {
+    "channel_name": "Radio Shemroon",
+    "aliases": [
+      "Radio Shemroon",
+      "شبکه Radio Shemroon"
+    ]
+  },
+  "00380171800022": {
+    "channel_name": "Araz Radio",
+    "aliases": [
+      "Araz Radio",
+      "شبکه Araz Radio"
+    ]
+  },
+  "00380171800032": {
+    "channel_name": "MBC Persia SD",
+    "aliases": [
+      "MBC Persia SD",
+      "شبکه MBC Persia SD"
+    ]
+  },
+  "00380171800040": {
+    "channel_name": "ICNET2 HD",
+    "aliases": [
+      "ICNET2 HD",
+      "شبکه ICNET2 HD"
+    ]
+  },
+  "00380171800041": {
+    "channel_name": "Azadi TV HD",
+    "aliases": [
+      "Azadi TV HD",
+      "شبکه Azadi TV HD"
+    ]
+  },
+  "00380171800054": {
+    "channel_name": "Mozhda TV",
+    "aliases": [
+      "Mozhda TV",
+      "شبکه Mozhda TV"
+    ]
+  },
+  "00380171200140": {
+    "channel_name": "SAHAR AFGHAN",
+    "aliases": [
+      "SAHAR AFGHAN",
+      "شبکه SAHAR AFGHAN"
+    ]
+  },
+  "00380172000001": {
+    "channel_name": "Iran Nama HD",
+    "aliases": [
+      "Iran Nama HD",
+      "شبکه Iran Nama HD"
+    ]
+  },
+  "00380172000003": {
+    "channel_name": "ITN HD",
+    "aliases": [
+      "ITN HD",
+      "شبکه ITN HD"
+    ]
+  },
+  "00380172000004": {
+    "channel_name": "SETAREH TV",
+    "aliases": [
+      "SETAREH TV",
+      "شبکه SETAREH TV"
+    ]
+  },
+  "00380172000005": {
+    "channel_name": "247Box",
+    "aliases": [
+      "247Box",
+      "شبکه 247Box"
+    ]
+  },
+  "00380172000009": {
+    "channel_name": "Azadi TV SD",
+    "aliases": [
+      "Azadi TV SD",
+      "شبکه Azadi TV SD"
+    ]
+  },
+  "00380172000010": {
+    "channel_name": "Omid e Iran",
+    "aliases": [
+      "شبکه امید",
+      "کانال امید",
+      "امید",
+      "Omid e Iran",
+      "شبکه Omid e Iran",
+      "امید ایران",
+      "امیدایران"
+    ]
+  },
+  "00380172000018": {
+    "channel_name": "MTC",
+    "aliases": [
+      "MTC",
+      "شبکه MTC"
+    ]
+  },
+  "00380172000024": {
+    "channel_name": "4U TV HD",
+    "aliases": [
+      "4U TV HD",
+      "شبکه 4U TV HD"
+    ]
+  },
+  "00380172000025": {
+    "channel_name": "Royal TV",
+    "aliases": [
+      "Royal TV",
+      "شبکه Royal TV"
+    ]
+  },
+  "00380172000026": {
+    "channel_name": "Meraj TV",
+    "aliases": [
+      "Meraj TV",
+      "شبکه Meraj TV"
+    ]
+  },
+  "00380172000029": {
+    "channel_name": "ARAX TV",
+    "aliases": [
+      "ARAX TV",
+      "شبکه ARAX TV"
+    ]
+  },
+  "00380172000030": {
+    "channel_name": "DATIS TV",
+    "aliases": [
+      "DATIS TV",
+      "شبکه DATIS TV"
+    ]
+  },
+  "00380172000040": {
+    "channel_name": "Project Leon",
+    "aliases": [
+      "Project Leon",
+      "شبکه Project Leon"
+    ]
+  },
+  "00380172000061": {
+    "channel_name": "Afghanistan Intl SD",
+    "aliases": [
+      "Afghanistan Intl SD",
+      "شبکه Afghanistan Intl SD"
+    ]
+  },
+  "00380172000062": {
+    "channel_name": "Afghanistan Intl Radio",
+    "aliases": [
+      "Afghanistan Intl Radio",
+      "شبکه Afghanistan Intl Radio"
+    ]
+  },
+  "00380171300001": {
+    "channel_name": "Persiana Sports HD",
+    "aliases": [
+      "Persiana Sports HD",
+      "شبکه Persiana Sports HD",
+      "پرشیانا اسپورت",
+      "پرشیانا ورزش",
+      "شبکه پرشیانا اسپورت"
+    ]
+  },
+  "00380171300003": {
+    "channel_name": "Persiana Sports 2",
+    "aliases": [
+      "Persiana Sports 2",
+      "شبکه Persiana Sports 2",
+      "پرشیانا اسپورت ۲",
+      "پرشیانا اسپورت دو",
+      "پرشیانا ورزش ۲"
+    ]
+  },
+  "00380171300004": {
+    "channel_name": "Persiana Sports 3",
+    "aliases": [
+      "Persiana Sports 3",
+      "شبکه Persiana Sports 3",
+      "پرشیانا اسپورت ۳",
+      "پرشیانا اسپورت سه",
+      "پرشیانا ورزش ۳"
+    ]
+  },
+  "00380171300009": {
+    "channel_name": "Persiana Sports 4",
+    "aliases": [
+      "Persiana Sports 4",
+      "شبکه Persiana Sports 4",
+      "پرشیانا اسپورت ۴",
+      "پرشیانا اسپورت چهار",
+      "پرشیانا ورزش ۴"
+    ]
+  },
+  "00380171300010": {
+    "channel_name": "Persiana Fight",
+    "aliases": [
+      "Persiana Fight",
+      "شبکه Persiana Fight"
+    ]
+  },
+  "00380171300011": {
+    "channel_name": "Persiana Reality",
+    "aliases": [
+      "Persiana Reality",
+      "شبکه Persiana Reality"
+    ]
+  },
+  "00380171300012": {
+    "channel_name": "Persiana Medical",
+    "aliases": [
+      "Persiana Medical",
+      "شبکه Persiana Medical",
+      "پرشیانا مدیکال",
+      "پرشیانا پزشکی",
+      "شبکه پرشیانا مدیکال"
+    ]
+  },
+  "00380171300013": {
+    "channel_name": "4Turk",
+    "aliases": [
+      "4Turk",
+      "شبکه 4Turk"
+    ]
+  },
+  "00380171300014": {
+    "channel_name": "Persiana China",
+    "aliases": [
+      "Persiana China",
+      "شبکه Persiana China"
+    ]
+  },
+  "00380171300015": {
+    "channel_name": "Persiana Podcast",
+    "aliases": [
+      "Persiana Podcast",
+      "شبکه Persiana Podcast"
+    ]
+  },
+  "00380171300016": {
+    "channel_name": "Persiana Voyage",
+    "aliases": [
+      "Persiana Voyage",
+      "شبکه Persiana Voyage"
+    ]
+  },
+  "00380172500005": {
+    "channel_name": "Iran Wire",
+    "aliases": [
+      "Iran Wire",
+      "شبکه Iran Wire"
+    ]
+  },
+  "00380172500008": {
+    "channel_name": "Kurd Channel",
+    "aliases": [
+      "Kurd Channel",
+      "شبکه Kurd Channel"
+    ]
+  },
+  "00380172500009": {
+    "channel_name": "Komala",
+    "aliases": [
+      "Komala",
+      "شبکه Komala"
+    ]
+  },
+  "00380172500010": {
+    "channel_name": "4 Kurd",
+    "aliases": [
+      "4 Kurd",
+      "شبکه 4 Kurd"
+    ]
+  },
+  "00380172500011": {
+    "channel_name": "Balochistan TV",
+    "aliases": [
+      "Balochistan TV",
+      "شبکه Balochistan TV"
+    ]
+  },
+  "00380172600003": {
+    "channel_name": "Shabakeh 7",
+    "aliases": [
+      "Shabakeh 7",
+      "شبکه Shabakeh 7"
+    ]
+  },
+  "00380172600009": {
+    "channel_name": "Nour TV",
+    "aliases": [
+      "Nour TV",
+      "شبکه Nour TV"
+    ]
+  },
+  "00380172600011": {
+    "channel_name": "Mardom TV",
+    "aliases": [
+      "Mardom TV",
+      "شبکه Mardom TV"
+    ]
+  },
+  "00380172600014": {
+    "channel_name": "RAVI TV",
+    "aliases": [
+      "RAVI TV",
+      "شبکه RAVI TV"
+    ]
+  },
+  "00380172600016": {
+    "channel_name": "Komala TV",
+    "aliases": [
+      "Komala TV",
+      "شبکه Komala TV"
+    ]
+  },
+  "00380172600017": {
+    "channel_name": "Kurd Channel",
+    "aliases": [
+      "Kurd Channel",
+      "شبکه Kurd Channel"
+    ]
+  },
+  "00380172600018": {
+    "channel_name": "SAT-7 Pars",
+    "aliases": [
+      "SAT-7 Pars",
+      "شبکه SAT-7 Pars"
+    ]
+  },
+  "00380172600019": {
+    "channel_name": "Mohabat TV HD",
+    "aliases": [
+      "Mohabat TV HD",
+      "شبکه Mohabat TV HD"
+    ]
+  },
+  "00380172600021": {
+    "channel_name": "316 TV",
+    "aliases": [
+      "316 TV",
+      "شبکه 316 TV"
+    ]
+  },
+  "00380172600022": {
+    "channel_name": "Balochistan TV",
+    "aliases": [
+      "Balochistan TV",
+      "شبکه Balochistan TV"
+    ]
+  },
+  "00380171500001": {
+    "channel_name": "NTV Mir",
+    "aliases": [
+      "NTV Mir",
+      "شبکه NTV Mir"
+    ]
+  },
+  "00380131502601": {
+    "channel_name": "SAUDI TV HD",
+    "aliases": [
+      "SAUDI TV HD",
+      "شبکه SAUDI TV HD"
+    ]
+  },
+  "00380131502602": {
+    "channel_name": "Thikrayat HD",
+    "aliases": [
+      "Thikrayat HD",
+      "شبکه Thikrayat HD"
+    ]
+  },
+  "00380131502603": {
+    "channel_name": "SBC HD",
+    "aliases": [
+      "SBC HD",
+      "شبکه SBC HD"
+    ]
+  },
+  "00380131502604": {
+    "channel_name": "Al Ekhbaria HD",
+    "aliases": [
+      "Al Ekhbaria HD",
+      "شبکه Al Ekhbaria HD"
+    ]
+  },
+  "00380131502605": {
+    "channel_name": "Saudia Alaan TV HD",
+    "aliases": [
+      "Saudia Alaan TV HD",
+      "شبکه Saudia Alaan TV HD"
+    ]
+  },
+  "00380131505601": {
+    "channel_name": "SAUDI CH For Quran HD",
+    "aliases": [
+      "شبکه قرآن",
+      "کانال قرآن",
+      "قرآن",
+      "SAUDI CH For Quran HD",
+      "شبکه SAUDI CH For Quran HD"
+    ]
+  },
+  "00380131505602": {
+    "channel_name": "SAUDI CH For Sunnah HD",
+    "aliases": [
+      "SAUDI CH For Sunnah HD",
+      "شبکه SAUDI CH For Sunnah HD"
+    ]
+  },
+  "00380131505603": {
+    "channel_name": "KSA SPORT1 HD",
+    "aliases": [
+      "KSA SPORT1 HD",
+      "شبکه KSA SPORT1 HD"
+    ]
+  },
+  "00380131505604": {
+    "channel_name": "KSA SPORT2 HD",
+    "aliases": [
+      "KSA SPORT2 HD",
+      "شبکه KSA SPORT2 HD"
+    ]
+  },
+  "00380131505605": {
+    "channel_name": "KSA SPORTS 3 HD",
+    "aliases": [
+      "KSA SPORTS 3 HD",
+      "شبکه KSA SPORTS 3 HD"
+    ]
+  },
+  "00380131505607": {
+    "channel_name": "KSA SPORTS 4 HD",
+    "aliases": [
+      "KSA SPORTS 4 HD",
+      "شبکه KSA SPORTS 4 HD"
+    ]
+  },
+  "00380131600001": {
+    "channel_name": "Kalemeh TV",
+    "aliases": [
+      "Kalemeh TV",
+      "شبکه Kalemeh TV"
+    ]
+  },
+  "00380131600059": {
+    "channel_name": "GANJE HOZOUR 5",
+    "aliases": [
+      "GANJE HOZOUR 5",
+      "شبکه GANJE HOZOUR 5"
+    ]
+  },
+  "00380131600061": {
+    "channel_name": "Iran Beauty",
+    "aliases": [
+      "Iran Beauty",
+      "شبکه Iran Beauty"
+    ]
+  },
+  "00380131600063": {
+    "channel_name": "C+",
+    "aliases": [
+      "C+",
+      "شبکه C+",
+      "C پلاس"
+    ]
+  },
+  "00380131600064": {
+    "channel_name": "RUBY MUSIC",
+    "aliases": [
+      "RUBY MUSIC",
+      "شبکه RUBY MUSIC"
+    ]
+  },
+  "00380131600065": {
+    "channel_name": "Rostam Media",
+    "aliases": [
+      "Rostam Media",
+      "شبکه Rostam Media"
+    ]
+  },
+  "00380131600066": {
+    "channel_name": "MY TV",
+    "aliases": [
+      "MY TV",
+      "شبکه MY TV"
+    ]
+  },
+  "00380131600067": {
+    "channel_name": "LUX TV",
+    "aliases": [
+      "LUX TV",
+      "شبکه LUX TV"
+    ]
+  },
+  "00380131600068": {
+    "channel_name": "TAK TV",
+    "aliases": [
+      "TAK TV",
+      "شبکه TAK TV"
+    ]
+  },
+  "00380131600069": {
+    "channel_name": "Film+",
+    "aliases": [
+      "Film+",
+      "شبکه Film+",
+      "Film پلاس"
+    ]
+  },
+  "00380131600070": {
+    "channel_name": "CITY TV",
+    "aliases": [
+      "CITY TV",
+      "شبکه CITY TV"
+    ]
+  },
+  "00380131600071": {
+    "channel_name": "GANJE HOZOUR",
+    "aliases": [
+      "GANJE HOZOUR",
+      "شبکه GANJE HOZOUR"
+    ]
+  },
+  "00380131600072": {
+    "channel_name": "DIDGAH TV",
+    "aliases": [
+      "DIDGAH TV",
+      "شبکه DIDGAH TV"
+    ]
+  },
+  "00380131600073": {
+    "channel_name": "Hamsafar",
+    "aliases": [
+      "Hamsafar",
+      "شبکه Hamsafar"
+    ]
+  },
+  "00380131600074": {
+    "channel_name": "TALA KIDS",
+    "aliases": [
+      "TALA KIDS",
+      "شبکه TALA KIDS"
+    ]
+  },
+  "00380131600075": {
+    "channel_name": "Tv8+",
+    "aliases": [
+      "Tv8+",
+      "شبکه Tv8+",
+      "Tv8 پلاس"
+    ]
+  },
+  "00380131600077": {
+    "channel_name": "GANJE HOZOUR 4",
+    "aliases": [
+      "GANJE HOZOUR 4",
+      "شبکه GANJE HOZOUR 4"
+    ]
+  },
+  "00380131600079": {
+    "channel_name": "TIN TV",
+    "aliases": [
+      "TIN TV",
+      "شبکه TIN TV"
+    ]
+  },
+  "00380131600080": {
+    "channel_name": "QFilm",
+    "aliases": [
+      "QFilm",
+      "شبکه QFilm"
+    ]
+  },
+  "00380131600081": {
+    "channel_name": "VELAYAT TV",
+    "aliases": [
+      "VELAYAT TV",
+      "شبکه VELAYAT TV"
+    ]
+  },
+  "00380131700001": {
+    "channel_name": "Tojikiston",
+    "aliases": [
+      "Tojikiston",
+      "شبکه Tojikiston"
+    ]
+  },
+  "00380131700002": {
+    "channel_name": "Safina",
+    "aliases": [
+      "Safina",
+      "شبکه Safina"
+    ]
+  },
+  "00380131700003": {
+    "channel_name": "Bahoriston",
+    "aliases": [
+      "Bahoriston",
+      "شبکه Bahoriston"
+    ]
+  },
+  "00380131700004": {
+    "channel_name": "Jahonnamo",
+    "aliases": [
+      "Jahonnamo",
+      "شبکه Jahonnamo"
+    ]
+  },
+  "00380131700006": {
+    "channel_name": "Sinamo",
+    "aliases": [
+      "Sinamo",
+      "شبکه Sinamo"
+    ]
+  },
+  "00380131700007": {
+    "channel_name": "Dushanbe HD",
+    "aliases": [
+      "Dushanbe HD",
+      "شبکه Dushanbe HD"
+    ]
+  },
+  "00380131700009": {
+    "channel_name": "TMT Shahnavoz",
+    "aliases": [
+      "TMT Shahnavoz",
+      "شبکه TMT Shahnavoz"
+    ]
+  },
+  "00380131700010": {
+    "channel_name": "Tv-Khatlon",
+    "aliases": [
+      "Tv-Khatlon",
+      "شبکه Tv-Khatlon"
+    ]
+  },
+  "00380131700011": {
+    "channel_name": "TV-Badakhshon",
+    "aliases": [
+      "TV-Badakhshon",
+      "شبکه TV-Badakhshon"
+    ]
+  },
+  "00380131700012": {
+    "channel_name": "TV-Kulob",
+    "aliases": [
+      "TV-Kulob",
+      "شبکه TV-Kulob"
+    ]
+  },
+  "00380131700014": {
+    "channel_name": "TV-SUGD",
+    "aliases": [
+      "TV-SUGD",
+      "شبکه TV-SUGD"
+    ]
+  },
+  "00380131700015": {
+    "channel_name": "ILM VA TABIAT",
+    "aliases": [
+      "ILM VA TABIAT",
+      "شبکه ILM VA TABIAT"
+    ]
+  },
+  "00380131700016": {
+    "channel_name": "TV Sayohi",
+    "aliases": [
+      "TV Sayohi",
+      "شبکه TV Sayohi"
+    ]
+  },
+  "00380131900004": {
+    "channel_name": "AYENEH HD",
+    "aliases": [
+      "AYENEH HD",
+      "شبکه AYENEH HD"
+    ]
+  },
+  "00380131900005": {
+    "channel_name": "HAMBASTEGI TV",
+    "aliases": [
+      "HAMBASTEGI TV",
+      "شبکه HAMBASTEGI TV"
+    ]
+  },
+  "00380131900006": {
+    "channel_name": "TEST CARD 1",
+    "aliases": [
+      "TEST CARD 1",
+      "شبکه TEST CARD 1"
+    ]
+  },
+  "00380131900008": {
+    "channel_name": "QTV",
+    "aliases": [
+      "QTV",
+      "شبکه QTV"
+    ]
+  },
+  "00380131900009": {
+    "channel_name": "BBC News Arabic",
+    "aliases": [
+      "BBC News Arabic",
+      "شبکه BBC News Arabic"
+    ]
+  },
+  "00380131900013": {
+    "channel_name": "MBC Persia",
+    "aliases": [
+      "MBC Persia",
+      "شبکه MBC Persia"
+    ]
+  },
+  "00380131900014": {
+    "channel_name": "CNN International",
+    "aliases": [
+      "CNN International",
+      "شبکه CNN International"
+    ]
+  },
+  "00380131900015": {
+    "channel_name": "BBC News Afghanistan",
+    "aliases": [
+      "BBC News Afghanistan",
+      "شبکه BBC News Afghanistan"
+    ]
+  },
+  "00380132100014": {
+    "channel_name": "GEM FOOD",
+    "aliases": [
+      "GEM FOOD",
+      "شبکه GEM FOOD",
+      "جم فود",
+      "شبکه جم فود",
+      "جم غذا"
+    ]
+  },
+  "00380132100015": {
+    "channel_name": "GEM FIT",
+    "aliases": [
+      "GEM FIT",
+      "شبکه GEM FIT",
+      "جم فیت",
+      "شبکه جم فیت"
+    ]
+  },
+  "00380132100016": {
+    "channel_name": "RUBIX",
+    "aliases": [
+      "RUBIX",
+      "شبکه RUBIX",
+      "روبیکس",
+      "شبکه روبیکس",
+      "کانال روبیکس",
+      "جم روبیکس"
+    ]
+  },
+  "00380132100017": {
+    "channel_name": "RIVER",
+    "aliases": [
+      "RIVER",
+      "شبکه RIVER",
+      "ریور",
+      "شبکه ریور",
+      "کانال ریور",
+      "جم ریور"
+    ]
+  },
+  "00380132100018": {
+    "channel_name": "GEM LIFE",
+    "aliases": [
+      "GEM LIFE",
+      "شبکه GEM LIFE",
+      "جم لایف",
+      "شبکه جم لایف",
+      "کانال جم لایف"
+    ]
+  },
+  "00380132100019": {
+    "channel_name": "GEM BOLLYWOOD",
+    "aliases": [
+      "GEM BOLLYWOOD",
+      "شبکه GEM BOLLYWOOD",
+      "جم بالیوود",
+      "شبکه جم بالیوود",
+      "کانال جم بالیوود"
+    ]
+  },
+  "00380132100020": {
+    "channel_name": "GEM CLASSIC",
+    "aliases": [
+      "GEM CLASSIC",
+      "شبکه GEM CLASSIC",
+      "جم کلاسیک",
+      "شبکه جم کلاسیک",
+      "کانال جم کلاسیک"
+    ]
+  },
+  "00380132100022": {
+    "channel_name": "GEM NATURE",
+    "aliases": [
+      "GEM NATURE",
+      "شبکه GEM NATURE",
+      "جم نیچر",
+      "شبکه جم نیچر",
+      "جم طبیعت"
+    ]
+  },
+  "00380132100023": {
+    "channel_name": "GEM JUNIOR",
+    "aliases": [
+      "GEM JUNIOR",
+      "شبکه GEM JUNIOR",
+      "جم جونیور",
+      "شبکه جم جونیور",
+      "جم کودک"
+    ]
+  },
+  "00380132100026": {
+    "channel_name": "GEM ENTERTAINMENT",
+    "aliases": [
+      "GEM ENTERTAINMENT",
+      "شبکه GEM ENTERTAINMENT",
+      "جم انترتینمنت",
+      "جم اینترتینمنت",
+      "شبکه جم انترتینمنت"
+    ]
+  },
+  "00380132100028": {
+    "channel_name": "GEM KIDS",
+    "aliases": [
+      "GEM KIDS",
+      "شبکه GEM KIDS",
+      "جم کیدز",
+      "شبکه جم کیدز",
+      "جم بچه ها"
+    ]
+  },
+  "00380132100029": {
+    "channel_name": "GEM SPORT 2 SD",
+    "aliases": [
+      "GEM SPORT 2 SD",
+      "شبکه GEM SPORT 2 SD",
+      "جم اسپورت ۲",
+      "جم اسپورت دو",
+      "جم ورزش ۲",
+      "جم ورزش دو"
+    ]
+  },
+  "00380132100040": {
+    "channel_name": "GEM PIXEL",
+    "aliases": [
+      "GEM PIXEL",
+      "شبکه GEM PIXEL",
+      "جم پیکسل",
+      "جم پیکس",
+      "شبکه جم پیکسل"
+    ]
+  },
+  "00380132300465": {
+    "channel_name": "SMTV",
+    "aliases": [
+      "SMTV",
+      "شبکه SMTV"
+    ]
+  },
+  "00380132300469": {
+    "channel_name": "VOA Afghanistan",
+    "aliases": [
+      "VOA Afghanistan",
+      "شبکه VOA Afghanistan"
+    ]
+  },
+  "00380132300475": {
+    "channel_name": "Al Arabiya",
+    "aliases": [
+      "Al Arabiya",
+      "شبکه Al Arabiya"
+    ]
+  },
+  "00380132300488": {
+    "channel_name": "Begum TV",
+    "aliases": [
+      "Begum TV",
+      "شبکه Begum TV"
+    ]
+  },
+  "00380132300569": {
+    "channel_name": "AF Sport",
+    "aliases": [
+      "AF Sport",
+      "شبکه AF Sport"
+    ]
+  },
+  "00380132300570": {
+    "channel_name": "Lemar",
+    "aliases": [
+      "Lemar",
+      "شبکه Lemar"
+    ]
+  },
+  "00380132300571": {
+    "channel_name": "Tolo HD",
+    "aliases": [
+      "Tolo HD",
+      "شبکه Tolo HD"
+    ]
+  },
+  "00380132300572": {
+    "channel_name": "Tolo News",
+    "aliases": [
+      "Tolo News",
+      "شبکه Tolo News"
+    ]
+  },
+  "00380132300582": {
+    "channel_name": "FAZA TV",
+    "aliases": [
+      "FAZA TV",
+      "شبکه FAZA TV"
+    ]
+  },
+  "00380132300583": {
+    "channel_name": "Amu TV",
+    "aliases": [
+      "Amu TV",
+      "شبکه Amu TV"
+    ]
+  },
+  "00380132300588": {
+    "channel_name": "ATN",
+    "aliases": [
+      "ATN",
+      "شبکه ATN"
+    ]
+  },
+  "00380132300593": {
+    "channel_name": "Shams TV",
+    "aliases": [
+      "Shams TV",
+      "شبکه Shams TV"
+    ]
+  },
+  "00380132300594": {
+    "channel_name": "Afghanistan international",
+    "aliases": [
+      "Afghanistan international",
+      "شبکه Afghanistan international"
+    ]
+  },
+  "00380132307011": {
+    "channel_name": "Hadi6 TV",
+    "aliases": [
+      "Hadi6 TV",
+      "شبکه Hadi6 TV"
+    ]
+  },
+  "00380132307012": {
+    "channel_name": "Rana TV",
+    "aliases": [
+      "Rana TV",
+      "شبکه Rana TV"
+    ]
+  },
+  "00380132400001": {
+    "channel_name": "CINOVA",
+    "aliases": [
+      "CINOVA",
+      "شبکه CINOVA"
+    ]
+  },
+  "00380132400002": {
+    "channel_name": "QToon",
+    "aliases": [
+      "QToon",
+      "شبکه QToon"
+    ]
+  },
+  "00380132400004": {
+    "channel_name": "TEST CARD 16",
+    "aliases": [
+      "TEST CARD 16",
+      "شبکه TEST CARD 16"
+    ]
+  },
+  "00380132400005": {
+    "channel_name": "Drpal TV",
+    "aliases": [
+      "Drpal TV",
+      "شبکه Drpal TV"
+    ]
+  },
+  "00380132400006": {
+    "channel_name": "TEST CARD 24",
+    "aliases": [
+      "TEST CARD 24",
+      "شبکه TEST CARD 24"
+    ]
+  },
+  "00380132400007": {
+    "channel_name": "MOVIE ONE",
+    "aliases": [
+      "MOVIE ONE",
+      "شبکه MOVIE ONE"
+    ]
+  },
+  "00380132400008": {
+    "channel_name": "Iran TV",
+    "aliases": [
+      "Iran TV",
+      "شبکه Iran TV"
+    ]
+  },
+  "00380132400009": {
+    "channel_name": "Vira TV",
+    "aliases": [
+      "Vira TV",
+      "شبکه Vira TV"
+    ]
+  },
+  "00380132400011": {
+    "channel_name": "SHABAKEH 7 SD",
+    "aliases": [
+      "SHABAKEH 7 SD",
+      "شبکه SHABAKEH 7 SD"
+    ]
+  },
+  "00380132400012": {
+    "channel_name": "TV8",
+    "aliases": [
+      "TV8",
+      "شبکه TV8"
+    ]
+  },
+  "00380132400013": {
+    "channel_name": "TOON+",
+    "aliases": [
+      "TOON+",
+      "شبکه TOON+",
+      "TOON پلاس"
+    ]
+  },
+  "00380132400015": {
+    "channel_name": "Simay Azadi SD",
+    "aliases": [
+      "Simay Azadi SD",
+      "شبکه Simay Azadi SD"
+    ]
+  },
+  "00380132400016": {
+    "channel_name": "ICC",
+    "aliases": [
+      "ICC",
+      "شبکه ICC"
+    ]
+  },
+  "00380132400017": {
+    "channel_name": "SAT7 PARS",
+    "aliases": [
+      "SAT7 PARS",
+      "شبکه SAT7 PARS"
+    ]
+  },
+  "00380132400018": {
+    "channel_name": "JK Music",
+    "aliases": [
+      "JK Music",
+      "شبکه JK Music"
+    ]
+  },
+  "00380132400023": {
+    "channel_name": "AlHadi TV",
+    "aliases": [
+      "AlHadi TV",
+      "شبکه AlHadi TV"
+    ]
+  },
+  "00380132400024": {
+    "channel_name": "GANJE HOZOUR 3",
+    "aliases": [
+      "GANJE HOZOUR 3",
+      "شبکه GANJE HOZOUR 3"
+    ]
+  },
+  "00380132400025": {
+    "channel_name": "KALEMEH TV",
+    "aliases": [
+      "KALEMEH TV",
+      "شبکه KALEMEH TV"
+    ]
+  },
+  "00380132400027": {
+    "channel_name": "AYENEH TV",
+    "aliases": [
+      "AYENEH TV",
+      "شبکه AYENEH TV"
+    ]
+  },
+  "00380132400030": {
+    "channel_name": "RADIS",
+    "aliases": [
+      "RADIS",
+      "شبکه RADIS"
+    ]
+  },
+  "00380132400031": {
+    "channel_name": "TEST CARD 17",
+    "aliases": [
+      "TEST CARD 17",
+      "شبکه TEST CARD 17"
+    ]
+  },
+  "00380132500001": {
+    "channel_name": "ATV Eritrea",
+    "aliases": [
+      "ATV Eritrea",
+      "شبکه ATV Eritrea"
+    ]
+  },
+  "00380132500002": {
+    "channel_name": "TMC - Tigray Media Corporat",
+    "aliases": [
+      "TMC - Tigray Media Corporat",
+      "شبکه TMC - Tigray Media Corporat"
+    ]
+  },
+  "00380132500003": {
+    "channel_name": "Vilayet Tv",
+    "aliases": [
+      "Vilayet Tv",
+      "شبکه Vilayet Tv"
+    ]
+  },
+  "00380132500004": {
+    "channel_name": "Imam Hussain Arabic",
+    "aliases": [
+      "Imam Hussain Arabic",
+      "شبکه Imam Hussain Arabic"
+    ]
+  },
+  "00380132500006": {
+    "channel_name": "Albasiya Alhussainia TV",
+    "aliases": [
+      "Albasiya Alhussainia TV",
+      "شبکه Albasiya Alhussainia TV"
+    ]
+  },
+  "00380132500007": {
+    "channel_name": "Drpal",
+    "aliases": [
+      "Drpal",
+      "شبکه Drpal"
+    ]
+  },
+  "00380132500008": {
+    "channel_name": "24.7 MUSIC",
+    "aliases": [
+      "24.7 MUSIC",
+      "شبکه 24.7 MUSIC"
+    ]
+  },
+  "00380132500010": {
+    "channel_name": "Gulf movie",
+    "aliases": [
+      "Gulf movie",
+      "شبکه Gulf movie"
+    ]
+  },
+  "00380132500011": {
+    "channel_name": "Asre Emrooz TV",
+    "aliases": [
+      "Asre Emrooz TV",
+      "شبکه Asre Emrooz TV"
+    ]
+  },
+  "00380132500012": {
+    "channel_name": "Tibeb Ybrah",
+    "aliases": [
+      "Tibeb Ybrah",
+      "شبکه Tibeb Ybrah"
+    ]
+  },
+  "00380132500013": {
+    "channel_name": "Dedebit TV",
+    "aliases": [
+      "Dedebit TV",
+      "شبکه Dedebit TV"
+    ]
+  },
+  "00380132500014": {
+    "channel_name": "Ayaz TV",
+    "aliases": [
+      "Ayaz TV",
+      "شبکه Ayaz TV"
+    ]
+  },
+  "00380132500015": {
+    "channel_name": "ONM",
+    "aliases": [
+      "ONM",
+      "شبکه ONM"
+    ]
+  },
+  "00380132500016": {
+    "channel_name": "Axumawian TV",
+    "aliases": [
+      "Axumawian TV",
+      "شبکه Axumawian TV"
+    ]
+  },
+  "00380132500017": {
+    "channel_name": "AmharaSat",
+    "aliases": [
+      "AmharaSat",
+      "شبکه AmharaSat"
+    ]
+  },
+  "00380132500018": {
+    "channel_name": "Zemed Tv",
+    "aliases": [
+      "Zemed Tv",
+      "شبکه Zemed Tv"
+    ]
+  },
+  "00380132500019": {
+    "channel_name": "CHANNEL8",
+    "aliases": [
+      "CHANNEL8",
+      "شبکه CHANNEL8"
+    ]
+  },
+  "00380132500020": {
+    "channel_name": "Gulfmovies SD",
+    "aliases": [
+      "Gulfmovies SD",
+      "شبکه Gulfmovies SD"
+    ]
+  },
+  "00380132500021": {
+    "channel_name": "Drpal Arabic",
+    "aliases": [
+      "Drpal Arabic",
+      "شبکه Drpal Arabic"
+    ]
+  },
+  "00380132500026": {
+    "channel_name": "Spogmai radio",
+    "aliases": [
+      "Spogmai radio",
+      "شبکه Spogmai radio"
+    ]
+  },
+  "00380132500027": {
+    "channel_name": "Al Aghile Talebin TV",
+    "aliases": [
+      "Al Aghile Talebin TV",
+      "شبکه Al Aghile Talebin TV"
+    ]
+  },
+  "00380132500028": {
+    "channel_name": "Al Amir",
+    "aliases": [
+      "Al Amir",
+      "شبکه Al Amir"
+    ]
+  },
+  "00380132500030": {
+    "channel_name": "RTA News HD",
+    "aliases": [
+      "RTA News HD",
+      "شبکه RTA News HD"
+    ]
+  },
+  "00380132500031": {
+    "channel_name": "Hagere Hamasien TV",
+    "aliases": [
+      "Hagere Hamasien TV",
+      "شبکه Hagere Hamasien TV"
+    ]
+  },
+  "00380132500032": {
+    "channel_name": "Meraj",
+    "aliases": [
+      "Meraj",
+      "شبکه Meraj"
+    ]
+  },
+  "00380132600103": {
+    "channel_name": "BBC News Arabic",
+    "aliases": [
+      "BBC News Arabic",
+      "شبکه BBC News Arabic"
+    ]
+  },
+  "00380132600104": {
+    "channel_name": "MBC Persia",
+    "aliases": [
+      "MBC Persia",
+      "شبکه MBC Persia"
+    ]
+  },
+  "00380132600107": {
+    "channel_name": "BBC News Afghanistan",
+    "aliases": [
+      "BBC News Afghanistan",
+      "شبکه BBC News Afghanistan"
+    ]
+  },
+  "00380132600108": {
+    "channel_name": "TESTCARD #1",
+    "aliases": [
+      "TESTCARD #1",
+      "شبکه TESTCARD #1"
+    ]
+  },
+  "00380132600202": {
+    "channel_name": "CNN International",
+    "aliases": [
+      "CNN International",
+      "شبکه CNN International"
+    ]
+  },
+  "00380132600203": {
+    "channel_name": "TESTCARD #2",
+    "aliases": [
+      "TESTCARD #2",
+      "شبکه TESTCARD #2"
+    ]
+  },
+  "00380132701604": {
+    "channel_name": "SHAMSHAD HD",
+    "aliases": [
+      "SHAMSHAD HD",
+      "شبکه SHAMSHAD HD"
+    ]
+  },
+  "00380132701613": {
+    "channel_name": "Esteqlal-tv",
+    "aliases": [
+      "Esteqlal-tv",
+      "شبکه Esteqlal-tv"
+    ]
+  },
+  "00380132701620": {
+    "channel_name": "Zhwandoon TV",
+    "aliases": [
+      "Zhwandoon TV",
+      "شبکه Zhwandoon TV"
+    ]
+  },
+  "00380132701622": {
+    "channel_name": "Arezo HD",
+    "aliases": [
+      "Arezo HD",
+      "شبکه Arezo HD"
+    ]
+  },
+  "00380132701626": {
+    "channel_name": "ATN NEWS",
+    "aliases": [
+      "ATN NEWS",
+      "شبکه ATN NEWS"
+    ]
+  },
+  "00380132701627": {
+    "channel_name": "ATN",
+    "aliases": [
+      "ATN",
+      "شبکه ATN"
+    ]
+  },
+  "00380132701630": {
+    "channel_name": "RTA HD",
+    "aliases": [
+      "RTA HD",
+      "شبکه RTA HD"
+    ]
+  },
+  "00380132701631": {
+    "channel_name": "RTA NEWS HD",
+    "aliases": [
+      "RTA NEWS HD",
+      "شبکه RTA NEWS HD"
+    ]
+  },
+  "00380132701632": {
+    "channel_name": "RTA SPORT HD",
+    "aliases": [
+      "RTA SPORT HD",
+      "شبکه RTA SPORT HD"
+    ]
+  },
+  "00380132701633": {
+    "channel_name": "RTA-WORLD",
+    "aliases": [
+      "RTA-WORLD",
+      "شبکه RTA-WORLD"
+    ]
+  },
+  "00380132701634": {
+    "channel_name": "RTA EDUCATION HD",
+    "aliases": [
+      "RTA EDUCATION HD",
+      "شبکه RTA EDUCATION HD"
+    ]
+  },
+  "00380132701635": {
+    "channel_name": "RTA EDUCATION RADIO",
+    "aliases": [
+      "RTA EDUCATION RADIO",
+      "شبکه RTA EDUCATION RADIO"
+    ]
+  },
+  "00380132701637": {
+    "channel_name": "RTA TARANUM RADIO",
+    "aliases": [
+      "RTA TARANUM RADIO",
+      "شبکه RTA TARANUM RADIO"
+    ]
+  },
+  "00380132701638": {
+    "channel_name": "RTA NATIONAL RADIO",
+    "aliases": [
+      "RTA NATIONAL RADIO",
+      "شبکه RTA NATIONAL RADIO"
+    ]
+  },
+  "00380132701639": {
+    "channel_name": "RTA SHARIAT RADIO",
+    "aliases": [
+      "RTA SHARIAT RADIO",
+      "شبکه RTA SHARIAT RADIO"
+    ]
+  },
+  "00380132800011": {
+    "channel_name": "ONYX HD",
+    "aliases": [
+      "ONYX HD",
+      "شبکه ONYX HD",
+      "اونیکس",
+      "انیکس",
+      "شبکه اونیکس",
+      "کانال اونیکس",
+      "جم اونیکس"
+    ]
+  },
+  "00380132800012": {
+    "channel_name": "RUBIX+ HD",
+    "aliases": [
+      "RUBIX+ HD",
+      "شبکه RUBIX+ HD",
+      "روبیکس پلاس",
+      "شبکه روبیکس پلاس",
+      "جم روبیکس پلاس"
+    ]
+  },
+  "00380132800014": {
+    "channel_name": "RIVER+ HD",
+    "aliases": [
+      "RIVER+ HD",
+      "شبکه RIVER+ HD",
+      "ریور پلاس",
+      "شبکه ریور پلاس",
+      "جم ریور پلاس"
+    ]
+  },
+  "00380132800015": {
+    "channel_name": "24B HD",
+    "aliases": [
+      "24B HD",
+      "شبکه 24B HD",
+      "بیست و چهار بی",
+      "24 بی",
+      "۲۴ بی",
+      "کانال ۲۴ بی",
+      "جم ۲۴ بی"
+    ]
+  },
+  "00380132800022": {
+    "channel_name": "MIFA MUSIC HD",
+    "aliases": [
+      "MIFA MUSIC HD",
+      "شبکه MIFA MUSIC HD",
+      "میفا",
+      "میفا موزیک",
+      "شبکه میفا",
+      "کانال میفا",
+      "جم میفا"
+    ]
+  },
+  "00380132800023": {
+    "channel_name": "MIFA+",
+    "aliases": [
+      "MIFA+",
+      "شبکه MIFA+",
+      "میفا پلاس",
+      "شبکه میفا پلاس",
+      "جم میفا پلاس"
+    ]
+  },
+  "00380132800026": {
+    "channel_name": "GEM DOCUMENTARY HD",
+    "aliases": [
+      "GEM DOCUMENTARY HD",
+      "شبکه GEM DOCUMENTARY HD",
+      "جم مستند",
+      "شبکه جم مستند",
+      "جم داکیومنتری"
+    ]
+  },
+  "00380132800027": {
+    "channel_name": "MODERN ECONOMY",
+    "aliases": [
+      "MODERN ECONOMY",
+      "شبکه MODERN ECONOMY"
+    ]
+  },
+  "00380132800028": {
+    "channel_name": "GEM FASHION TV HD",
+    "aliases": [
+      "GEM FASHION TV HD",
+      "شبکه GEM FASHION TV HD",
+      "جم فشن",
+      "شبکه جم فشن",
+      "جم مد"
+    ]
+  },
+  "00380132800029": {
+    "channel_name": "GEM SPORT 1 HD",
+    "aliases": [
+      "GEM SPORT 1 HD",
+      "شبکه GEM SPORT 1 HD",
+      "جم اسپورت ۱",
+      "جم اسپورت یک",
+      "جم ورزش ۱",
+      "جم ورزش یک"
+    ]
+  },
+  "00380132800030": {
+    "channel_name": "GEM MUSIC",
+    "aliases": [
+      "GEM MUSIC",
+      "شبکه GEM MUSIC",
+      "جم موزیک",
+      "شبکه جم موزیک",
+      "جم موسیقی"
+    ]
+  },
+  "00380133000019": {
+    "channel_name": "MARJAEYAT TV",
+    "aliases": [
+      "MARJAEYAT TV",
+      "شبکه MARJAEYAT TV"
+    ]
+  },
+  "00380133000020": {
+    "channel_name": "IMAM HUSSEIN 1 SD",
+    "aliases": [
+      "IMAM HUSSEIN 1 SD",
+      "شبکه IMAM HUSSEIN 1 SD"
+    ]
+  },
+  "00380133000021": {
+    "channel_name": "Aryen TV",
+    "aliases": [
+      "Aryen TV",
+      "شبکه Aryen TV"
+    ]
+  },
+  "00380133000022": {
+    "channel_name": "Towheed TV SD",
+    "aliases": [
+      "Towheed TV SD",
+      "شبکه Towheed TV SD"
+    ]
+  },
+  "00380133000023": {
+    "channel_name": "NT TESTCARD 24",
+    "aliases": [
+      "NT TESTCARD 24",
+      "شبکه NT TESTCARD 24"
+    ]
+  },
+  "00380133000024": {
+    "channel_name": "Zagros 24",
+    "aliases": [
+      "Zagros 24",
+      "شبکه Zagros 24"
+    ]
+  },
+  "00380133000028": {
+    "channel_name": "NT TESTCARD 22",
+    "aliases": [
+      "NT TESTCARD 22",
+      "شبکه NT TESTCARD 22"
+    ]
+  },
+  "00380133000031": {
+    "channel_name": "CHANNEL ONE",
+    "aliases": [
+      "CHANNEL ONE",
+      "شبکه CHANNEL ONE"
+    ]
+  },
+  "00380133000036": {
+    "channel_name": "NT TESTCARD 1",
+    "aliases": [
+      "NT TESTCARD 1",
+      "شبکه NT TESTCARD 1"
+    ]
+  },
+  "00380133000043": {
+    "channel_name": "NT TESTCARD 25",
+    "aliases": [
+      "NT TESTCARD 25",
+      "شبکه NT TESTCARD 25"
+    ]
+  },
+  "00380133000045": {
+    "channel_name": "NT TESTCARD 3",
+    "aliases": [
+      "NT TESTCARD 3",
+      "شبکه NT TESTCARD 3"
+    ]
+  },
+  "00380133000047": {
+    "channel_name": "GANJE HOZOUR 2",
+    "aliases": [
+      "GANJE HOZOUR 2",
+      "شبکه GANJE HOZOUR 2"
+    ]
+  },
+  "00380133000048": {
+    "channel_name": "IMAM HUSSEIN 1 HD",
+    "aliases": [
+      "IMAM HUSSEIN 1 HD",
+      "شبکه IMAM HUSSEIN 1 HD"
+    ]
+  },
+  "00380133000050": {
+    "channel_name": "BEITOLABBAS",
+    "aliases": [
+      "BEITOLABBAS",
+      "شبکه BEITOLABBAS"
+    ]
+  },
+  "00380133000052": {
+    "channel_name": "MI TV",
+    "aliases": [
+      "MI TV",
+      "شبکه MI TV"
+    ]
+  },
+  "00380133000070": {
+    "channel_name": "PAYAM-E-AFGHAN",
+    "aliases": [
+      "PAYAM-E-AFGHAN",
+      "شبکه PAYAM-E-AFGHAN"
+    ]
+  },
+  "00380133000071": {
+    "channel_name": "NT TESTCARD 9",
+    "aliases": [
+      "NT TESTCARD 9",
+      "شبکه NT TESTCARD 9"
+    ]
+  },
+  "00380133000090": {
+    "channel_name": "City+",
+    "aliases": [
+      "City+",
+      "شبکه City+",
+      "City پلاس"
+    ]
+  },
+  "00380133000091": {
+    "channel_name": "JK Music",
+    "aliases": [
+      "JK Music",
+      "شبکه JK Music"
+    ]
+  },
+  "00380133400001": {
+    "channel_name": "JANNATUL BAQI' TV",
+    "aliases": [
+      "JANNATUL BAQI' TV",
+      "شبکه JANNATUL BAQI' TV"
+    ]
+  },
+  "00380133400002": {
+    "channel_name": "RADIS",
+    "aliases": [
+      "RADIS",
+      "شبکه RADIS"
+    ]
+  },
+  "00380133400003": {
+    "channel_name": "HOD HOD HD",
+    "aliases": [
+      "HOD HOD HD",
+      "شبکه HOD HOD HD"
+    ]
+  },
+  "00380133400004": {
+    "channel_name": "CHANNEL ONE HD",
+    "aliases": [
+      "CHANNEL ONE HD",
+      "شبکه CHANNEL ONE HD"
+    ]
+  },
+  "00380133400005": {
+    "channel_name": "Afghanistan International",
+    "aliases": [
+      "Afghanistan International",
+      "شبکه Afghanistan International"
+    ]
+  },
+  "00380133400006": {
+    "channel_name": "TESTCARD 14",
+    "aliases": [
+      "TESTCARD 14",
+      "شبکه TESTCARD 14"
+    ]
+  },
+  "00380133400009": {
+    "channel_name": "Simay Azadi HD",
+    "aliases": [
+      "Simay Azadi HD",
+      "شبکه Simay Azadi HD"
+    ]
+  },
+  "00380133400010": {
+    "channel_name": "Payam Azadi",
+    "aliases": [
+      "Payam Azadi",
+      "شبکه Payam Azadi"
+    ]
+  },
+  "00380133400011": {
+    "channel_name": "TESTCARD 16",
+    "aliases": [
+      "TESTCARD 16",
+      "شبکه TESTCARD 16"
+    ]
+  },
+  "00380133400012": {
+    "channel_name": "TESTCARD 17",
+    "aliases": [
+      "TESTCARD 17",
+      "شبکه TESTCARD 17"
+    ]
+  },
+  "00380133400013": {
+    "channel_name": "Mydot TV",
+    "aliases": [
+      "Mydot TV",
+      "شبکه Mydot TV"
+    ]
+  },
+  "00380133400019": {
+    "channel_name": "MARJAEYAT TV HD",
+    "aliases": [
+      "MARJAEYAT TV HD",
+      "شبکه MARJAEYAT TV HD"
+    ]
+  },
+  "00380133400068": {
+    "channel_name": "Me Shop TV",
+    "aliases": [
+      "Me Shop TV",
+      "شبکه Me Shop TV"
+    ]
+  },
+  "00380133400069": {
+    "channel_name": "NEWFLIX",
+    "aliases": [
+      "NEWFLIX",
+      "شبکه NEWFLIX"
+    ]
+  },
+  "00380133400070": {
+    "channel_name": "Mohabat TV HD",
+    "aliases": [
+      "Mohabat TV HD",
+      "شبکه Mohabat TV HD"
+    ]
+  },
+  "00380133400071": {
+    "channel_name": "TESTCARD 19",
+    "aliases": [
+      "TESTCARD 19",
+      "شبکه TESTCARD 19"
+    ]
+  },
+  "00380133400072": {
+    "channel_name": "SHABAKEH 7 HD",
+    "aliases": [
+      "SHABAKEH 7 HD",
+      "شبکه SHABAKEH 7 HD"
+    ]
+  },
+  "00380133400073": {
+    "channel_name": "AYENEH HD",
+    "aliases": [
+      "AYENEH HD",
+      "شبکه AYENEH HD"
+    ]
+  },
+  "00380133400075": {
+    "channel_name": "TESTCARD 15",
+    "aliases": [
+      "TESTCARD 15",
+      "شبکه TESTCARD 15"
+    ]
+  },
+  "00380133400078": {
+    "channel_name": "TESTCARD 21",
+    "aliases": [
+      "TESTCARD 21",
+      "شبکه TESTCARD 21"
+    ]
+  },
+  "00380133400079": {
+    "channel_name": "ABALFADHLTV",
+    "aliases": [
+      "ABALFADHLTV",
+      "شبکه ABALFADHLTV"
+    ]
+  },
+  "00380133400080": {
+    "channel_name": "TESTCARD 20",
+    "aliases": [
+      "TESTCARD 20",
+      "شبکه TESTCARD 20"
+    ]
+  },
+  "00380133400083": {
+    "channel_name": "VALIASR TV",
+    "aliases": [
+      "VALIASR TV",
+      "شبکه VALIASR TV"
+    ]
+  },
+  "00380133400089": {
+    "channel_name": "TOWHEED TV",
+    "aliases": [
+      "TOWHEED TV",
+      "شبکه TOWHEED TV"
+    ]
+  },
+  "00380172900202": {
+    "channel_name": "Yaslyk",
+    "aliases": [
+      "Yaslyk",
+      "شبکه Yaslyk"
+    ]
+  },
+  "00380172900203": {
+    "channel_name": "Miras",
+    "aliases": [
+      "Miras",
+      "شبکه Miras"
+    ]
+  },
+  "00380172900204": {
+    "channel_name": "Turkmenistan",
+    "aliases": [
+      "Turkmenistan",
+      "شبکه Turkmenistan"
+    ]
+  },
+  "00380172900201": {
+    "channel_name": "Altyn Asyr",
+    "aliases": [
+      "Altyn Asyr",
+      "شبکه Altyn Asyr"
+    ]
+  },
+  "00380173000205": {
+    "channel_name": "Asgabat",
+    "aliases": [
+      "Asgabat",
+      "شبکه Asgabat"
+    ]
+  },
+  "00380173000206": {
+    "channel_name": "Turkmen Owazy",
+    "aliases": [
+      "Turkmen Owazy",
+      "شبکه Turkmen Owazy"
+    ]
+  },
+  "00380173000207": {
+    "channel_name": "Turkmenistan Sport",
+    "aliases": [
+      "Turkmenistan Sport",
+      "شبکه Turkmenistan Sport",
+      "ترکمنستان اسپورت",
+      "ورزش ترکمنستان",
+      "ترکمنستان ورزش"
+    ]
+  },
+  "00380173000208": {
+    "channel_name": "Arkadag",
+    "aliases": [
+      "Arkadag",
+      "شبکه Arkadag"
+    ]
+  },
+  "00380173100003": {
+    "channel_name": "Rudaw TV",
+    "aliases": [
+      "Rudaw TV",
+      "شبکه Rudaw TV"
+    ]
+  },
+  "00380173100005": {
+    "channel_name": "Rojhelat TV",
+    "aliases": [
+      "Rojhelat TV",
+      "شبکه Rojhelat TV"
+    ]
+  },
+  "00380173100006": {
+    "channel_name": "Alternative Shorai TV",
+    "aliases": [
+      "Alternative Shorai TV",
+      "شبکه Alternative Shorai TV"
+    ]
+  },
+  "00380173100007": {
+    "channel_name": "DW International",
+    "aliases": [
+      "DW International",
+      "شبکه DW International"
+    ]
+  },
+  "00380173100008": {
+    "channel_name": "TBS TV",
+    "aliases": [
+      "TBS TV",
+      "شبکه TBS TV"
+    ]
+  },
+  "00380173100009": {
+    "channel_name": "TIGRAI TV",
+    "aliases": [
+      "TIGRAI TV",
+      "شبکه TIGRAI TV"
+    ]
+  },
+  "00380173100013": {
+    "channel_name": "IITV",
+    "aliases": [
+      "IITV",
+      "شبکه IITV"
+    ]
+  },
+  "00380173100014": {
+    "channel_name": "Iran E Aryee",
+    "aliases": [
+      "Iran E Aryee",
+      "شبکه Iran E Aryee"
+    ]
+  },
+  "00380173100016": {
+    "channel_name": "ONM",
+    "aliases": [
+      "ONM",
+      "شبکه ONM"
+    ]
+  },
+  "00380173100018": {
+    "channel_name": "Zagros 24",
+    "aliases": [
+      "Zagros 24",
+      "شبکه Zagros 24"
+    ]
+  },
+  "00250089000012": {
+    "channel_name": "OMAN TV",
+    "aliases": [
+      "OMAN TV",
+      "شبکه OMAN TV"
+    ]
+  },
+  "00250089001808": {
+    "channel_name": "SPACETOON ARABIC",
+    "aliases": [
+      "SPACETOON ARABIC",
+      "شبکه SPACETOON ARABIC"
+    ]
+  },
+  "00250089005950": {
+    "channel_name": "ALWAQIE TV HD",
+    "aliases": [
+      "ALWAQIE TV HD",
+      "شبکه ALWAQIE TV HD"
+    ]
+  },
+  "00250089200001": {
+    "channel_name": "MBC1",
+    "aliases": [
+      "MBC1",
+      "شبکه MBC1"
+    ]
+  },
+  "00250089200002": {
+    "channel_name": "MBC4",
+    "aliases": [
+      "MBC4",
+      "شبکه MBC4"
+    ]
+  },
+  "00250089200003": {
+    "channel_name": "MBC Drama",
+    "aliases": [
+      "MBC Drama",
+      "شبکه MBC Drama"
+    ]
+  },
+  "00250089200005": {
+    "channel_name": "MBC Bollywood",
+    "aliases": [
+      "MBC Bollywood",
+      "شبکه MBC Bollywood"
+    ]
+  },
+  "00250089200006": {
+    "channel_name": "MBC2",
+    "aliases": [
+      "MBC2",
+      "شبکه MBC2"
+    ]
+  },
+  "00250089200007": {
+    "channel_name": "MBC Action",
+    "aliases": [
+      "MBC Action",
+      "شبکه MBC Action"
+    ]
+  },
+  "00250089200008": {
+    "channel_name": "MBC MAX",
+    "aliases": [
+      "MBC MAX",
+      "شبکه MBC MAX"
+    ]
+  },
+  "00250089200009": {
+    "channel_name": "MBC3",
+    "aliases": [
+      "MBC3",
+      "شبکه MBC3"
+    ]
+  },
+  "00250089200010": {
+    "channel_name": "MBC 1 SD",
+    "aliases": [
+      "MBC 1 SD",
+      "شبکه MBC 1 SD"
+    ]
+  },
+  "00250089200011": {
+    "channel_name": "MBC MOOD",
+    "aliases": [
+      "MBC MOOD",
+      "شبکه MBC MOOD"
+    ]
+  },
+  "00250089200012": {
+    "channel_name": "Shopping 3",
+    "aliases": [
+      "Shopping 3",
+      "شبکه Shopping 3"
+    ]
+  },
+  "00250090800101": {
+    "channel_name": "IRIB TV1",
+    "aliases": [
+      "شبکه یک",
+      "کانال یک",
+      "شبکه ۱",
+      "IRIB TV1",
+      "شبکه IRIB TV1"
+    ]
+  },
+  "00250090800102": {
+    "channel_name": "IRIB TV2",
+    "aliases": [
+      "شبکه دو",
+      "کانال دو",
+      "شبکه ۲",
+      "IRIB TV2",
+      "شبکه IRIB TV2"
+    ]
+  },
+  "00250090800104": {
+    "channel_name": "IRIB TV4",
+    "aliases": [
+      "شبکه چهار",
+      "کانال چهار",
+      "شبکه ۴",
+      "IRIB TV4",
+      "شبکه IRIB TV4"
+    ]
+  },
+  "00250090800105": {
+    "channel_name": "IRIB NASIM",
+    "aliases": [
+      "شبکه نسیم",
+      "کانال نسیم",
+      "نسیم",
+      "IRIB NASIM",
+      "شبکه IRIB NASIM"
+    ]
+  },
+  "00250090800107": {
+    "channel_name": "IRIB AMOOZESH",
+    "aliases": [
+      "شبکه آموزش",
+      "کانال آموزش",
+      "آموزش",
+      "IRIB AMOOZESH",
+      "شبکه IRIB AMOOZESH"
+    ]
+  },
+  "00250090800108": {
+    "channel_name": "IRIB QURAN",
+    "aliases": [
+      "شبکه قرآن",
+      "کانال قرآن",
+      "قرآن",
+      "IRIB QURAN",
+      "شبکه IRIB QURAN"
+    ]
+  },
+  "00250090800109": {
+    "channel_name": "MOSTANAD",
+    "aliases": [
+      "شبکه مستند",
+      "کانال مستند",
+      "مستند",
+      "MOSTANAD",
+      "شبکه MOSTANAD"
+    ]
+  },
+  "00250090800110": {
+    "channel_name": "OMID",
+    "aliases": [
+      "شبکه امید",
+      "کانال امید",
+      "امید",
+      "OMID",
+      "شبکه OMID"
+    ]
+  },
+  "00250090800111": {
+    "channel_name": "POUYA",
+    "aliases": [
+      "POUYA",
+      "شبکه POUYA"
+    ]
+  },
+  "00250090800113": {
+    "channel_name": "IRIB OFOGH",
+    "aliases": [
+      "شبکه افق",
+      "کانال افق",
+      "افق",
+      "IRIB OFOGH",
+      "شبکه IRIB OFOGH"
+    ]
+  },
+  "00250090800116": {
+    "channel_name": "IRNN2",
+    "aliases": [
+      "IRNN2",
+      "شبکه IRNN2"
+    ]
+  },
+  "00250090800117": {
+    "channel_name": "IRIB VARZESH",
+    "aliases": [
+      "شبکه ورزش",
+      "کانال ورزش",
+      "ورزش",
+      "IRIB VARZESH",
+      "شبکه IRIB VARZESH",
+      "ورزش ایران",
+      "ورزش صدا و سیما"
+    ]
+  },
+  "00250090800119": {
+    "channel_name": "IRIB SALAMAT",
+    "aliases": [
+      "شبکه سلامت",
+      "کانال سلامت",
+      "سلامت",
+      "IRIB SALAMAT",
+      "شبکه IRIB SALAMAT"
+    ]
+  },
+  "00250090800120": {
+    "channel_name": "TEHRAN",
+    "aliases": [
+      "TEHRAN",
+      "شبکه TEHRAN"
+    ]
+  },
+  "00250090800127": {
+    "channel_name": "SAHAR AZARI",
+    "aliases": [
+      "SAHAR AZARI",
+      "شبکه SAHAR AZARI"
+    ]
+  },
+  "00250090800168": {
+    "channel_name": "IRIB-ABADAN",
+    "aliases": [
+      "IRIB-ABADAN",
+      "شبکه IRIB-ABADAN"
+    ]
+  },
+  "00250090800177": {
+    "channel_name": "IRIB-HAMOON",
+    "aliases": [
+      "IRIB-HAMOON",
+      "شبکه IRIB-HAMOON"
+    ]
+  },
+  "00250090800192": {
+    "channel_name": "IRIB KH JONOOBI",
+    "aliases": [
+      "IRIB KH JONOOBI",
+      "شبکه IRIB KH JONOOBI"
+    ]
+  },
+  "00250090800368": {
+    "channel_name": "RADIONAMA ABADAN",
+    "aliases": [
+      "RADIONAMA ABADAN",
+      "شبکه RADIONAMA ABADAN"
+    ]
+  },
+  "00250090800377": {
+    "channel_name": "RADIO NAMA SISTAN VA BALOOC",
+    "aliases": [
+      "RADIO NAMA SISTAN VA BALOOC",
+      "شبکه RADIO NAMA SISTAN VA BALOOC"
+    ]
+  },
+  "00250090800392": {
+    "channel_name": "RADIO NAMA KH JONOBI",
+    "aliases": [
+      "RADIO NAMA KH JONOBI",
+      "شبکه RADIO NAMA KH JONOBI"
+    ]
+  },
+  "00250186200150": {
+    "channel_name": "IRIB UHD",
+    "aliases": [
+      "IRIB UHD",
+      "شبکه IRIB UHD"
+    ]
+  },
+  "00250093500161": {
+    "channel_name": "IRIB KH RAZAVI",
+    "aliases": [
+      "IRIB KH RAZAVI",
+      "شبکه IRIB KH RAZAVI"
+    ]
+  },
+  "00250093500162": {
+    "channel_name": "IRIB SAHAND",
+    "aliases": [
+      "IRIB SAHAND",
+      "شبکه IRIB SAHAND"
+    ]
+  },
+  "00250093500163": {
+    "channel_name": "IRIB GOLESTAN",
+    "aliases": [
+      "IRIB GOLESTAN",
+      "شبکه IRIB GOLESTAN"
+    ]
+  },
+  "00250093500164": {
+    "channel_name": "IRIB FARS",
+    "aliases": [
+      "IRIB FARS",
+      "شبکه IRIB FARS"
+    ]
+  },
+  "00250093500165": {
+    "channel_name": "IRIB LORESTAN",
+    "aliases": [
+      "IRIB LORESTAN",
+      "شبکه IRIB LORESTAN"
+    ]
+  },
+  "00250093500167": {
+    "channel_name": "IRIB BARAN",
+    "aliases": [
+      "IRIB BARAN",
+      "شبکه IRIB BARAN"
+    ]
+  },
+  "00250093500169": {
+    "channel_name": "IRIB AZARBAYJAN",
+    "aliases": [
+      "IRIB AZARBAYJAN",
+      "شبکه IRIB AZARBAYJAN"
+    ]
+  },
+  "00250093500170": {
+    "channel_name": "IRIB ALBORZ",
+    "aliases": [
+      "IRIB ALBORZ",
+      "شبکه IRIB ALBORZ"
+    ]
+  },
+  "00250093500171": {
+    "channel_name": "IRIB ESFAHAN",
+    "aliases": [
+      "IRIB ESFAHAN",
+      "شبکه IRIB ESFAHAN"
+    ]
+  },
+  "00250093500172": {
+    "channel_name": "IRIB KHOOZESTAN",
+    "aliases": [
+      "IRIB KHOOZESTAN",
+      "شبکه IRIB KHOOZESTAN"
+    ]
+  },
+  "00250093500173": {
+    "channel_name": "IRIB KERMAN",
+    "aliases": [
+      "IRIB KERMAN",
+      "شبکه IRIB KERMAN"
+    ]
+  },
+  "00250093500174": {
+    "channel_name": "IRIB MAZANDARAN",
+    "aliases": [
+      "IRIB MAZANDARAN",
+      "شبکه IRIB MAZANDARAN"
+    ]
+  },
+  "00250093500175": {
+    "channel_name": "IRIB NOOR",
+    "aliases": [
+      "IRIB NOOR",
+      "شبکه IRIB NOOR"
+    ]
+  },
+  "00250093500176": {
+    "channel_name": "IRIB KH SHOMALI",
+    "aliases": [
+      "IRIB KH SHOMALI",
+      "شبکه IRIB KH SHOMALI"
+    ]
+  },
+  "00250093500177": {
+    "channel_name": "IRIB HAMOON",
+    "aliases": [
+      "IRIB HAMOON",
+      "شبکه IRIB HAMOON"
+    ]
+  },
+  "00250093500178": {
+    "channel_name": "IRIB BUSHEHR",
+    "aliases": [
+      "IRIB BUSHEHR",
+      "شبکه IRIB BUSHEHR"
+    ]
+  },
+  "00250093500179": {
+    "channel_name": "IRIB ILAM",
+    "aliases": [
+      "IRIB ILAM",
+      "شبکه IRIB ILAM"
+    ]
+  },
+  "00250093500180": {
+    "channel_name": "IRIB HAMEDAN",
+    "aliases": [
+      "IRIB HAMEDAN",
+      "شبکه IRIB HAMEDAN"
+    ]
+  },
+  "00250093500181": {
+    "channel_name": "IRIB JAHANBIN",
+    "aliases": [
+      "IRIB JAHANBIN",
+      "شبکه IRIB JAHANBIN"
+    ]
+  },
+  "00250093500182": {
+    "channel_name": "IRIB YAZD",
+    "aliases": [
+      "IRIB YAZD",
+      "شبکه IRIB YAZD"
+    ]
+  },
+  "00250093500183": {
+    "channel_name": "IRIB SABALAN",
+    "aliases": [
+      "IRIB SABALAN",
+      "شبکه IRIB SABALAN"
+    ]
+  },
+  "00250093500184": {
+    "channel_name": "IRIB MAHABAD",
+    "aliases": [
+      "IRIB MAHABAD",
+      "شبکه IRIB MAHABAD"
+    ]
+  },
+  "00250093500185": {
+    "channel_name": "IRIB KHALIJEFARS",
+    "aliases": [
+      "IRIB KHALIJEFARS",
+      "شبکه IRIB KHALIJEFARS"
+    ]
+  },
+  "00250093500186": {
+    "channel_name": "IRIB AFTAB",
+    "aliases": [
+      "IRIB AFTAB",
+      "شبکه IRIB AFTAB"
+    ]
+  },
+  "00250093500187": {
+    "channel_name": "IRIB ESHRAGH",
+    "aliases": [
+      "IRIB ESHRAGH",
+      "شبکه IRIB ESHRAGH"
+    ]
+  },
+  "00250093500188": {
+    "channel_name": "IRIB KERMANSHAH",
+    "aliases": [
+      "IRIB KERMANSHAH",
+      "شبکه IRIB KERMANSHAH"
+    ]
+  },
+  "00250093500189": {
+    "channel_name": "IRIB DENA",
+    "aliases": [
+      "IRIB DENA",
+      "شبکه IRIB DENA"
+    ]
+  },
+  "00250093500190": {
+    "channel_name": "IRIB SEMNAN",
+    "aliases": [
+      "IRIB SEMNAN",
+      "شبکه IRIB SEMNAN"
+    ]
+  },
+  "00250093500191": {
+    "channel_name": "IRIB KORDESTAN",
+    "aliases": [
+      "IRIB KORDESTAN",
+      "شبکه IRIB KORDESTAN"
+    ]
+  },
+  "00250093500192": {
+    "channel_name": "IRIB KH JONOOBI",
+    "aliases": [
+      "IRIB KH JONOOBI",
+      "شبکه IRIB KH JONOOBI"
+    ]
+  },
+  "00250093500193": {
+    "channel_name": "IRIB QAZVIN",
+    "aliases": [
+      "IRIB QAZVIN",
+      "شبکه IRIB QAZVIN"
+    ]
+  },
+  "00250093500361": {
+    "channel_name": "RADIONAMA MASHHAD",
+    "aliases": [
+      "RADIONAMA MASHHAD",
+      "شبکه RADIONAMA MASHHAD"
+    ]
+  },
+  "00250093500362": {
+    "channel_name": "RADIO NAMA AZARBAYJAN SHARG",
+    "aliases": [
+      "RADIO NAMA AZARBAYJAN SHARG",
+      "شبکه RADIO NAMA AZARBAYJAN SHARG"
+    ]
+  },
+  "00250093500363": {
+    "channel_name": "RADIO NAMA GORGAN",
+    "aliases": [
+      "RADIO NAMA GORGAN",
+      "شبکه RADIO NAMA GORGAN"
+    ]
+  },
+  "00250093500364": {
+    "channel_name": "RADIO NAMA FARS",
+    "aliases": [
+      "RADIO NAMA FARS",
+      "شبکه RADIO NAMA FARS"
+    ]
+  },
+  "00250093500365": {
+    "channel_name": "RADIO NAMA LORESTAN",
+    "aliases": [
+      "RADIO NAMA LORESTAN",
+      "شبکه RADIO NAMA LORESTAN"
+    ]
+  },
+  "00250093500367": {
+    "channel_name": "RADIO NAMA GUILAN",
+    "aliases": [
+      "RADIO NAMA GUILAN",
+      "شبکه RADIO NAMA GUILAN"
+    ]
+  },
+  "00250093500369": {
+    "channel_name": "RADIO NAMA AZARBAYJAN GHARB",
+    "aliases": [
+      "RADIO NAMA AZARBAYJAN GHARB",
+      "شبکه RADIO NAMA AZARBAYJAN GHARB"
+    ]
+  },
+  "00250093500370": {
+    "channel_name": "RADIO NAMA ALBORZ",
+    "aliases": [
+      "RADIO NAMA ALBORZ",
+      "شبکه RADIO NAMA ALBORZ"
+    ]
+  },
+  "00250093500371": {
+    "channel_name": "RADIO NAMA ESFAHAN",
+    "aliases": [
+      "RADIO NAMA ESFAHAN",
+      "شبکه RADIO NAMA ESFAHAN"
+    ]
+  },
+  "00250093500372": {
+    "channel_name": "RADIO NAMA KHOUZESTAN",
+    "aliases": [
+      "RADIO NAMA KHOUZESTAN",
+      "شبکه RADIO NAMA KHOUZESTAN"
+    ]
+  },
+  "00250093500373": {
+    "channel_name": "RADIO NAMA KERMAN",
+    "aliases": [
+      "RADIO NAMA KERMAN",
+      "شبکه RADIO NAMA KERMAN"
+    ]
+  },
+  "00250093500374": {
+    "channel_name": "RADIO NAMA MAZANDARAN",
+    "aliases": [
+      "RADIO NAMA MAZANDARAN",
+      "شبکه RADIO NAMA MAZANDARAN"
+    ]
+  },
+  "00250093500375": {
+    "channel_name": "RADIO NAMA QOM",
+    "aliases": [
+      "RADIO NAMA QOM",
+      "شبکه RADIO NAMA QOM"
+    ]
+  },
+  "00250093500376": {
+    "channel_name": "RADIONAMA KH SHOMALI",
+    "aliases": [
+      "RADIONAMA KH SHOMALI",
+      "شبکه RADIONAMA KH SHOMALI"
+    ]
+  },
+  "00250093500377": {
+    "channel_name": "RADIO NAMA SISTAN VA BALOCH",
+    "aliases": [
+      "RADIO NAMA SISTAN VA BALOCH",
+      "شبکه RADIO NAMA SISTAN VA BALOCH"
+    ]
+  },
+  "00250093500378": {
+    "channel_name": "RADIO NAMA BUSHEHR",
+    "aliases": [
+      "RADIO NAMA BUSHEHR",
+      "شبکه RADIO NAMA BUSHEHR"
+    ]
+  },
+  "00250093500379": {
+    "channel_name": "RADIO NAMA ILAM",
+    "aliases": [
+      "RADIO NAMA ILAM",
+      "شبکه RADIO NAMA ILAM"
+    ]
+  },
+  "00250093500380": {
+    "channel_name": "RADIO NAMA HAMEDAN",
+    "aliases": [
+      "RADIO NAMA HAMEDAN",
+      "شبکه RADIO NAMA HAMEDAN"
+    ]
+  },
+  "00250093500381": {
+    "channel_name": "RADIO NAMA JAHANBIN",
+    "aliases": [
+      "RADIO NAMA JAHANBIN",
+      "شبکه RADIO NAMA JAHANBIN"
+    ]
+  },
+  "00250093500382": {
+    "channel_name": "RADIO NAMA YAZD",
+    "aliases": [
+      "RADIO NAMA YAZD",
+      "شبکه RADIO NAMA YAZD"
+    ]
+  },
+  "00250093500383": {
+    "channel_name": "RADIO NAMA ARDABIL",
+    "aliases": [
+      "RADIO NAMA ARDABIL",
+      "شبکه RADIO NAMA ARDABIL"
+    ]
+  },
+  "00250093500384": {
+    "channel_name": "RADIO NAMA MAHABAD",
+    "aliases": [
+      "RADIO NAMA MAHABAD",
+      "شبکه RADIO NAMA MAHABAD"
+    ]
+  },
+  "00250093500385": {
+    "channel_name": "RADIO NAMAKHALIJEFARS",
+    "aliases": [
+      "RADIO NAMAKHALIJEFARS",
+      "شبکه RADIO NAMAKHALIJEFARS"
+    ]
+  },
+  "00250093500386": {
+    "channel_name": "RADIO NAMA MARKAZI",
+    "aliases": [
+      "RADIO NAMA MARKAZI",
+      "شبکه RADIO NAMA MARKAZI"
+    ]
+  },
+  "00250093500387": {
+    "channel_name": "RADIO NAMA ZANJAN",
+    "aliases": [
+      "RADIO NAMA ZANJAN",
+      "شبکه RADIO NAMA ZANJAN"
+    ]
+  },
+  "00250093500388": {
+    "channel_name": "RADIO NAMA KERMANSHAH",
+    "aliases": [
+      "RADIO NAMA KERMANSHAH",
+      "شبکه RADIO NAMA KERMANSHAH"
+    ]
+  },
+  "00250093500389": {
+    "channel_name": "RADIO NAMA DENA",
+    "aliases": [
+      "RADIO NAMA DENA",
+      "شبکه RADIO NAMA DENA"
+    ]
+  },
+  "00250093500390": {
+    "channel_name": "RADIO NAMA SEMNAN",
+    "aliases": [
+      "RADIO NAMA SEMNAN",
+      "شبکه RADIO NAMA SEMNAN"
+    ]
+  },
+  "00250093500391": {
+    "channel_name": "RADIONAMA KORDESTAN",
+    "aliases": [
+      "RADIONAMA KORDESTAN",
+      "شبکه RADIONAMA KORDESTAN"
+    ]
+  },
+  "00250093500392": {
+    "channel_name": "RADIO NAMA KH JONOBI",
+    "aliases": [
+      "RADIO NAMA KH JONOBI",
+      "شبکه RADIO NAMA KH JONOBI"
+    ]
+  },
+  "00250093500393": {
+    "channel_name": "RADIO NAMA QAZVIN",
+    "aliases": [
+      "RADIO NAMA QAZVIN",
+      "شبکه RADIO NAMA QAZVIN"
+    ]
+  },
+  "00380171700040": {
+    "channel_name": "Pars TV",
+    "aliases": [
+      "Pars TV",
+      "شبکه Pars TV"
+    ]
+  },
+  "00250090800106": {
+    "channel_name": "IRINN",
+    "aliases": [
+      "شبکه خبر",
+      "کانال خبر",
+      "خبر",
+      "IRINN",
+      "شبکه IRINN"
+    ]
+  },
+  "00380172000060": {
+    "channel_name": "Afghanistan Intl",
+    "aliases": [
+      "Afghanistan Intl",
+      "شبکه Afghanistan Intl"
+    ]
+  },
+  "00380170700008": {
+    "channel_name": "Afghanistan Intl HD",
+    "aliases": [
+      "Afghanistan Intl HD",
+      "شبکه Afghanistan Intl HD"
+    ]
+  },
+  "00380171800024": {
+    "channel_name": "Radio Payam",
+    "aliases": [
+      "Radio Payam",
+      "شبکه Radio Payam"
+    ]
+  },
+  "00380172000013": {
+    "channel_name": "Radio Payam",
+    "aliases": [
+      "Radio Payam",
+      "شبکه Radio Payam"
+    ]
+  },
+  "00380171500012": {
+    "channel_name": "Radio CH50",
+    "aliases": [
+      "Radio CH50",
+      "شبکه Radio CH50"
+    ]
+  },
+  "00380171500013": {
+    "channel_name": "Radio CH51",
+    "aliases": [
+      "Radio CH51",
+      "شبکه Radio CH51"
+    ]
+  },
+  "00380171500014": {
+    "channel_name": "Radio CH52",
+    "aliases": [
+      "Radio CH52",
+      "شبکه Radio CH52"
+    ]
+  },
+  "00380171500015": {
+    "channel_name": "Radio CH54",
+    "aliases": [
+      "Radio CH54",
+      "شبکه Radio CH54"
+    ]
+  },
+  "00380171500016": {
+    "channel_name": "Radio CH55",
+    "aliases": [
+      "Radio CH55",
+      "شبکه Radio CH55"
+    ]
+  },
+  "00380171500017": {
+    "channel_name": "Radio CH56",
+    "aliases": [
+      "Radio CH56",
+      "شبکه Radio CH56"
+    ]
+  },
+  "00380171500018": {
+    "channel_name": "Radio CH57",
+    "aliases": [
+      "Radio CH57",
+      "شبکه Radio CH57"
+    ]
+  },
+  "00380171500019": {
+    "channel_name": "Radio CH58",
+    "aliases": [
+      "Radio CH58",
+      "شبکه Radio CH58"
+    ]
+  },
+  "00380171500020": {
+    "channel_name": "Radio CH59",
+    "aliases": [
+      "Radio CH59",
+      "شبکه Radio CH59"
+    ]
+  },
+  "00380131502624": {
+    "channel_name": "Nedaa El Islam",
+    "aliases": [
+      "Nedaa El Islam",
+      "شبکه Nedaa El Islam"
+    ]
+  },
+  "00380131502620": {
+    "channel_name": "Holly Quran",
+    "aliases": [
+      "شبکه قرآن",
+      "کانال قرآن",
+      "قرآن",
+      "Holly Quran",
+      "شبکه Holly Quran"
+    ]
+  },
+  "00380131502623": {
+    "channel_name": "Eurpean Radio",
+    "aliases": [
+      "Eurpean Radio",
+      "شبکه Eurpean Radio"
+    ]
+  },
+  "00380131502622": {
+    "channel_name": "Jedda Radio",
+    "aliases": [
+      "Jedda Radio",
+      "شبکه Jedda Radio"
+    ]
+  },
+  "00380131502621": {
+    "channel_name": "Riyad Radio",
+    "aliases": [
+      "Riyad Radio",
+      "شبکه Riyad Radio"
+    ]
+  },
+  "00380131502625": {
+    "channel_name": "Ekhbaria",
+    "aliases": [
+      "Ekhbaria",
+      "شبکه Ekhbaria"
+    ]
+  },
+  "00380131502626": {
+    "channel_name": "Mowajhat",
+    "aliases": [
+      "Mowajhat",
+      "شبکه Mowajhat"
+    ]
+  },
+  "00380131502627": {
+    "channel_name": "French",
+    "aliases": [
+      "French",
+      "شبکه French"
+    ]
+  },
+  "00380131502628": {
+    "channel_name": "Pishto",
+    "aliases": [
+      "Pishto",
+      "شبکه Pishto"
+    ]
+  },
+  "00380131502629": {
+    "channel_name": "Bangali",
+    "aliases": [
+      "Bangali",
+      "شبکه Bangali"
+    ]
+  },
+  "00380131502630": {
+    "channel_name": "Hona AlAzim",
+    "aliases": [
+      "Hona AlAzim",
+      "شبکه Hona AlAzim"
+    ]
+  },
+  "00380131502631": {
+    "channel_name": "khozama",
+    "aliases": [
+      "khozama",
+      "شبکه khozama"
+    ]
+  },
+  "00380131700017": {
+    "channel_name": "Radio Tojik",
+    "aliases": [
+      "Radio Tojik",
+      "شبکه Radio Tojik"
+    ]
+  },
+  "00380131700018": {
+    "channel_name": "Ovozi Tojik",
+    "aliases": [
+      "Ovozi Tojik",
+      "شبکه Ovozi Tojik"
+    ]
+  },
+  "00380131700019": {
+    "channel_name": "Sadoi Dushanbe",
+    "aliases": [
+      "Sadoi Dushanbe",
+      "شبکه Sadoi Dushanbe"
+    ]
+  },
+  "00380131700020": {
+    "channel_name": "Radio Farhang",
+    "aliases": [
+      "Radio Farhang",
+      "شبکه Radio Farhang"
+    ]
+  },
+  "00380131900011": {
+    "channel_name": "BBC Arabic Radio",
+    "aliases": [
+      "BBC Arabic Radio",
+      "شبکه BBC Arabic Radio"
+    ]
+  },
+  "00380131900016": {
+    "channel_name": "VOA Radio Persian",
+    "aliases": [
+      "VOA Radio Persian",
+      "شبکه VOA Radio Persian"
+    ]
+  },
+  "00380131900017": {
+    "channel_name": "VOA Radio Future",
+    "aliases": [
+      "VOA Radio Future",
+      "شبکه VOA Radio Future"
+    ]
+  },
+  "00380131900018": {
+    "channel_name": "BBC Afghan Radio",
+    "aliases": [
+      "BBC Afghan Radio",
+      "شبکه BBC Afghan Radio"
+    ]
+  },
+  "00380132300461": {
+    "channel_name": "Radio Nawa",
+    "aliases": [
+      "Radio Nawa",
+      "شبکه Radio Nawa"
+    ]
+  },
+  "00380132300467": {
+    "channel_name": "VOA Radio Afghanistan",
+    "aliases": [
+      "VOA Radio Afghanistan",
+      "شبکه VOA Radio Afghanistan"
+    ]
+  },
+  "00380132300579": {
+    "channel_name": "Arman FM",
+    "aliases": [
+      "Arman FM",
+      "شبکه Arman FM"
+    ]
+  },
+  "00380132300580": {
+    "channel_name": "Arakozia FM",
+    "aliases": [
+      "Arakozia FM",
+      "شبکه Arakozia FM"
+    ]
+  },
+  "00380132400029": {
+    "channel_name": "RADIO MOJDEH",
+    "aliases": [
+      "RADIO MOJDEH",
+      "شبکه RADIO MOJDEH"
+    ]
+  },
+  "00380132500108": {
+    "channel_name": "Asre Emrooz Radio",
+    "aliases": [
+      "Asre Emrooz Radio",
+      "شبکه Asre Emrooz Radio"
+    ]
+  },
+  "00380132600105": {
+    "channel_name": "BBC Afghan Radio",
+    "aliases": [
+      "BBC Afghan Radio",
+      "شبکه BBC Afghan Radio"
+    ]
+  },
+  "00380132600106": {
+    "channel_name": "BBC Arabic Radio",
+    "aliases": [
+      "BBC Arabic Radio",
+      "شبکه BBC Arabic Radio"
+    ]
+  },
+  "00380132701704": {
+    "channel_name": "Hurriyat Radio",
+    "aliases": [
+      "Hurriyat Radio",
+      "شبکه Hurriyat Radio"
+    ]
+  },
+  "00380132701705": {
+    "channel_name": "Salam Watandar FM",
+    "aliases": [
+      "Salam Watandar FM",
+      "شبکه Salam Watandar FM"
+    ]
+  },
+  "00380132701706": {
+    "channel_name": "Zhwandoon FM",
+    "aliases": [
+      "Zhwandoon FM",
+      "شبکه Zhwandoon FM"
+    ]
+  },
+  "00380132701707": {
+    "channel_name": "Omid Radio",
+    "aliases": [
+      "شبکه امید",
+      "کانال امید",
+      "امید",
+      "Omid Radio",
+      "شبکه Omid Radio"
+    ]
+  },
+  "00380132701708": {
+    "channel_name": "Ariana FM",
+    "aliases": [
+      "Ariana FM",
+      "شبکه Ariana FM"
+    ]
+  },
+  "00380132701709": {
+    "channel_name": "Shamshad FM",
+    "aliases": [
+      "Shamshad FM",
+      "شبکه Shamshad FM"
+    ]
+  },
+  "00380132701710": {
+    "channel_name": "Radio Begum",
+    "aliases": [
+      "Radio Begum",
+      "شبکه Radio Begum"
+    ]
+  },
+  "00380132701711": {
+    "channel_name": "Radio Jawanan",
+    "aliases": [
+      "Radio Jawanan",
+      "شبکه Radio Jawanan"
+    ]
+  },
+  "00380132701725": {
+    "channel_name": "Radio Killid",
+    "aliases": [
+      "Radio Killid",
+      "شبکه Radio Killid"
+    ]
+  },
+  "00380132701728": {
+    "channel_name": "Arezo FM",
+    "aliases": [
+      "Arezo FM",
+      "شبکه Arezo FM"
+    ]
+  },
+  "00380132701730": {
+    "channel_name": "POLICE RADIO",
+    "aliases": [
+      "POLICE RADIO",
+      "شبکه POLICE RADIO"
+    ]
+  },
+  "00380172900301": {
+    "channel_name": "Watan",
+    "aliases": [
+      "Watan",
+      "شبکه Watan"
+    ]
+  },
+  "00380172900303": {
+    "channel_name": "Char-tarapdan",
+    "aliases": [
+      "Char-tarapdan",
+      "شبکه Char-tarapdan"
+    ]
+  },
+  "00380172900305": {
+    "channel_name": "Miras",
+    "aliases": [
+      "Miras",
+      "شبکه Miras"
+    ]
+  },
+  "00380172900309": {
+    "channel_name": "Owaz",
+    "aliases": [
+      "Owaz",
+      "شبکه Owaz"
+    ]
+  },
+  "00380173000001": {
+    "channel_name": "Turkmen Radio",
+    "aliases": [
+      "Turkmen Radio",
+      "شبکه Turkmen Radio"
+    ]
+  },
+  "00380173100001": {
+    "channel_name": "R Radio",
+    "aliases": [
+      "R Radio",
+      "شبکه R Radio"
+    ]
+  },
+  "00380173100010": {
+    "channel_name": "TIGRAI Radio",
+    "aliases": [
+      "TIGRAI Radio",
+      "شبکه TIGRAI Radio"
+    ]
+  },
+  "00380173100027": {
+    "channel_name": "SAM FM",
+    "aliases": [
+      "SAM FM",
+      "شبکه SAM FM"
+    ]
+  },
+  "00380173100028": {
+    "channel_name": "AFAQ",
+    "aliases": [
+      "AFAQ",
+      "شبکه AFAQ"
+    ]
+  },
+  "00380173100029": {
+    "channel_name": "Sawt alahrar",
+    "aliases": [
+      "Sawt alahrar",
+      "شبکه Sawt alahrar"
+    ]
+  },
+  "00250089200052": {
+    "channel_name": "MBC FM",
+    "aliases": [
+      "MBC FM",
+      "شبکه MBC FM"
+    ]
+  },
+  "00250089200053": {
+    "channel_name": "Al Ula FM",
+    "aliases": [
+      "Al Ula FM",
+      "شبکه Al Ula FM"
+    ]
+  },
+  "00250089200054": {
+    "channel_name": "Panorama FM",
+    "aliases": [
+      "Panorama FM",
+      "شبکه Panorama FM"
+    ]
+  },
+  "00250089200055": {
+    "channel_name": "Al Arabiya FM",
+    "aliases": [
+      "Al Arabiya FM",
+      "شبکه Al Arabiya FM"
+    ]
+  },
+  "00250089200056": {
+    "channel_name": "Riyadh FM Split",
+    "aliases": [
+      "Riyadh FM Split",
+      "شبکه Riyadh FM Split"
+    ]
+  },
+  "00250089200060": {
+    "channel_name": "Loud FM",
+    "aliases": [
+      "Loud FM",
+      "شبکه Loud FM"
+    ]
+  },
+  "00250090800241": {
+    "channel_name": "RADIO IRAN",
+    "aliases": [
+      "RADIO IRAN",
+      "شبکه RADIO IRAN"
+    ]
+  },
+  "00250090800242": {
+    "channel_name": "RADIO AVA",
+    "aliases": [
+      "RADIO AVA",
+      "شبکه RADIO AVA"
+    ]
+  },
+  "00250090800243": {
+    "channel_name": "RADIO JAVAN",
+    "aliases": [
+      "رادیو جوان",
+      "RADIO JAVAN",
+      "شبکه RADIO JAVAN"
+    ]
+  },
+  "00250090800244": {
+    "channel_name": "RADIO PAYAM",
+    "aliases": [
+      "RADIO PAYAM",
+      "شبکه RADIO PAYAM"
+    ]
+  },
+  "00250090800245": {
+    "channel_name": "RADIO VARZESH",
+    "aliases": [
+      "شبکه ورزش",
+      "کانال ورزش",
+      "ورزش",
+      "RADIO VARZESH",
+      "شبکه RADIO VARZESH",
+      "رادیو ورزش",
+      "کانال رادیو ورزش"
+    ]
+  },
+  "00250090800246": {
+    "channel_name": "RADIO MAAREF",
+    "aliases": [
+      "RADIO MAAREF",
+      "شبکه RADIO MAAREF"
+    ]
+  },
+  "00250090800247": {
+    "channel_name": "RADIO QURAN",
+    "aliases": [
+      "شبکه قرآن",
+      "کانال قرآن",
+      "قرآن",
+      "RADIO QURAN",
+      "شبکه RADIO QURAN"
+    ]
+  },
+  "00250090800248": {
+    "channel_name": "RADIO FARHANG",
+    "aliases": [
+      "RADIO FARHANG",
+      "شبکه RADIO FARHANG"
+    ]
+  },
+  "00250090800249": {
+    "channel_name": "RADIO SALAMAT",
+    "aliases": [
+      "شبکه سلامت",
+      "کانال سلامت",
+      "سلامت",
+      "RADIO SALAMAT",
+      "شبکه RADIO SALAMAT"
+    ]
+  },
+  "00250090800250": {
+    "channel_name": "RADIO EGHTESAD",
+    "aliases": [
+      "RADIO EGHTESAD",
+      "شبکه RADIO EGHTESAD"
+    ]
+  },
+  "00250090800251": {
+    "channel_name": "RADIO GOFTOGOO",
+    "aliases": [
+      "RADIO GOFTOGOO",
+      "شبکه RADIO GOFTOGOO"
+    ]
+  },
+  "00250090800252": {
+    "channel_name": "RADIO NAMAYESH",
+    "aliases": [
+      "شبکه نمایش",
+      "کانال نمایش",
+      "نمایش",
+      "RADIO NAMAYESH",
+      "شبکه RADIO NAMAYESH"
+    ]
+  },
+  "00250090800253": {
+    "channel_name": "RADIO TEHRAN",
+    "aliases": [
+      "RADIO TEHRAN",
+      "شبکه RADIO TEHRAN"
+    ]
+  },
+  "00250090800254": {
+    "channel_name": "RADIO SABA",
+    "aliases": [
+      "RADIO SABA",
+      "شبکه RADIO SABA"
+    ]
+  },
+  "00250090800255": {
+    "channel_name": "RADIO MONASEBATI",
+    "aliases": [
+      "RADIO MONASEBATI",
+      "شبکه RADIO MONASEBATI"
+    ]
+  },
+  "00250090800256": {
+    "channel_name": "RADIO TALAVAT",
+    "aliases": [
+      "RADIO TALAVAT",
+      "شبکه RADIO TALAVAT"
+    ]
+  },
+  "00250090800257": {
+    "channel_name": "RADIO TARTIL",
+    "aliases": [
+      "RADIO TARTIL",
+      "شبکه RADIO TARTIL"
+    ]
+  },
+  "00250090800258": {
+    "channel_name": "ENGLISH RADIO WORLD SERVICE",
+    "aliases": [
+      "ENGLISH RADIO WORLD SERVICE",
+      "شبکه ENGLISH RADIO WORLD SERVICE"
+    ]
+  },
+  "00250090800259": {
+    "channel_name": "ARABIC RADIO WORLD SERVICE",
+    "aliases": [
+      "ARABIC RADIO WORLD SERVICE",
+      "شبکه ARABIC RADIO WORLD SERVICE"
+    ]
+  },
+  "00250090800262": {
+    "channel_name": "RADIO ZIYARAT",
+    "aliases": [
+      "RADIO ZIYARAT",
+      "شبکه RADIO ZIYARAT"
+    ]
+  },
+  "00250090800351": {
+    "channel_name": "RADIO IRAN",
+    "aliases": [
+      "RADIO IRAN",
+      "شبکه RADIO IRAN"
+    ]
+  },
+  "00250090800468": {
+    "channel_name": "RADIO-ABADAN",
+    "aliases": [
+      "RADIO-ABADAN",
+      "شبکه RADIO-ABADAN"
+    ]
+  },
+  "00250090800477": {
+    "channel_name": "RADIO-ZAHEDAN",
+    "aliases": [
+      "RADIO-ZAHEDAN",
+      "شبکه RADIO-ZAHEDAN"
+    ]
+  },
+  "00250090800492": {
+    "channel_name": "RADIO KH JONOOBI",
+    "aliases": [
+      "RADIO KH JONOOBI",
+      "شبکه RADIO KH JONOOBI"
+    ]
+  },
+  "00250093500461": {
+    "channel_name": "RADIO KH RAZAVI",
+    "aliases": [
+      "RADIO KH RAZAVI",
+      "شبکه RADIO KH RAZAVI"
+    ]
+  },
+  "00250093500462": {
+    "channel_name": "RADIO AZARBAYJAN SHARGHI",
+    "aliases": [
+      "RADIO AZARBAYJAN SHARGHI",
+      "شبکه RADIO AZARBAYJAN SHARGHI"
+    ]
+  },
+  "00250093500463": {
+    "channel_name": "RADIO GOLESTAN",
+    "aliases": [
+      "RADIO GOLESTAN",
+      "شبکه RADIO GOLESTAN"
+    ]
+  },
+  "00250093500464": {
+    "channel_name": "RADIO FARS",
+    "aliases": [
+      "RADIO FARS",
+      "شبکه RADIO FARS"
+    ]
+  },
+  "00250093500465": {
+    "channel_name": "RADIO LORESTAN",
+    "aliases": [
+      "RADIO LORESTAN",
+      "شبکه RADIO LORESTAN"
+    ]
+  },
+  "00250093500467": {
+    "channel_name": "RADIO RASHT",
+    "aliases": [
+      "RADIO RASHT",
+      "شبکه RADIO RASHT"
+    ]
+  },
+  "00250093500469": {
+    "channel_name": "RADIO AZARBAYEJAN",
+    "aliases": [
+      "RADIO AZARBAYEJAN",
+      "شبکه RADIO AZARBAYEJAN"
+    ]
+  },
+  "00250093500470": {
+    "channel_name": "RADIO ALBORZ",
+    "aliases": [
+      "RADIO ALBORZ",
+      "شبکه RADIO ALBORZ"
+    ]
+  },
+  "00250093500471": {
+    "channel_name": "RADIO ESFAHAN",
+    "aliases": [
+      "RADIO ESFAHAN",
+      "شبکه RADIO ESFAHAN"
+    ]
+  },
+  "00250093500472": {
+    "channel_name": "RADIO KHOOZESTAN",
+    "aliases": [
+      "RADIO KHOOZESTAN",
+      "شبکه RADIO KHOOZESTAN"
+    ]
+  },
+  "00250093500473": {
+    "channel_name": "RADIO KERMAN",
+    "aliases": [
+      "RADIO KERMAN",
+      "شبکه RADIO KERMAN"
+    ]
+  },
+  "00250093500474": {
+    "channel_name": "RADIO MAZANDARAN",
+    "aliases": [
+      "RADIO MAZANDARAN",
+      "شبکه RADIO MAZANDARAN"
+    ]
+  },
+  "00250093500475": {
+    "channel_name": "RADIO QOM",
+    "aliases": [
+      "RADIO QOM",
+      "شبکه RADIO QOM"
+    ]
+  },
+  "00250093500476": {
+    "channel_name": "RADIO KH SHOMALI",
+    "aliases": [
+      "RADIO KH SHOMALI",
+      "شبکه RADIO KH SHOMALI"
+    ]
+  },
+  "00250093500477": {
+    "channel_name": "RADIO ZAHEDAN",
+    "aliases": [
+      "RADIO ZAHEDAN",
+      "شبکه RADIO ZAHEDAN"
+    ]
+  },
+  "00250093500478": {
+    "channel_name": "RADIO BUSHEHR",
+    "aliases": [
+      "RADIO BUSHEHR",
+      "شبکه RADIO BUSHEHR"
+    ]
+  },
+  "00250093500479": {
+    "channel_name": "RADIO ILAM",
+    "aliases": [
+      "RADIO ILAM",
+      "شبکه RADIO ILAM"
+    ]
+  },
+  "00250093500480": {
+    "channel_name": "RADIO HAMEDAN",
+    "aliases": [
+      "RADIO HAMEDAN",
+      "شبکه RADIO HAMEDAN"
+    ]
+  },
+  "00250093500481": {
+    "channel_name": "RADIO SHAHREKORD",
+    "aliases": [
+      "RADIO SHAHREKORD",
+      "شبکه RADIO SHAHREKORD"
+    ]
+  },
+  "00250093500482": {
+    "channel_name": "RADIO YAZD",
+    "aliases": [
+      "RADIO YAZD",
+      "شبکه RADIO YAZD"
+    ]
+  },
+  "00250093500483": {
+    "channel_name": "RADIO ARDABIL",
+    "aliases": [
+      "RADIO ARDABIL",
+      "شبکه RADIO ARDABIL"
+    ]
+  },
+  "00250093500484": {
+    "channel_name": "RADIO MAHABAD",
+    "aliases": [
+      "RADIO MAHABAD",
+      "شبکه RADIO MAHABAD"
+    ]
+  },
+  "00250093500485": {
+    "channel_name": "RADIO BANDARABAS",
+    "aliases": [
+      "RADIO BANDARABAS",
+      "شبکه RADIO BANDARABAS"
+    ]
+  },
+  "00250093500486": {
+    "channel_name": "RADIO MARKAZI",
+    "aliases": [
+      "RADIO MARKAZI",
+      "شبکه RADIO MARKAZI"
+    ]
+  },
+  "00250093500487": {
+    "channel_name": "RADIO ZANJAN",
+    "aliases": [
+      "RADIO ZANJAN",
+      "شبکه RADIO ZANJAN"
+    ]
+  },
+  "00250093500488": {
+    "channel_name": "RADIO KERMANSHAH",
+    "aliases": [
+      "RADIO KERMANSHAH",
+      "شبکه RADIO KERMANSHAH"
+    ]
+  },
+  "00250093500489": {
+    "channel_name": "RADIO YASOOJ",
+    "aliases": [
+      "RADIO YASOOJ",
+      "شبکه RADIO YASOOJ"
+    ]
+  },
+  "00250093500490": {
+    "channel_name": "RADIO SEMNAN",
+    "aliases": [
+      "RADIO SEMNAN",
+      "شبکه RADIO SEMNAN"
+    ]
+  },
+  "00250093500491": {
+    "channel_name": "RADIO KORDESTAN",
+    "aliases": [
+      "RADIO KORDESTAN",
+      "شبکه RADIO KORDESTAN"
+    ]
+  },
+  "00250093500492": {
+    "channel_name": "RADIO KH JONOOBI",
+    "aliases": [
+      "RADIO KH JONOOBI",
+      "شبکه RADIO KH JONOOBI"
+    ]
+  },
+  "00250093500493": {
+    "channel_name": "RADIO QAZVIN",
+    "aliases": [
+      "RADIO QAZVIN",
+      "شبکه RADIO QAZVIN"
+    ]
+  },
+  "00250093500495": {
+    "channel_name": "RADIO BOROONMARZI(RAZAVI)",
+    "aliases": [
+      "RADIO BOROONMARZI(RAZAVI)",
+      "شبکه RADIO BOROONMARZI(RAZAVI)"
+    ]
+  },
+  "00250093500496": {
+    "channel_name": "RADIO BRONMARZI TALESH",
+    "aliases": [
+      "RADIO BRONMARZI TALESH",
+      "شبکه RADIO BRONMARZI TALESH"
+    ]
+  },
+  "00250093500497": {
+    "channel_name": "RADIO TURKMEN",
+    "aliases": [
+      "RADIO TURKMEN",
+      "شبکه RADIO TURKMEN"
+    ]
+  },
+  "00250093500498": {
+    "channel_name": "RADIO BROONMARZI(AZARBAYJAN",
+    "aliases": [
+      "RADIO BROONMARZI(AZARBAYJAN",
+      "شبکه RADIO BROONMARZI(AZARBAYJAN"
+    ]
+  },
+  "00250093500499": {
+    "channel_name": "RADIO ARAN",
+    "aliases": [
+      "RADIO ARAN",
+      "شبکه RADIO ARAN"
+    ]
+  },
+  "00250093500658": {
+    "channel_name": "ENGLISH RADIO WORLD SERVICE",
+    "aliases": [
+      "ENGLISH RADIO WORLD SERVICE",
+      "شبکه ENGLISH RADIO WORLD SERVICE"
+    ]
+  },
+  "00250093500659": {
+    "channel_name": "ARABIC RADIO WORLD SERVICE",
+    "aliases": [
+      "ARABIC RADIO WORLD SERVICE",
+      "شبکه ARABIC RADIO WORLD SERVICE"
+    ]
+  },
+  "00250093500671": {
+    "channel_name": "RADIO KASHAN",
+    "aliases": [
+      "RADIO KASHAN",
+      "شبکه RADIO KASHAN"
+    ]
+  },
+  "00250093500682": {
+    "channel_name": "RADIO 02 WORLD SERVICE",
+    "aliases": [
+      "RADIO 02 WORLD SERVICE",
+      "شبکه RADIO 02 WORLD SERVICE"
+    ]
+  },
+  "00250093500684": {
+    "channel_name": "RADIO 04 WORLD SERVICE",
+    "aliases": [
+      "RADIO 04 WORLD SERVICE",
+      "شبکه RADIO 04 WORLD SERVICE"
+    ]
+  },
+  "00250093500685": {
+    "channel_name": "RADIO 05 WORLD SERVICE",
+    "aliases": [
+      "RADIO 05 WORLD SERVICE",
+      "شبکه RADIO 05 WORLD SERVICE"
+    ]
+  },
+  "00250093500686": {
+    "channel_name": "RADIO 06 WORLD SERVICE",
+    "aliases": [
+      "RADIO 06 WORLD SERVICE",
+      "شبکه RADIO 06 WORLD SERVICE"
+    ]
+  },
+  "00250093500698": {
+    "channel_name": "RADIO SHAHRI TABRIZ",
+    "aliases": [
+      "RADIO SHAHRI TABRIZ",
+      "شبکه RADIO SHAHRI TABRIZ"
+    ]
+  },
+  "00010001": {
+    "channel_name": "IRIB TV1 HD",
+    "aliases": [
+      "شبکه یک",
+      "کانال یک",
+      "شبکه ۱",
+      "IRIB TV1 HD",
+      "شبکه IRIB TV1 HD"
+    ]
+  },
+  "00010004": {
+    "channel_name": "PERSIANA MIX",
+    "aliases": [
+      "پرشیانا ست میکس",
+      "پرشیانا میکس",
+      "پرشیانا",
+      "PERSIANA MIX",
+      "شبکه PERSIANA MIX",
+      "پرشیانا ستمیکس",
+      "شبکه پرشیانا میکس"
+    ]
+  },
+  "00010005": {
+    "channel_name": "IRAN INTL HD",
+    "aliases": [
+      "ایران اینترنشنال",
+      "ایران اینتر نشنال",
+      "اینترنشنال",
+      "IRAN INTL HD",
+      "شبکه IRAN INTL HD",
+      "اینتر نشنال"
+    ]
+  }
+}

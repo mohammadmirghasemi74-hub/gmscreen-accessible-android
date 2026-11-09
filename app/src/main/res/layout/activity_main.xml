@@ -6,26 +6,33 @@
     android:orientation="vertical"
     android:background="@color/dark_bg">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/topToolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/card_bg"
-        app:title="@string/app_name"
-        app:titleTextColor="@color/text_primary"
-        app:subtitleTextColor="@color/text_secondary" />
-
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabLayout"
+    <!-- Top Accessible Navigation Bar -->
+    <LinearLayout
+        android:id="@+id/headerContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:background="@color/card_bg"
-        app:tabIndicatorColor="@color/primary"
-        app:tabSelectedTextColor="@color/primary"
-        app:tabTextColor="@color/text_secondary"
-        app:tabMode="fixed"
-        app:tabGravity="fill" />
+        android:padding="8dp">
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnActiveTab"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="سربرگ فعال: اتصال (برای تغییر کلیک کنید)"
+            android:contentDescription="سربرگ فعال: اتصال. برای تغییر سربرگ دو بار ضربه بزنید"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:icon="@android:drawable/ic_menu_sort_by_size"
+            app:iconGravity="textStart"
+            app:iconTint="@color/accent_yellow"
+            app:backgroundTint="@color/primary"
+            app:cornerRadius="10dp" />
+
+    </LinearLayout>
+
+    <!-- Main ViewPager: full screen display for current tab only -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="match_parent"

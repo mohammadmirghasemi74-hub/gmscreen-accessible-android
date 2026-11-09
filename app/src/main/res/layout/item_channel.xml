@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/cardChannel"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="8dp"
-    android:layout_marginEnd="8dp"
-    android:layout_marginTop="4dp"
-    android:layout_marginBottom="4dp"
-    android:clickable="true"
-    android:focusable="true"
+    android:layout_marginHorizontal="6dp"
+    android:layout_marginVertical="4dp"
     app:cardBackgroundColor="@color/card_bg"
-    app:cardCornerRadius="8dp"
+    app:cardCornerRadius="10dp"
     app:strokeColor="@color/divider"
     app:strokeWidth="1dp">
 
@@ -20,82 +15,100 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="12dp"
-        android:minHeight="64dp">
+        android:padding="8dp">
 
         <!-- Channel Number -->
         <TextView
             android:id="@+id/txtChannelNumber"
-            android:layout_width="54dp"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:gravity="center"
+            android:background="@drawable/badge_bg"
             android:text="1"
             android:textColor="@color/accent_yellow"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
-        <!-- Info Column -->
+        <!-- Channel Info -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp">
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="6dp">
 
-            <TextView
-                android:id="@+id/txtChannelName"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="GEM TV HD"
-                android:textColor="@color/text_primary"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:singleLine="true" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
+                <TextView
+                    android:id="@+id/txtChannelName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="شبکه سه"
+                    android:textColor="@color/text_primary"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <!-- HD Badge -->
+                <TextView
+                    android:id="@+id/badgeHd"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="HD"
+                    android:textColor="@color/accent_green"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:background="@color/black"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="1dp"
+                    android:layout_marginStart="4dp"
+                    android:visibility="gone" />
+
+                <!-- Scrambled Badge -->
+                <TextView
+                    android:id="@+id/badgeLock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="$"
+                    android:textColor="@color/accent_red"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="4dp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- Satellite and Frequency -->
             <TextView
                 android:id="@+id/txtChannelDetails"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Yahsat 52.5E • 11881 V 27500"
+                android:layout_marginTop="3dp"
+                android:text="بدر ۵ • ۱۱۸۸۱ MHz"
                 android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
-
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
         </LinearLayout>
 
-        <!-- Badges (HD / Free / $) -->
-        <LinearLayout
+        <!-- Live Play Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLivePlay"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="end">
-
-            <TextView
-                android:id="@+id/badgeHd"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/badge_bg"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:text="HD"
-                android:textColor="@color/primary"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/badgeLock"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text=""
-                android:textColor="@color/accent_red"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
+            android:layout_height="48dp"
+            android:text="@string/btn_play_channel"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            app:icon="@android:drawable/ic_media_play"
+            app:iconGravity="textStart"
+            app:backgroundTint="@color/primary"
+            app:cornerRadius="8dp" />
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

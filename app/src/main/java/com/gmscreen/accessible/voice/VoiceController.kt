@@ -3,6 +3,8 @@ package com.gmscreen.accessible.voice
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -18,22 +20,37 @@ class VoiceController(
         fun onListening()
         fun onResults(recognizedText: String)
         fun onError(errorMessage: String)
+        fun onWakeWordTriggered(remainingCommand: String)
     }
 
     private var speechRecognizer: SpeechRecognizer? = null
     private var isListening: Boolean = false
+    private var isWakeWordActive: Boolean = false
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     companion object {
         private const val TAG = "VoiceController"
+        val WAKE_WORDS = listOf("جی ام اسکرین", "جی ام", "رسیور", "دستگاه", "screen", "stb")
     }
+
+    fun setWakeWordMode(enabled: Boolean) {
+        isWakeWordActive = enabled
+        if (enabled) {
+            startListening()
+        } else {
+            stopListening()
+        }
+    }
+
+    fun isWakeWordEnabled(): Boolean = isWakeWordActive
 
     fun startListening() {
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
-            listener.onError("سرویس تشخیص گفتار در این دستگاه در دسترس نیست")
+            listener.onError("سرویس تشخیص گفتار گوگل در این دستگاه در دسترس نیست")
             return
         }
 
-        stopListening()
+        stopRecognizerOnly()
 
         try {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
@@ -45,7 +62,11 @@ class VoiceController(
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "fa-IR")
                 putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, "fa-IR")
                 putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
-                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
+                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                // Tuned specifically for phone microphones
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 2000L)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1500L)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1200L)
             }
 
             speechRecognizer?.startListening(intent)
@@ -56,7 +77,7 @@ class VoiceController(
         }
     }
 
-    fun stopListening() {
+    private fun stopRecognizerOnly() {
         try {
             isListening = false
             speechRecognizer?.stopListening()
@@ -64,6 +85,11 @@ class VoiceController(
             speechRecognizer?.destroy()
             speechRecognizer = null
         } catch (_: Exception) {}
+    }
+
+    fun stopListening() {
+        isWakeWordActive = false
+        stopRecognizerOnly()
     }
 
     fun isCurrentlyListening(): Boolean = isListening
@@ -92,23 +118,57 @@ class VoiceController(
             SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "مجوز دسترسی به میکروفون داده نشده است"
             SpeechRecognizer.ERROR_NETWORK -> "خطای شبکه در ارتباط با سرور گفتار"
             SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "زمان اتصال به سرور گفتار به پایان رسید"
-            SpeechRecognizer.ERROR_NO_MATCH -> "صدایی شناسایی نشد، لطفاً مجدداً تلاش فرمایید"
+            SpeechRecognizer.ERROR_NO_MATCH -> "صدایی شناسایی نشد"
             SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "سرویس گفتار مشغول است"
             SpeechRecognizer.ERROR_SERVER -> "خطای سرور گوگل"
             SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "صدایی دریافت نشد"
-            else -> "خطای نامشخص در تشخیص گفتار ($error)"
+            else -> "خطا در تشخیص گفتار ($error)"
         }
-        listener.onError(msg)
+
+        if (isWakeWordActive) {
+            // Auto restart listening after brief delay in wake word mode
+            mainHandler.postDelayed({
+                if (isWakeWordActive) {
+                    startListening()
+                }
+            }, 800)
+        } else {
+            listener.onError(msg)
+        }
     }
 
     override fun onResults(results: Bundle?) {
         isListening = false
         val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         if (!matches.isNullOrEmpty()) {
-            val recognizedText = matches[0]
-            listener.onResults(recognizedText)
+            val text = matches[0]
+            if (isWakeWordActive) {
+                val cleaned = text.trim()
+                var wakeDetected = false
+                var commandRemainder = ""
+                for (ww in WAKE_WORDS) {
+                    if (cleaned.contains(ww, ignoreCase = true)) {
+                        wakeDetected = true
+                        commandRemainder = cleaned.replace(Regex(Regex.escape(ww), RegexOption.IGNORE_CASE), "").trim()
+                        break
+                    }
+                }
+                if (wakeDetected) {
+                    listener.onWakeWordTriggered(commandRemainder)
+                }
+                // Continue wake word loop
+                mainHandler.postDelayed({
+                    if (isWakeWordActive) {
+                        startListening()
+                    }
+                }, 1000)
+            } else {
+                listener.onResults(text)
+            }
         } else {
-            listener.onError("صدایی تشخیص داده نشد")
+            if (!isWakeWordActive) {
+                listener.onError("صدایی تشخیص داده نشد")
+            }
         }
     }
 
