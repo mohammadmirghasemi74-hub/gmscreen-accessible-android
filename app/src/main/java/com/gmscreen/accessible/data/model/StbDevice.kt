@@ -6,6 +6,8 @@ data class StbDevice(
     val rawModel: String,
     val formattedModel: String
 ) {
+    val productName: String get() = formattedModel
+
     override fun toString(): String {
         return "$formattedModel ($ip)"
     }
