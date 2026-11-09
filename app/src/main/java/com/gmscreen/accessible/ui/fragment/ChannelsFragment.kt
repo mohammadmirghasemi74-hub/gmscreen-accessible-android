@@ -148,8 +148,7 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
 
     private fun refreshChannelsList() {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val type = if (isRadioMode) 1 else 0
-            val list = repository.client.fetchChannels(type)
+            repository.client.fetchChannels()
             withContext(Dispatchers.Main) {
                 filterChannels()
             }
