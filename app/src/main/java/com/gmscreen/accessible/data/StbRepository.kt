@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 class StbRepository(context: Context) {
 
     private val appConfig = AppConfig(context)
+    private val discovery = StbDiscovery(context)
     val client = StbClient()
 
     private val _isConnected = MutableStateFlow(false)
@@ -39,7 +40,7 @@ class StbRepository(context: Context) {
     val currentChannel: StateFlow<Channel?> = _currentChannel.asStateFlow()
 
     suspend fun discoverDevices(): List<StbDevice> {
-        return StbDiscovery.discover(timeoutMs = 3500)
+        return discovery.discover(timeoutMs = 3500)
     }
 
     suspend fun connect(ip: String): Result<Boolean> {
@@ -49,7 +50,7 @@ class StbRepository(context: Context) {
                 _isConnected.value = true
                 _connectedIp.value = ip
                 appConfig.lastConnectedIp = ip
-                _deviceModel.value = client.productName
+                _deviceModel.value = client.formattedModel
 
                 // Fetch initial data
                 refreshData()
@@ -75,20 +76,20 @@ class StbRepository(context: Context) {
             val sats = client.fetchSatellites()
             _satellites.value = sats
 
-            val chList = client.fetchChannels(type = 0) // TV channels
+            val chList = client.fetchChannels()
             _channels.value = chList
 
-            val state = client.fetchCurrentState()
+            val state = client.fetchStbState()
             _currentState.value = state
-            if (state != null) {
-                _currentChannel.value = chList.find { it.serviceId == state.serviceId }
+            if (state.playingServiceId.isNotBlank()) {
+                _currentChannel.value = chList.find { it.serviceId == state.playingServiceId }
             }
         } catch (_: Exception) {}
     }
 
     suspend fun switchChannel(channel: Channel): Boolean {
         if (!_isConnected.value) return false
-        val success = client.switchChannel(channel)
+        val success = client.switchChannel(channel.serviceId, channel.isRadio)
         if (success) {
             _currentChannel.value = channel
         }
