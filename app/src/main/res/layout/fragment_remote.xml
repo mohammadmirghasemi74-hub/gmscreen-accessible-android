@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dark_bg"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <!-- Power & Mute Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="10dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPower"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="روشن/خاموش"
+                android:contentDescription="@string/rcu_power"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                app:backgroundTint="@color/accent_red"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMute"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="بی‌صدا (Mute)"
+                android:contentDescription="@string/rcu_mute"
+                android:textColor="@color/black"
+                android:textSize="15sp"
+                app:backgroundTint="@color/accent_yellow"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <!-- Recall & TV/Radio Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="10dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRecall"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="بازگشت (Recall)"
+                android:contentDescription="@string/rcu_recall"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTvRadio"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="تلویزیون / رادیو"
+                android:contentDescription="@string/rcu_tv_radio"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <!-- Menu, EPG, Info, Exit -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMenu"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:text="منو"
+                android:contentDescription="@string/rcu_menu"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnExit"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
+                android:text="خروج"
+                android:contentDescription="@string/rcu_exit"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEpg"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
+                android:text="EPG"
+                android:contentDescription="@string/rcu_epg"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnInfo"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:text="اینفو"
+                android:contentDescription="@string/rcu_info"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <!-- D-Pad Navigation Section -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="12dp"
+            app:strokeColor="@color/divider"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:gravity="center">
+
+                <!-- Up Button (کانال قبلی) -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnNavUp"
+                    android:layout_width="150dp"
+                    android:layout_height="56dp"
+                    android:text="▲ بالا (کانال قبل)"
+                    android:contentDescription="جهت‌نمای بالا: کانال قبلی"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    app:backgroundTint="@color/primary"
+                    app:cornerRadius="8dp" />
+
+                <!-- Left, OK, Right Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="6dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnNavLeft"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:text="◄ چپ (صدا -)"
+                        android:contentDescription="جهت‌نمای چپ: کاهش صدا"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        app:backgroundTint="@color/primary"
+                        app:cornerRadius="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnNavOk"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="تأیید (OK)"
+                        android:contentDescription="@string/rcu_ok"
+                        android:textColor="@color/white"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/accent_green"
+                        app:cornerRadius="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnNavRight"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:text="راست (صدا +) ►"
+                        android:contentDescription="جهت‌نمای راست: افزایش صدا"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        app:backgroundTint="@color/primary"
+                        app:cornerRadius="8dp" />
+                </LinearLayout>
+
+                <!-- Down Button (کانال بعدی) -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnNavDown"
+                    android:layout_width="150dp"
+                    android:layout_height="56dp"
+                    android:text="▼ پایین (کانال بعد)"
+                    android:contentDescription="جهت‌نمای پایین: کانال بعدی"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    app:backgroundTint="@color/primary"
+                    app:cornerRadius="8dp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Volume & Channel Rockers -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <!-- Volume column -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginEnd="6dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnVolUp"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="صدا +"
+                    android:contentDescription="@string/rcu_vol_up"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/card_bg"
+                    app:strokeColor="@color/divider"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnVolDown"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="6dp"
+                    android:text="صدا -"
+                    android:contentDescription="@string/rcu_vol_down"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/card_bg"
+                    app:strokeColor="@color/divider"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
+
+            <!-- Channel column -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="6dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChNext"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="کانال بعدی"
+                    android:contentDescription="@string/rcu_ch_next"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/card_bg"
+                    app:strokeColor="@color/divider"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChPrev"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="6dp"
+                    android:text="کانال قبلی"
+                    android:contentDescription="@string/rcu_ch_prev"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/card_bg"
+                    app:strokeColor="@color/divider"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Color Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRed"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:text="قرمز"
+                android:contentDescription="@string/rcu_red"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/accent_red"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGreen"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
+                android:text="سبز"
+                android:contentDescription="@string/rcu_green"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/accent_green"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnYellow"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
+                android:text="زرد"
+                android:contentDescription="@string/rcu_yellow"
+                android:textColor="@color/black"
+                app:backgroundTint="@color/accent_yellow"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBlue"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:text="آبی"
+                android:contentDescription="@string/rcu_blue"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/accent_blue"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <!-- Numeric Keypad (0-9) -->
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="3"
+            android:rowCount="4"
+            android:alignmentMode="alignMargins"
+            android:layout_marginBottom="16dp">
+
+            <!-- 1, 2, 3 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDigit1"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="1"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDigit2"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="2"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDigit3"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="3"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <!-- 4, 5, 6 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDigit4"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="4"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDigit5"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="5"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDigit6"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="6"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <!-- 7, 8, 9 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDigit7"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="7"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDigit8"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="8"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDigit9"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="9"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <!-- Spacer, 0, Spacer -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_columnWeight="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDigit0"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_columnWeight="1"
+                android:layout_margin="3dp"
+                android:text="0"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                app:backgroundTint="@color/card_bg"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_columnWeight="1" />
+        </GridLayout>
+
+    </LinearLayout>
+</ScrollView>

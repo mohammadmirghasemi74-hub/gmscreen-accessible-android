@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/dark_bg">
+
+    <!-- Live Stream Player Container (Hidden by default until stream started) -->
+    <LinearLayout
+        android:id="@+id/containerPlayer"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:orientation="vertical"
+        android:background="@color/black"
+        android:visibility="gone">
+
+        <androidx.media3.ui.PlayerView
+            android:id="@+id/playerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            app:use_controller="true" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@color/card_bg"
+            android:padding="6dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/txtPlayerTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="در حال پخش..."
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:singleLine="true" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStopPlayer"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="@string/btn_stop_stream"
+                android:textSize="13sp"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/accent_red"
+                app:cornerRadius="6dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Filters Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:background="@color/card_bg">
+
+        <!-- TV / Radio Toggle Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTvRadioToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="@string/mode_tv"
+            android:textSize="14sp"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/primary"
+            app:cornerRadius="6dp" />
+
+        <!-- Satellite Dropdown Spinner -->
+        <Spinner
+            android:id="@+id/spinnerSatellite"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/spinner_bg"
+            android:popupBackground="@color/card_bg"
+            android:contentDescription="انتخاب ماهواره جهت فیلتر کانال‌ها" />
+
+    </LinearLayout>
+
+    <!-- Search Input -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layoutSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:hint="@string/search_channels_hint"
+        android:textColorHint="@color/text_secondary"
+        app:boxBackgroundColor="@color/card_bg"
+        app:boxStrokeColor="@color/primary"
+        app:boxCornerRadiusTopStart="6dp"
+        app:boxCornerRadiusTopEnd="6dp"
+        app:boxCornerRadiusBottomStart="6dp"
+        app:boxCornerRadiusBottomEnd="6dp"
+        app:endIconMode="clear_text">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtSearch"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:padding="8dp"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp"
+            android:singleLine="true" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Channel count info -->
+    <TextView
+        android:id="@+id/txtChannelCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="4dp"
+        android:text="۰ کانال یافت شد"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp" />
+
+    <!-- Channels List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewChannels"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="12dp" />
+
+</LinearLayout>
