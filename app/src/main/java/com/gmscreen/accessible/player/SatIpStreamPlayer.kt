@@ -175,17 +175,23 @@ class SatIpStreamPlayer(
         stopRelay()
         satIpSession?.stop()
         satIpSession = null
-        exoPlayer?.stop()
-        exoPlayer?.clearMediaItems()
+        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        mainHandler.post {
+            exoPlayer?.stop()
+            exoPlayer?.clearMediaItems()
+        }
     }
 
     fun release() {
         stop()
         playerScope.cancel()
-        exoPlayer?.removeListener(this)
-        exoPlayer?.release()
-        exoPlayer = null
-        playerView.player = null
+        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        mainHandler.post {
+            exoPlayer?.removeListener(this@SatIpStreamPlayer)
+            exoPlayer?.release()
+            exoPlayer = null
+            playerView.player = null
+        }
     }
 
     fun isPlaying(): Boolean = exoPlayer?.isPlaying == true
