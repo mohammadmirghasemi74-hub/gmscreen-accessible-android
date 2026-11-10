@@ -174,6 +174,15 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
                 filterChannels()
             }
         }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repository.currentChannel.collect { currCh ->
+                channelsAdapter?.setCurrentPlayingChannel(currCh?.serviceId)
+                if (currCh != null) {
+                    val statusText = "در حال پخش در تلویزیون: ${currCh.serviceName}"
+                    txtPlayerTitle.text = statusText
+                }
+            }
+        }
     }
 
     private fun filterChannels() {
@@ -201,10 +210,13 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
                 keepGlobal,
                 onChannelClick = { onChannelSelected(it, isAudioOnly = false) },
                 onChannelLongClick = { showChannelContextMenu(it) }
-            )
+            ).apply {
+                setCurrentPlayingChannel(repository.currentChannel.value?.serviceId)
+            }
             recyclerViewChannels.adapter = channelsAdapter
         } else {
             channelsAdapter?.updateChannels(filtered)
+            channelsAdapter?.setCurrentPlayingChannel(repository.currentChannel.value?.serviceId)
         }
     }
 
@@ -223,13 +235,16 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             val switched = repository.switchChannel(channel)
             withContext(Dispatchers.Main) {
                 if (switched) {
-                    AccessibilityHelper.announce(txtChannelCount, "کانال ${channel.serviceName} پخش شد")
+                    AccessibilityHelper.announce(txtChannelCount, "کانال ${channel.serviceName} در حال پخش است")
                     if (appConfig.hapticFeedbackEnabled) {
                         AccessibilityHelper.vibrateSuccess(requireContext())
                     }
                     containerPlayer.visibility = View.VISIBLE
-                    txtPlayerTitle.text = if (isAudioOnly) "پخش صوتی: ${channel.serviceName}" else "پخش تصویری: ${channel.serviceName}"
-                    streamPlayer?.playChannel(ip, channel)
+                    txtPlayerTitle.text = if (isAudioOnly) "پخش صوتی: ${channel.serviceName}" else "پخش زنده: ${channel.serviceName}"
+                    streamPlayer?.playChannel(repository.client, ip, channel)
+                } else {
+                    AccessibilityHelper.announce(txtChannelCount, "خطا در تعویض کانال")
+                    Toast.makeText(requireContext(), "خطا در تعویض کانال روی رسیور", Toast.LENGTH_SHORT).show()
                 }
             }
         }

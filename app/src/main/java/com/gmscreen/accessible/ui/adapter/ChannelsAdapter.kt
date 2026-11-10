@@ -4,7 +4,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.button.MaterialButton
 import com.gmscreen.accessible.R
 import com.gmscreen.accessible.data.model.Channel
@@ -16,9 +18,18 @@ class ChannelsAdapter(
     private val onChannelLongClick: (Channel) -> Unit
 ) : RecyclerView.Adapter<ChannelsAdapter.ChannelViewHolder>() {
 
+    private var currentPlayingServiceId: String? = null
+
     fun updateChannels(newChannels: List<Channel>) {
         channels = newChannels
         notifyDataSetChanged()
+    }
+
+    fun setCurrentPlayingChannel(serviceId: String?) {
+        if (currentPlayingServiceId != serviceId) {
+            currentPlayingServiceId = serviceId
+            notifyDataSetChanged()
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChannelViewHolder {
@@ -33,15 +44,18 @@ class ChannelsAdapter(
         } else {
             position + 1
         }
-        holder.bind(ch, displayNum, onChannelClick, onChannelLongClick)
+        val isPlaying = (ch.serviceId == currentPlayingServiceId)
+        holder.bind(ch, displayNum, isPlaying, onChannelClick, onChannelLongClick)
     }
 
     override fun getItemCount(): Int = channels.size
 
     class ChannelViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val cardView: MaterialCardView = itemView as MaterialCardView
         private val txtNum: TextView = itemView.findViewById(R.id.txtChannelNumber)
         private val txtName: TextView = itemView.findViewById(R.id.txtChannelName)
         private val txtDetails: TextView = itemView.findViewById(R.id.txtChannelDetails)
+        private val badgePlaying: TextView = itemView.findViewById(R.id.badgePlaying)
         private val badgeHd: TextView = itemView.findViewById(R.id.badgeHd)
         private val badgeLock: TextView = itemView.findViewById(R.id.badgeLock)
         private val btnLivePlay: MaterialButton = itemView.findViewById(R.id.btnLivePlay)
@@ -49,6 +63,7 @@ class ChannelsAdapter(
         fun bind(
             channel: Channel,
             displayNumber: Int,
+            isCurrentlyPlaying: Boolean,
             onClick: (Channel) -> Unit,
             onLongClick: (Channel) -> Unit
         ) {
@@ -59,14 +74,26 @@ class ChannelsAdapter(
             val freqText = if (channel.frequency > 0) "${channel.frequency} MHz" else ""
             txtDetails.text = if (freqText.isNotBlank()) "$satText • $freqText" else satText
 
+            badgePlaying.visibility = if (isCurrentlyPlaying) View.VISIBLE else View.GONE
             badgeHd.visibility = if (channel.isHd) View.VISIBLE else View.GONE
             badgeLock.visibility = if (channel.isScrambled) View.VISIBLE else View.GONE
+
+            if (isCurrentlyPlaying) {
+                cardView.strokeColor = ContextCompat.getColor(itemView.context, R.color.accent_green)
+                cardView.strokeWidth = 4
+            } else {
+                cardView.strokeColor = ContextCompat.getColor(itemView.context, R.color.divider)
+                cardView.strokeWidth = 1
+            }
 
             val accessibilityDescription = buildString {
                 append("کانال ")
                 append(displayNumber)
                 append("، ")
                 append(channel.serviceName)
+                if (isCurrentlyPlaying) {
+                    append("، در حال پخش در تلویزیون")
+                }
                 if (channel.isHd) append("، اچ دی")
                 if (channel.isScrambled) append("، کارتی") else append("، رایگان")
                 if (channel.satelliteName.isNotBlank()) {

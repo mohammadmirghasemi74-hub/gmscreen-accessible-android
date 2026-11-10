@@ -56,6 +56,21 @@
                     android:maxLines="1"
                     android:ellipsize="end" />
 
+                <!-- Playing Badge -->
+                <TextView
+                    android:id="@+id/badgePlaying"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="در حال پخش"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:background="@color/accent_green"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="2dp"
+                    android:layout_marginStart="4dp"
+                    android:visibility="gone" />
+
                 <!-- HD Badge -->
                 <TextView
                     android:id="@+id/badgeHd"

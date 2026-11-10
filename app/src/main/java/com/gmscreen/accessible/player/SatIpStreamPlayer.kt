@@ -8,10 +8,25 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.UdpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.rtsp.RtspMediaSource
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.extractor.DefaultExtractorsFactory
+import androidx.media3.extractor.ts.TsExtractor
 import androidx.media3.ui.PlayerView
 import com.gmscreen.accessible.data.model.Channel
+import com.gmscreen.accessible.protocol.StbClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetSocketAddress
 
 @OptIn(UnstableApi::class)
 class SatIpStreamPlayer(
@@ -28,10 +43,16 @@ class SatIpStreamPlayer(
     }
 
     private var exoPlayer: ExoPlayer? = null
-    private var currentChannel: Channel? = null
+    private var satIpSession: SatIpSession? = null
+    private var relayJob: Job? = null
+    private var inSocket: DatagramSocket? = null
+    private var outSocket: DatagramSocket? = null
+    private val playerScope = CoroutineScope(Dispatchers.IO)
 
     companion object {
         private const val TAG = "SatIpStreamPlayer"
+        private const val STB_STREAM_PORT = 5114
+        private const val LOCAL_RELAY_PORT = 5118
     }
 
     init {
@@ -48,32 +69,130 @@ class SatIpStreamPlayer(
         }
     }
 
-    fun playChannel(stbIp: String, channel: Channel) {
-        currentChannel = channel
-        val rtspUrl = channel.toSatIpUrl(stbIp)
-        Log.d(TAG, "Playing SAT>IP RTSP URL: $rtspUrl for channel ${channel.serviceName}")
+    fun playChannel(stbClient: StbClient, stbIp: String, channel: Channel) {
+        stop()
 
-        initializePlayer()
+        playerScope.launch {
+            try {
+                // 1. Wake STB SAT>IP server daemon
+                stbClient.sendCmd(1009, expectReply = false)
+                delay(300)
 
-        val mediaItem = MediaItem.fromUri(Uri.parse(rtspUrl))
-        val mediaSource = RtspMediaSource.Factory()
-            .setDebugLoggingEnabled(false)
-            .setTimeoutMs(8000)
-            .createMediaSource(mediaItem)
+                // 2. Build ALi SAT>IP query
+                val query = stbClient.buildSatIpQuery(channel)
+                if (query.isNullOrBlank()) {
+                    withContext(Dispatchers.Main) {
+                        listener?.onPlaybackError("اطلاعات فرکانس و ترنسپوندر کانال یافت نشد")
+                    }
+                    return@launch
+                }
 
-        exoPlayer?.apply {
-            setMediaSource(mediaSource)
-            prepare()
-            play()
+                // 3. Start local UDP relay (strips 12-byte RTP header and forwards pure MPEG-TS)
+                startRelay()
+
+                // 4. Start RTSP Session (SETUP + PLAY)
+                val session = SatIpSession(stbIp, clientPort = STB_STREAM_PORT)
+                val ok = session.start(query)
+                if (!ok) {
+                    stop()
+                    withContext(Dispatchers.Main) {
+                        listener?.onPlaybackError("عدم دریافت سیگنال استریم از رسیور")
+                    }
+                    return@launch
+                }
+                satIpSession = session
+
+                withContext(Dispatchers.Main) {
+                    initializePlayer()
+
+                    val extractorsFactory = DefaultExtractorsFactory()
+                        .setTsExtractorFlags(TsExtractor.FLAG_ALLOW_NON_IDR_KEYFRAMES)
+                        .setTsExtractorMode(TsExtractor.MODE_SINGLE_PMT)
+
+                    val udpSourceFactory = UdpDataSource.Factory()
+                    val mediaSource = ProgressiveMediaSource.Factory(udpSourceFactory, extractorsFactory)
+                        .createMediaSource(MediaItem.fromUri(Uri.parse("udp://127.0.0.1:$LOCAL_RELAY_PORT")))
+
+                    exoPlayer?.apply {
+                        setMediaSource(mediaSource)
+                        prepare()
+                        play()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    listener?.onPlaybackError("خطا در راه‌اندازی استریم: ${e.message}")
+                }
+            }
         }
     }
 
+    private fun startRelay() {
+        stopRelay()
+        try {
+            val iSock = DatagramSocket(null).apply {
+                reuseAddress = true
+                bind(InetSocketAddress(STB_STREAM_PORT))
+                soTimeout = 2000
+                receiveBufferSize = 2 * 1024 * 1024
+            }
+            val oSock = DatagramSocket()
+            inSocket = iSock
+            outSocket = oSock
+
+            val dest = InetSocketAddress("127.0.0.1", LOCAL_RELAY_PORT)
+
+            relayJob = playerScope.launch {
+                val buf = ByteArray(4096)
+                val packet = DatagramPacket(buf, buf.size)
+                while (isActive) {
+                    try {
+                        iSock.receive(packet)
+                        val len = packet.length
+                        if (len <= 0) continue
+
+                        // Check if RTP packet (12-byte header, sync byte 0x47 at index 12)
+                        val offset = if (len > 12 && (buf[0].toInt() and 0xC0) == 0x80 && buf[12] == 0x47.toByte()) {
+                            12
+                        } else {
+                            0
+                        }
+                        val tsLen = len - offset
+                        if (tsLen > 0) {
+                            val forwardPkt = DatagramPacket(buf, offset, tsLen, dest)
+                            oSock.send(forwardPkt)
+                        }
+                    } catch (_: Exception) {
+                        if (!isActive) break
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun stopRelay() {
+        relayJob?.cancel()
+        relayJob = null
+        try { inSocket?.close() } catch (_: Exception) {}
+        try { outSocket?.close() } catch (_: Exception) {}
+        inSocket = null
+        outSocket = null
+    }
+
     fun stop() {
+        stopRelay()
+        satIpSession?.stop()
+        satIpSession = null
         exoPlayer?.stop()
         exoPlayer?.clearMediaItems()
     }
 
     fun release() {
+        stop()
+        playerScope.cancel()
         exoPlayer?.removeListener(this)
         exoPlayer?.release()
         exoPlayer = null
@@ -92,7 +211,7 @@ class SatIpStreamPlayer(
     }
 
     override fun onPlayerError(error: PlaybackException) {
-        Log.e(TAG, "ExoPlayer RTSP playback error", error)
+        Log.e(TAG, "ExoPlayer playback error", error)
         val msg = "خطا در پخش استریم زنده: ${error.localizedMessage ?: "عدم پاسخ از تیونر رسیور"}"
         listener?.onPlaybackError(msg)
     }

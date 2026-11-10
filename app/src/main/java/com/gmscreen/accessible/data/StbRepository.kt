@@ -8,12 +8,10 @@ import com.gmscreen.accessible.data.model.StbState
 import com.gmscreen.accessible.protocol.StbClient
 import com.gmscreen.accessible.protocol.StbDiscovery
 import com.gmscreen.accessible.util.AppConfig
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 class StbRepository(context: Context) {
 
@@ -48,6 +46,9 @@ class StbRepository(context: Context) {
     private val _pvrFiles = MutableStateFlow<List<Map<String, Any>>>(emptyList())
     val pvrFiles: StateFlow<List<Map<String, Any>>> = _pvrFiles.asStateFlow()
 
+    private var monitorJob: Job? = null
+    private val repoScope = CoroutineScope(Dispatchers.IO)
+
     suspend fun discoverDevices(): List<StbDevice> {
         return discovery.discover(timeoutMs = 3500)
     }
@@ -61,8 +62,10 @@ class StbRepository(context: Context) {
                 appConfig.lastConnectedIp = ip
                 _deviceModel.value = client.formattedModel
 
+                startChannelMonitor()
+
                 // Launch initial data fetch in background without blocking connect UI
-                CoroutineScope(Dispatchers.IO).launch {
+                repoScope.launch {
                     refreshData()
                 }
                 Result.success(true)
@@ -75,7 +78,28 @@ class StbRepository(context: Context) {
         }
     }
 
+    private fun startChannelMonitor() {
+        monitorJob?.cancel()
+        monitorJob = repoScope.launch {
+            while (isActive && client.isConnected) {
+                delay(1500)
+                if (!client.isConnected) break
+                try {
+                    val pid = client.getPlayingChannel()
+                    if (!pid.isNullOrBlank() && pid != _currentChannel.value?.serviceId) {
+                        val ch = _channels.value.find { it.serviceId == pid }
+                        if (ch != null) {
+                            _currentChannel.value = ch
+                        }
+                    }
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
     fun disconnect() {
+        monitorJob?.cancel()
+        monitorJob = null
         client.disconnect()
         _isConnected.value = false
         _currentState.value = null
@@ -96,8 +120,9 @@ class StbRepository(context: Context) {
             val chList = client.fetchChannels(toIndex = if (state.channelNum > 0) state.channelNum else 800)
             _channels.value = chList
 
-            if (state.playingServiceId.isNotBlank()) {
-                _currentChannel.value = chList.find { it.serviceId == state.playingServiceId }
+            val playingPid = if (state.playingServiceId.isNotBlank()) state.playingServiceId else client.getPlayingChannel()
+            if (!playingPid.isNullOrBlank()) {
+                _currentChannel.value = chList.find { it.serviceId == playingPid }
             }
 
             refreshTimers()

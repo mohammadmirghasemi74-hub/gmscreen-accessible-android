@@ -8,10 +8,9 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.InetSocketAddress
@@ -41,73 +40,98 @@ class StbClient {
         private set
 
     private val transponders = mutableMapOf<Int, Map<String, Any>>()
+    private var keepaliveJob: Job? = null
+    private val clientScope = CoroutineScope(Dispatchers.IO)
 
     private val _notifications = MutableSharedFlow<String>(extraBufferCapacity = 64)
     val notifications = _notifications.asSharedFlow()
 
     suspend fun connect(ip: String, port: Int = ProtocolConstants.DEFAULT_PORT, timeoutMs: Int = 5000): Boolean = withContext(Dispatchers.IO) {
         synchronized(clientLock) {
+            currentIp = ip
+            val ok = connectLocked(ip, port, timeoutMs)
+            if (ok) {
+                startKeepalive()
+            }
+            ok
+        }
+    }
+
+    private fun connectLocked(ip: String, port: Int = ProtocolConstants.DEFAULT_PORT, timeoutMs: Int = 5000): Boolean {
+        disconnectLocked()
+        try {
+            val sock = Socket().apply {
+                tcpNoDelay = true
+                soTimeout = timeoutMs
+                connect(InetSocketAddress(ip, port), timeoutMs)
+            }
+            socket = sock
+            inputStream = sock.getInputStream()
+            outputStream = sock.getOutputStream()
+
+            // XML Handshake 998 with exact Windows payload
+            val login = "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
+                    "<Command request=\"998\"><data>G-MScreen-Win</data><uuid>gm-screen-pc</uuid></Command>"
+            val loginBytes = login.toByteArray(Charsets.UTF_8)
+            val lenStr = String.format(Locale.US, "%07d", loginBytes.size)
+            val pkt = "Start${lenStr}End".toByteArray(Charsets.US_ASCII) + loginBytes
+
+            outputStream?.write(pkt)
+            outputStream?.flush()
+
+            // Read 108-byte Login Response
+            val loginResp = ByteArray(108)
+            var readTotal = 0
+            val readStartTime = System.currentTimeMillis()
+            while (readTotal < 108 && System.currentTimeMillis() - readStartTime < timeoutMs) {
+                val r = inputStream?.read(loginResp, readTotal, 108 - readTotal) ?: -1
+                if (r == -1) break
+                readTotal += r
+            }
+
+            if (readTotal == 108) {
+                val dec = ByteArray(108) { i ->
+                    (loginResp[107 - i].toInt() xor 0x5B).toByte()
+                }
+                val magic = String(dec, 0, 12, Charsets.US_ASCII)
+                if (magic.startsWith("39WwijOog")) {
+                    val modelBytes = dec.copyOfRange(20, 52)
+                    val endIdx = modelBytes.indexOf(0).let { if (it >= 0) it else modelBytes.size }
+                    rawModel = String(modelBytes, 0, endIdx, Charsets.US_ASCII).trim()
+                    formattedModel = ProtocolConstants.formatStbProductName(rawModel)
+                }
+            }
+
+            if (formattedModel.isBlank()) {
+                formattedModel = "رسیور مدیااستار ($ip)"
+            }
+
+            isConnected = true
+            return true
+        } catch (e: Exception) {
             disconnectLocked()
-            try {
-                val sock = Socket().apply {
-                    tcpNoDelay = true
-                    soTimeout = timeoutMs
-                    connect(InetSocketAddress(ip, port), timeoutMs)
-                }
-                socket = sock
-                inputStream = sock.getInputStream()
-                outputStream = sock.getOutputStream()
-                currentIp = ip
+            return false
+        }
+    }
 
-                // XML Handshake 998 with exact Windows payload
-                val login = "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
-                        "<Command request=\"998\"><data>G-MScreen-Win</data><uuid>gm-screen-pc</uuid></Command>"
-                val loginBytes = login.toByteArray(Charsets.UTF_8)
-                val lenStr = String.format(Locale.US, "%07d", loginBytes.size)
-                val pkt = "Start${lenStr}End".toByteArray(Charsets.US_ASCII) + loginBytes
-
-                outputStream?.write(pkt)
-                outputStream?.flush()
-
-                // Read 108-byte Login Response
-                val loginResp = ByteArray(108)
-                var readTotal = 0
-                val readStartTime = System.currentTimeMillis()
-                while (readTotal < 108 && System.currentTimeMillis() - readStartTime < timeoutMs) {
-                    val r = inputStream?.read(loginResp, readTotal, 108 - readTotal) ?: -1
-                    if (r == -1) break
-                    readTotal += r
-                }
-
-                if (readTotal == 108) {
-                    val dec = ByteArray(108) { i ->
-                        (loginResp[107 - i].toInt() xor 0x5B).toByte()
-                    }
-                    val magic = String(dec, 0, 12, Charsets.US_ASCII)
-                    if (magic.startsWith("39WwijOog")) {
-                        val modelBytes = dec.copyOfRange(20, 52)
-                        val endIdx = modelBytes.indexOf(0).let { if (it >= 0) it else modelBytes.size }
-                        rawModel = String(modelBytes, 0, endIdx, Charsets.US_ASCII).trim()
-                        formattedModel = ProtocolConstants.formatStbProductName(rawModel)
-                    }
-                }
-
-                if (formattedModel.isBlank()) {
-                    formattedModel = "رسیور مدیااستار ($ip)"
-                }
-
-                isConnected = true
-                true
-            } catch (e: Exception) {
-                e.printStackTrace()
-                disconnectLocked()
-                false
+    private fun startKeepalive() {
+        keepaliveJob?.cancel()
+        keepaliveJob = clientScope.launch {
+            while (isActive && isConnected) {
+                delay(10000)
+                if (!isConnected) break
+                try {
+                    // Request 26 holds the session open on ALi firmware
+                    sendCmd(26, expectReply = false, timeoutMs = 2000)
+                } catch (_: Exception) {}
             }
         }
     }
 
     fun disconnect() {
         synchronized(clientLock) {
+            keepaliveJob?.cancel()
+            keepaliveJob = null
             disconnectLocked()
         }
     }
@@ -175,102 +199,137 @@ class StbClient {
         timeoutMs: Int = 6000
     ): List<Map<String, Any>>? {
         synchronized(clientLock) {
-            if (!isConnected || socket == null || outputStream == null || inputStream == null) {
-                return null
-            }
-
-            try {
-                drainSocket()
-
-                val body = mutableMapOf<String, Any>("request" to req.toString())
-                if (fields != null) {
-                    body.putAll(fields)
-                }
-
-                val payload = Gson().toJson(body)
-                val payloadBytes = payload.toByteArray(Charsets.UTF_8)
-                val lenStr = String.format(Locale.US, "%07d", payloadBytes.size)
-                val pkt = "Start${lenStr}End".toByteArray(Charsets.US_ASCII) + payloadBytes
-
-                outputStream?.write(pkt)
-                outputStream?.flush()
-
-                if (!expectReply) {
-                    return emptyList()
-                }
-
-                val startTime = System.currentTimeMillis()
-                while (System.currentTimeMillis() - startTime < timeoutMs) {
-                    val remTime = (timeoutMs - (System.currentTimeMillis() - startTime)).toInt().coerceAtLeast(500)
-                    val hdr = readExact(16, remTime) ?: return null
-
-                    val magic = String(hdr, 0, 4, Charsets.US_ASCII)
-                    if (magic != "GCDH") {
+            for (attempt in 0..1) {
+                if (!isConnected || socket == null || outputStream == null || inputStream == null) {
+                    if (currentIp.isNotBlank()) {
+                        val reconnected = connectLocked(currentIp, timeoutMs = 3000)
+                        if (!reconnected) continue
+                    } else {
                         return null
                     }
+                }
 
-                    val bb = ByteBuffer.wrap(hdr).order(ByteOrder.LITTLE_ENDIAN)
-                    bb.position(4)
-                    val plen = bb.int
-                    val mtype = bb.int
-                    val status = bb.int
+                try {
+                    drainSocket()
 
-                    var resultList = mutableListOf<Map<String, Any>>()
-                    if (plen > 0) {
-                        val raw = readExact(plen, remTime) ?: return null
-                        try {
-                            val jsonStr = decompressZlib(raw)
-                            val parsed = JsonParser.parseString(jsonStr)
-                            if (parsed.isJsonArray) {
-                                for (elem in parsed.asJsonArray) {
-                                    if (elem.isJsonObject) {
-                                        val map = jsonObjectToMap(elem.asJsonObject)
-                                        resultList.add(map)
+                    val body = mutableMapOf<String, Any>("request" to req.toString())
+                    if (fields != null) {
+                        body.putAll(fields)
+                    }
+
+                    val payload = Gson().toJson(body)
+                    val payloadBytes = payload.toByteArray(Charsets.UTF_8)
+                    val lenStr = String.format(Locale.US, "%07d", payloadBytes.size)
+                    val pkt = "Start${lenStr}End".toByteArray(Charsets.US_ASCII) + payloadBytes
+
+                    outputStream?.write(pkt)
+                    outputStream?.flush()
+
+                    if (!expectReply) {
+                        return emptyList()
+                    }
+
+                    val startTime = System.currentTimeMillis()
+                    while (System.currentTimeMillis() - startTime < timeoutMs) {
+                        val remTime = (timeoutMs - (System.currentTimeMillis() - startTime)).toInt().coerceAtLeast(500)
+                        val hdr = readExact(16, remTime) ?: break
+
+                        val magic = String(hdr, 0, 4, Charsets.US_ASCII)
+                        if (magic != "GCDH") {
+                            disconnectLocked()
+                            break
+                        }
+
+                        val bb = ByteBuffer.wrap(hdr).order(ByteOrder.LITTLE_ENDIAN)
+                        bb.position(4)
+                        val plen = bb.int
+                        val mtype = bb.int
+                        val status = bb.int
+
+                        var resultList = mutableListOf<Map<String, Any>>()
+                        if (plen > 0) {
+                            val raw = readExact(plen, remTime) ?: break
+                            try {
+                                val jsonStr = decompressZlib(raw)
+                                val parsed = JsonParser.parseString(jsonStr)
+                                if (parsed.isJsonArray) {
+                                    for (elem in parsed.asJsonArray) {
+                                        if (elem.isJsonObject) {
+                                            resultList.add(jsonObjectToMap(elem.asJsonObject))
+                                        }
                                     }
+                                } else if (parsed.isJsonObject) {
+                                    resultList.add(jsonObjectToMap(parsed.asJsonObject))
                                 }
-                            } else if (parsed.isJsonObject) {
-                                resultList.add(jsonObjectToMap(parsed.asJsonObject))
+                            } catch (e: Exception) {
+                                e.printStackTrace()
                             }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                        }
+
+                        // Matches Windows Python stb_api.py:
+                        if (mtype == req || (req == 3 && (mtype == 3 || mtype == 2001)) || (req == 1020 && (mtype == 1020 || mtype == 2005))) {
+                            return resultList
+                        } else if (mtype >= 2000) {
+                            // Asynchronous broadcast notification (e.g. 2001, 2002), continue waiting for command reply
+                            continue
+                        } else {
+                            // Generic ACK from receiver (plen == 0 or mtype == 0 or status == 0)
+                            return resultList
                         }
                     }
-
-                    if (mtype == req || (req == 3 && (mtype == 3 || mtype == 2001)) || (req == 1020 && (mtype == 1020 || mtype == 2005))) {
-                        return resultList
-                    } else if (mtype >= 2000) {
-                        // Trailing async notification, continue waiting for reply
+                } catch (e: Exception) {
+                    disconnectLocked()
+                    if (attempt == 0 && currentIp.isNotBlank()) {
                         continue
-                    } else {
-                        return resultList
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                return null
             }
-
             return null
         }
     }
 
     private fun jsonObjectToMap(obj: JsonObject): Map<String, Any> {
         val map = mutableMapOf<String, Any>()
-        for ((key, value) in obj.entrySet()) {
+        for ((k, v) in obj.entrySet()) {
             when {
-                value.isJsonPrimitive -> {
-                    val prim = value.asJsonPrimitive
+                v.isJsonPrimitive -> {
+                    val prim = v.asJsonPrimitive
                     when {
-                        prim.isBoolean -> map[key] = prim.asBoolean
-                        prim.isNumber -> map[key] = prim.asNumber
-                        else -> map[key] = prim.asString
+                        prim.isNumber -> map[k] = prim.asNumber
+                        prim.isBoolean -> map[k] = prim.asBoolean
+                        else -> map[k] = prim.asString
                     }
                 }
-                value.isJsonNull -> {}
-                else -> map[key] = value.toString()
+                v.isJsonArray -> map[k] = jsonArrayToList(v.asJsonArray)
+                v.isJsonObject -> map[k] = jsonObjectToMap(v.asJsonObject)
+                else -> map[k] = ""
             }
         }
         return map
+    }
+
+    private fun jsonArrayToList(arr: JsonArray): List<Any> {
+        val list = mutableListOf<Any>()
+        for (item in arr) {
+            when {
+                item.isJsonPrimitive -> list.add(item.asString)
+                item.isJsonObject -> list.add(jsonObjectToMap(item.asJsonObject))
+                item.isJsonArray -> list.add(jsonArrayToList(item.asJsonArray))
+            }
+        }
+        return list
+    }
+
+    suspend fun getPlayingChannel(): String? = withContext(Dispatchers.IO) {
+        val res = sendCmd(3, timeoutMs = 1500)
+        if (!res.isNullOrEmpty()) {
+            val d = res[0]
+            val dataVal = d["Data"]?.toString()
+            if (!dataVal.isNullOrBlank()) {
+                return@withContext dataVal
+            }
+        }
+        null
     }
 
     suspend fun fetchStbState(): StbState = withContext(Dispatchers.IO) {
@@ -278,10 +337,11 @@ class StbClient {
         if (res.isNullOrEmpty()) {
             res = sendCmd(15, timeoutMs = 4000)
         }
+        val playingPid = getPlayingChannel() ?: ""
         if (!res.isNullOrEmpty()) {
             val d = res[0]
             val chNum = d["ChannelNum"]?.toString()?.toIntOrNull() ?: 0
-            val playing = d["playingServiceId"]?.toString() ?: ""
+            val playing = if (playingPid.isNotBlank()) playingPid else (d["playingServiceId"]?.toString() ?: "")
             val power = d["PowerMode"]?.toString()?.toIntOrNull() ?: 1
             return@withContext StbState(
                 channelNum = chNum,
@@ -289,7 +349,7 @@ class StbClient {
                 powerMode = power
             )
         }
-        StbState()
+        StbState(playingServiceId = playingPid)
     }
 
     suspend fun fetchSatellites(): List<Satellite> = withContext(Dispatchers.IO) {
@@ -316,6 +376,28 @@ class StbClient {
             }
         }
         transponders
+    }
+
+    fun buildSatIpQuery(channel: Channel): String? {
+        val sid = channel.serviceId
+        if (sid.length < 9) return null
+        val tpIdx = sid.substring(4, 9).toIntOrNull() ?: return null
+        val tp = transponders[tpIdx] ?: return null
+
+        val isRadio = channel.isRadio
+        val vpid = if (isRadio) 0 else channel.videoPid
+        val apid = channel.audioPid
+        val pmt = channel.pmtPid
+        val prognumber = sid.takeLast(4)
+        val pidsStr = if (isRadio) "0,$pmt,$apid" else "$vpid,$apid,0,0,$pmt"
+
+        val satIdx = tp["SatIndex"] ?: 0
+        val freq = tp["Freq"] ?: 0
+        val pol = if (tp["POL"]?.toString() == "1") "v" else "h"
+        val sr = tp["SR"] ?: 0
+        val fec = tp["FEC"] ?: 0
+
+        return "?alisatid=$satIdx&freq=$freq&pol=$pol&msys=dvbs&mtype=qpsk&ro=0.35&plts=off&sr=$sr&fec=$fec&camode=0&vpid=$vpid&apid=$apid&ttxpid=0&subtpid=0&pmt=$pmt&prognumber=$prognumber&pids=$pidsStr"
     }
 
     suspend fun fetchChannels(toIndex: Int? = null): List<Channel> = withContext(Dispatchers.IO) {
