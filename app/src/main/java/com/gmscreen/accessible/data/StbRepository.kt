@@ -93,7 +93,7 @@ class StbRepository(context: Context) {
             val state = client.fetchStbState()
             _currentState.value = state
 
-            val chList = client.fetchChannels(toIndex = if (state.totalChannels > 0) state.totalChannels else 800)
+            val chList = client.fetchChannels(toIndex = if (state.channelNum > 0) state.channelNum else 800)
             _channels.value = chList
 
             if (state.playingServiceId.isNotBlank()) {

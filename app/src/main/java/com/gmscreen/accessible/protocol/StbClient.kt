@@ -284,7 +284,7 @@ class StbClient {
             val playing = d["playingServiceId"]?.toString() ?: ""
             val power = d["PowerMode"]?.toString()?.toIntOrNull() ?: 1
             return@withContext StbState(
-                totalChannels = chNum,
+                channelNum = chNum,
                 playingServiceId = playing,
                 powerMode = power
             )
