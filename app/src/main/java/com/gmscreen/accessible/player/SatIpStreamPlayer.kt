@@ -8,11 +8,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.UdpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
-import androidx.media3.extractor.DefaultExtractorsFactory
-import androidx.media3.extractor.ts.TsExtractor
 import androidx.media3.ui.PlayerView
 import com.gmscreen.accessible.data.model.Channel
 import com.gmscreen.accessible.protocol.StbClient
@@ -105,16 +101,9 @@ class SatIpStreamPlayer(
                 withContext(Dispatchers.Main) {
                     initializePlayer()
 
-                    val extractorsFactory = DefaultExtractorsFactory()
-                        .setTsExtractorFlags(TsExtractor.FLAG_ALLOW_NON_IDR_KEYFRAMES)
-                        .setTsExtractorMode(TsExtractor.MODE_SINGLE_PMT)
-
-                    val udpSourceFactory = UdpDataSource.Factory()
-                    val mediaSource = ProgressiveMediaSource.Factory(udpSourceFactory, extractorsFactory)
-                        .createMediaSource(MediaItem.fromUri(Uri.parse("udp://127.0.0.1:$LOCAL_RELAY_PORT")))
-
+                    val mediaItem = MediaItem.fromUri(Uri.parse("udp://127.0.0.1:$LOCAL_RELAY_PORT"))
                     exoPlayer?.apply {
-                        setMediaSource(mediaSource)
+                        setMediaItem(mediaItem)
                         prepare()
                         play()
                     }
