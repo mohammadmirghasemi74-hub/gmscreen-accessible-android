@@ -24,6 +24,11 @@ jobs:
         run: |
           mkdir -p keystore
           keytool -genkeypair -v -keystore keystore/gmscreen.keystore -alias gmscreen -keyalg RSA -keysize 2048 -validity 10000 -storepass gmscreen123 -keypass gmscreen123 -dname "CN=GMScreen Accessible, OU=Accessibility, O=GMScreen, L=Tehran, ST=Tehran, C=IR"
+          # Convert to base64 so we can preserve it permanently
+          echo "=== BASE64 KEYSTORE START ==="
+          base64 -w 0 keystore/gmscreen.keystore
+          echo ""
+          echo "=== BASE64 KEYSTORE END ==="
 
       - name: Make Gradle Wrapper Executable
         run: chmod +x gradlew
