@@ -8,9 +8,12 @@ import com.gmscreen.accessible.data.model.StbState
 import com.gmscreen.accessible.protocol.StbClient
 import com.gmscreen.accessible.protocol.StbDiscovery
 import com.gmscreen.accessible.util.AppConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class StbRepository(context: Context) {
 
@@ -39,6 +42,12 @@ class StbRepository(context: Context) {
     private val _currentChannel = MutableStateFlow<Channel?>(null)
     val currentChannel: StateFlow<Channel?> = _currentChannel.asStateFlow()
 
+    private val _stbTimers = MutableStateFlow<List<Map<String, Any>>>(emptyList())
+    val stbTimers: StateFlow<List<Map<String, Any>>> = _stbTimers.asStateFlow()
+
+    private val _pvrFiles = MutableStateFlow<List<Map<String, Any>>>(emptyList())
+    val pvrFiles: StateFlow<List<Map<String, Any>>> = _pvrFiles.asStateFlow()
+
     suspend fun discoverDevices(): List<StbDevice> {
         return discovery.discover(timeoutMs = 3500)
     }
@@ -52,8 +61,10 @@ class StbRepository(context: Context) {
                 appConfig.lastConnectedIp = ip
                 _deviceModel.value = client.formattedModel
 
-                // Fetch initial data
-                refreshData()
+                // Launch initial data fetch in background without blocking connect UI
+                CoroutineScope(Dispatchers.IO).launch {
+                    refreshData()
+                }
                 Result.success(true)
             } else {
                 Result.failure(Exception("اتصال به رسیور برقرار نشد"))
@@ -68,27 +79,48 @@ class StbRepository(context: Context) {
         client.disconnect()
         _isConnected.value = false
         _currentState.value = null
+        _stbTimers.value = emptyList()
+        _pvrFiles.value = emptyList()
     }
 
     suspend fun refreshData() {
-        if (!_isConnected.value) return
+        if (!client.isConnected) return
         try {
+            client.fetchTransponders()
             val sats = client.fetchSatellites()
             _satellites.value = sats
 
-            val chList = client.fetchChannels()
-            _channels.value = chList
-
             val state = client.fetchStbState()
             _currentState.value = state
+
+            val chList = client.fetchChannels(toIndex = if (state.totalChannels > 0) state.totalChannels else 800)
+            _channels.value = chList
+
             if (state.playingServiceId.isNotBlank()) {
                 _currentChannel.value = chList.find { it.serviceId == state.playingServiceId }
             }
-        } catch (_: Exception) {}
+
+            refreshTimers()
+            refreshPvrFiles()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun refreshTimers() {
+        if (!client.isConnected) return
+        val timers = client.fetchTimers()
+        _stbTimers.value = timers
+    }
+
+    suspend fun refreshPvrFiles() {
+        if (!client.isConnected) return
+        val files = client.fetchPvrFiles()
+        _pvrFiles.value = files
     }
 
     suspend fun switchChannel(channel: Channel): Boolean {
-        if (!_isConnected.value) return false
+        if (!client.isConnected) return false
         val success = client.switchChannel(channel.serviceId, channel.isRadio)
         if (success) {
             _currentChannel.value = channel
@@ -97,7 +129,21 @@ class StbRepository(context: Context) {
     }
 
     suspend fun sendRcuKey(keyCode: Int): Boolean {
-        if (!_isConnected.value) return false
+        if (!client.isConnected) return false
         return client.sendRcuKey(keyCode)
+    }
+
+    suspend fun addStbTimer(timer: Map<String, Any>): Boolean {
+        if (!client.isConnected) return false
+        val ok = client.addStbTimer(timer)
+        if (ok) refreshTimers()
+        return ok
+    }
+
+    suspend fun deleteStbTimer(timer: Map<String, Any>): Boolean {
+        if (!client.isConnected) return false
+        val ok = client.deleteStbTimer(timer)
+        if (ok) refreshTimers()
+        return ok
     }
 }

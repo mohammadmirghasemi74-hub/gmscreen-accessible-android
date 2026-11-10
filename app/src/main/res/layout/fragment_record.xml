@@ -10,23 +10,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="14dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/record_title"
+            android:text="مدیریت جامع ضبط و زمان‌بندی"
             android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="14dp" />
 
-        <!-- 1. Section: Record on Phone -->
+        <!-- 1. Instant Live Recording Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="14dp"
             app:cardBackgroundColor="@color/card_bg"
             app:cardCornerRadius="12dp"
             app:strokeColor="@color/divider"
@@ -36,143 +36,339 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="14dp">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/record_phone_section"
+                    android:text="۱. ضبط آنی در لحظه"
                     android:textColor="@color/accent_yellow"
                     android:textSize="17sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="10dp" />
+                    android:layout_marginBottom="8dp" />
 
                 <TextView
-                    android:id="@+id/txtPhoneRecStatus"
+                    android:id="@+id/txtInstantRecStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="وضعیت ضبط گوشی: آماده (ذخیره در پوشه gm screen android/recordings)"
+                    android:text="وضعیت: آماده ضبط روی گوشی یا فلش رسیور"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="10dp" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnStartPhoneVideoRec"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:text="@string/btn_start_record_video"
-                    android:textColor="@color/white"
-                    android:textSize="15sp"
-                    android:layout_marginBottom="8dp"
-                    app:icon="@android:drawable/ic_menu_camera"
-                    app:backgroundTint="@color/accent_red"
-                    app:cornerRadius="8dp" />
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnStartPhoneAudioRec"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:text="@string/btn_start_record_audio"
-                    android:textColor="@color/white"
-                    android:textSize="15sp"
-                    android:layout_marginBottom="8dp"
-                    app:icon="@android:drawable/ic_btn_speak_now"
-                    app:backgroundTint="@color/primary"
-                    app:cornerRadius="8dp" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnStartPhoneVideoRec"
+                        android:layout_width="0dp"
+                        android:layout_height="52dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:text="تصویری گوشی (MP4)"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        app:backgroundTint="@color/accent_red"
+                        app:cornerRadius="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnStartPhoneAudioRec"
+                        android:layout_width="0dp"
+                        android:layout_height="52dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:text="صوتی گوشی (MP3)"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        app:backgroundTint="@color/primary"
+                        app:cornerRadius="8dp" />
+                </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnStopPhoneRec"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
-                    android:text="@string/btn_stop_phone_record"
+                    android:text="توقف ضبط گوشی"
                     android:textColor="@color/white"
                     android:textSize="15sp"
                     android:visibility="gone"
+                    android:layout_marginBottom="8dp"
                     app:backgroundTint="@color/secondary"
+                    app:cornerRadius="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnStbInstantRecord"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:text="شروع ضبط فلش رسیور"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        app:backgroundTint="@color/accent_green"
+                        app:cornerRadius="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnStbStopRecord"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:text="توقف ضبط رسیور"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        app:backgroundTint="@color/secondary"
+                        app:cornerRadius="8dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 2. STB USB Scheduled Recording (PVR Timers) Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="12dp"
+            app:strokeColor="@color/accent_green"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="۲. زمان‌بندی ضبط روی فلش مموری رسیور (STB PVR)"
+                    android:textColor="@color/accent_green"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="تنظیم تایمر سخت‌افزاری رسیور تا در زمان مشخص به طور خودکار روشن شده و روی فلش USB ضبط کند."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="10dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAddStbTimer"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:text="➕ افزودن زمان‌بندی جدید روی فلش رسیور"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="8dp"
+                    app:backgroundTint="@color/accent_green"
                     app:cornerRadius="8dp" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="فایل‌های ضبط شده در گوشی:"
+                    android:text="تایمرهای فعال ثبت شده روی رسیور:"
                     android:textColor="@color/text_primary"
-                    android:textSize="15sp"
+                    android:textSize="14sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="4dp" />
+
+                <LinearLayout
+                    android:id="@+id/containerStbTimers"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/txtNoStbTimers"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="هیچ تایمری روی رسیور ثبت نشده است."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        android:padding="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 3. Phone Scheduled Recording Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="12dp"
+            app:strokeColor="@color/primary"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="۳. زمان‌بندی ضبط روی حافظه گوشی (Phone Scheduler)"
+                    android:textColor="@color/primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="تنظیم زمان‌بندی هوشمند در گوشی تا در ساعت تعیین شده استریم زنده را به صورت ویدیویی یا صوتی در حافظه ذخیره کند."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="10dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAddPhoneTimer"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:text="➕ افزودن زمان‌بندی ضبط روی حافظه گوشی"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="8dp"
+                    app:backgroundTint="@color/primary"
+                    app:cornerRadius="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="زمان‌بندی‌های فعال گوشی:"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="4dp" />
+
+                <LinearLayout
+                    android:id="@+id/containerPhoneTimers"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/txtNoPhoneTimers"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="هیچ زمان‌بندی فعالی در گوشی تنظیم نشده است."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        android:padding="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 4. Recordings Files (Phone & STB USB) Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="12dp"
+            app:strokeColor="@color/divider"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="۴. فایل‌های ضبط شده (گوشی و فلش مموری رسیور)"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="10dp" />
+
+                <!-- Files on Phone -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="فایل‌های ضبط شده در پوشه gm screen android/recordings:"
+                    android:textColor="@color/accent_yellow"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
                     android:layout_marginBottom="6dp" />
 
                 <LinearLayout
                     android:id="@+id/containerRecordedFiles"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp">
 
                     <TextView
                         android:id="@+id/txtNoRecordings"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="هنوز فایلی در گوشی ضبط نشده است."
+                        android:text="فایلی در حافظه گوشی ذخیره نشده است."
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp"
-                        android:padding="6dp" />
+                        android:padding="4dp" />
                 </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
 
-        <!-- 2. Section: Record on Receiver USB / PVR -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/divider"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
+                <!-- Files on STB USB Flash -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/record_receiver_section"
-                    android:textColor="@color/accent_green"
-                    android:textSize="17sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="10dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
 
-                <TextView
-                    android:id="@+id/txtStbRecStatus"
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="فایل‌های موجود روی فلش رسیور (PVR):"
+                        android:textColor="@color/accent_green"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnRefreshStbPvrFiles"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="بروزرسانی لیست"
+                        android:textColor="@color/accent_green"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/containerStbPvrFiles"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="وضعیت ضبط رسیور: ضبط مستقیم روی فلش مموری متصل به پورت USB رسیور انجام می‌شود."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="12dp" />
+                    android:orientation="vertical">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnStbInstantRecord"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:text="@string/btn_stb_instant_record"
-                    android:textColor="@color/white"
-                    android:textSize="15sp"
-                    android:layout_marginBottom="8dp"
-                    app:backgroundTint="@color/accent_red"
-                    app:cornerRadius="8dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnStbStopRecord"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:text="@string/btn_stb_stop_record"
-                    android:textColor="@color/white"
-                    android:textSize="15sp"
-                    app:backgroundTint="@color/secondary"
-                    app:cornerRadius="8dp" />
+                    <TextView
+                        android:id="@+id/txtNoStbPvrFiles"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="فایلی روی فلش رسیور پیدا نشد یا فلش متصل نیست."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        android:padding="4dp" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

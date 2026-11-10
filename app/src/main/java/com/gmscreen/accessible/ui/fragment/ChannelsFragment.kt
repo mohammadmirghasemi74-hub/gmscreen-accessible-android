@@ -245,7 +245,9 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             "۳. شروع ضبط زنده روی گوشی (MP4/MP3)",
             "۴. $lockTitle",
             "۵. مشخصات و اطلاعات فنی کانال",
-            "۶. کپی آدرس استریم زنده (RTSP URL)"
+            "۶. کپی آدرس استریم زنده (RTSP URL)",
+            "۷. افزودن به زمان‌بندی ضبط روی فلش رسیور",
+            "۸. افزودن به زمان‌بندی ضبط روی حافظه گوشی"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -255,7 +257,6 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
                     0 -> onChannelSelected(channel, isAudioOnly = false)
                     1 -> onChannelSelected(channel, isAudioOnly = true)
                     2 -> {
-                        // Quick record on phone
                         val file = StorageManager.generateRecordingFile(requireContext(), channel.serviceName, isAudioOnly = false)
                         val msg = "فایل ذخیره‌سازی ایجاد شد: ${file.name}"
                         Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
@@ -274,6 +275,16 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
                         val msg = "آدرس استریم زنده کپی شد: $url"
                         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                         AccessibilityHelper.announce(txtChannelCount, msg)
+                    }
+                    6 -> {
+                        // Switch to Record Tab to configure STB Timer
+                        (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
+                        Toast.makeText(requireContext(), "در سربرگ ضبط، دکمه افزودن زمان‌بندی رسیور را بزنید", Toast.LENGTH_LONG).show()
+                    }
+                    7 -> {
+                        // Switch to Record Tab to configure Phone Timer
+                        (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
+                        Toast.makeText(requireContext(), "در سربرگ ضبط، دکمه افزودن زمان‌بندی گوشی را بزنید", Toast.LENGTH_LONG).show()
                     }
                 }
             }
