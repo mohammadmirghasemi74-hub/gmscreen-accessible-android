@@ -389,7 +389,7 @@ class StbClient {
         val apid = channel.audioPid
         val pmt = channel.pmtPid
         val prognumber = sid.takeLast(4)
-        val pidsStr = if (isRadio) "0,$pmt,$apid" else "$vpid,$apid,0,0,$pmt"
+        val pidsStr = if (isRadio) "0,$pmt,$apid" else "$vpid,$apid,8191,0,$pmt"
 
         val satIdx = tp["SatIndex"] ?: 0
         val freq = tp["Freq"] ?: 0
@@ -397,7 +397,7 @@ class StbClient {
         val sr = tp["SR"] ?: 0
         val fec = tp["FEC"] ?: 0
 
-        return "?alisatid=$satIdx&freq=$freq&pol=$pol&msys=dvbs&mtype=qpsk&ro=0.35&plts=off&sr=$sr&fec=$fec&camode=0&vpid=$vpid&apid=$apid&ttxpid=0&subtpid=0&pmt=$pmt&prognumber=$prognumber&pids=$pidsStr"
+        return "?alisatid=$satIdx&freq=$freq&pol=$pol&msys=dvbs2&mtype=8psk&ro=0.35&plts=on&sr=$sr&fec=$fec&camode=0&vpid=$vpid&apid=$apid&ttxpid=8191&subtpid=0&pmt=$pmt&prognumber=$prognumber&pids=$pidsStr"
     }
 
     suspend fun fetchChannels(toIndex: Int? = null): List<Channel> = withContext(Dispatchers.IO) {

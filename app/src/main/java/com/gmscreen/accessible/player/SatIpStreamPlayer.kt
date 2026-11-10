@@ -98,6 +98,9 @@ class SatIpStreamPlayer(
                 }
                 satIpSession = session
 
+                // Wait 300ms for STB stream packets to arrive and buffer
+                delay(300)
+
                 withContext(Dispatchers.Main) {
                     initializePlayer()
 
