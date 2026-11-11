@@ -75,6 +75,8 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         recyclerViewChannels = view.findViewById(R.id.recyclerViewChannels)
 
         recyclerViewChannels.layoutManager = LinearLayoutManager(requireContext())
+        recyclerViewChannels.setHasFixedSize(true)
+        recyclerViewChannels.setItemViewCacheSize(20)
 
         setupPlayer(view)
         setupControls()
@@ -168,10 +170,19 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             .show()
     }
 
+    private var hasAnnouncedChannelsIntro = false
+
     private fun observeData() {
         viewLifecycleOwner.lifecycleScope.launch {
-            repository.channels.collect {
+            repository.channels.collect { allCh ->
                 filterChannels()
+                if (allCh.isNotEmpty() && !hasAnnouncedChannelsIntro) {
+                    hasAnnouncedChannelsIntro = true
+                    val tvCount = allCh.count { it.serviceType == 1 || it.serviceType == 0 }
+                    val radioCount = allCh.count { it.serviceType == 2 }
+                    val introMsg = "شبکه‌ها از رسیور دریافت شد. ${allCh.size} کانال شامل $tvCount تلویزیونی و $radioCount رادیویی پیدا شد. با ضربه زدن روی هر کانال پخش آغاز می‌شود و با لمس طولانی گزینه‌های بیشتر نمایش داده می‌شود."
+                    AccessibilityHelper.announce(txtChannelCount, introMsg)
+                }
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
@@ -223,19 +234,23 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
     private fun onChannelSelected(channel: Channel, isAudioOnly: Boolean) {
         val ip = repository.connectedIp.value
         if (ip.isBlank()) {
-            AccessibilityHelper.announce(txtChannelCount, "رسیور متصل نیست. ابتدا به رسیور متصل شوید.")
+            AccessibilityHelper.announce(txtChannelCount, "رسیور متصل نیست")
             Toast.makeText(requireContext(), "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val msg = "در حال انتقال به شبکه ${channel.serviceName}..."
-        AccessibilityHelper.announce(txtChannelCount, msg)
+        val isAlreadyPlaying = (repository.currentChannel.value?.serviceId == channel.serviceId)
+
+        // Concise, natural announcement matching user request: simply announce channel name
+        if (!isAlreadyPlaying) {
+            val prefix = if (channel.isRadio) "رادیو" else "شبکه"
+            AccessibilityHelper.announce(txtChannelCount, "$prefix ${channel.serviceName}")
+        }
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val switched = repository.switchChannel(channel)
+            val switched = if (isAlreadyPlaying) true else repository.switchChannel(channel)
             withContext(Dispatchers.Main) {
                 if (switched) {
-                    AccessibilityHelper.announce(txtChannelCount, "کانال ${channel.serviceName} در حال پخش است")
                     if (appConfig.hapticFeedbackEnabled) {
                         AccessibilityHelper.vibrateSuccess(requireContext())
                     }

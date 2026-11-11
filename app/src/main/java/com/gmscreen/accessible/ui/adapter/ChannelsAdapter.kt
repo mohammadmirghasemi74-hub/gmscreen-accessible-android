@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.card.MaterialCardView
 import com.google.android.material.button.MaterialButton
 import com.gmscreen.accessible.R
 import com.gmscreen.accessible.data.model.Channel
@@ -20,6 +19,14 @@ class ChannelsAdapter(
 
     private var currentPlayingServiceId: String? = null
 
+    init {
+        setHasStableIds(true)
+    }
+
+    override fun getItemId(position: Int): Long {
+        return channels[position].serviceId.hashCode().toLong()
+    }
+
     fun updateChannels(newChannels: List<Channel>) {
         channels = newChannels
         notifyDataSetChanged()
@@ -27,8 +34,12 @@ class ChannelsAdapter(
 
     fun setCurrentPlayingChannel(serviceId: String?) {
         if (currentPlayingServiceId != serviceId) {
+            val oldIdx = channels.indexOfFirst { it.serviceId == currentPlayingServiceId }
+            val newIdx = channels.indexOfFirst { it.serviceId == serviceId }
             currentPlayingServiceId = serviceId
-            notifyDataSetChanged()
+            if (oldIdx >= 0) notifyItemChanged(oldIdx)
+            if (newIdx >= 0) notifyItemChanged(newIdx)
+            if (oldIdx < 0 && newIdx < 0) notifyDataSetChanged()
         }
     }
 
@@ -51,7 +62,6 @@ class ChannelsAdapter(
     override fun getItemCount(): Int = channels.size
 
     class ChannelViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val cardView: MaterialCardView = itemView as MaterialCardView
         private val txtNum: TextView = itemView.findViewById(R.id.txtChannelNumber)
         private val txtName: TextView = itemView.findViewById(R.id.txtChannelName)
         private val txtDetails: TextView = itemView.findViewById(R.id.txtChannelDetails)
@@ -79,28 +89,22 @@ class ChannelsAdapter(
             badgeLock.visibility = if (channel.isScrambled) View.VISIBLE else View.GONE
 
             if (isCurrentlyPlaying) {
-                cardView.strokeColor = ContextCompat.getColor(itemView.context, R.color.accent_green)
-                cardView.strokeWidth = 4
+                itemView.setBackgroundColor(ContextCompat.getColor(itemView.context, R.color.card_bg))
             } else {
-                cardView.strokeColor = ContextCompat.getColor(itemView.context, R.color.divider)
-                cardView.strokeWidth = 1
+                itemView.background = null
             }
 
+            // Accessibility label: clean, short and concise
             val accessibilityDescription = buildString {
                 append("کانال ")
                 append(displayNumber)
                 append("، ")
                 append(channel.serviceName)
                 if (isCurrentlyPlaying) {
-                    append("، در حال پخش در تلویزیون")
+                    append("، در حال پخش")
                 }
-                if (channel.isHd) append("، اچ دی")
-                if (channel.isScrambled) append("، کارتی") else append("، رایگان")
-                if (channel.satelliteName.isNotBlank()) {
-                    append("، ماهواره ")
-                    append(channel.satelliteName)
-                }
-                append(". برای گزینه‌ها انگشت را نگه دارید.")
+                if (channel.isHd) append("، HD")
+                if (channel.isScrambled) append("، کارتی")
             }
             itemView.contentDescription = accessibilityDescription
 
@@ -108,7 +112,7 @@ class ChannelsAdapter(
                 onClick(channel)
             }
 
-            btnLivePlay.contentDescription = "پخش زنده کانال ${channel.serviceName}"
+            btnLivePlay.contentDescription = "پخش زنده"
             btnLivePlay.setOnClickListener {
                 onClick(channel)
             }

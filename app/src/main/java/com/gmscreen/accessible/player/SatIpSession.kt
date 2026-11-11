@@ -64,6 +64,7 @@ class SatIpSession(
             streamId = streamMatcher.group(1)?.trim()
 
             // 2. PLAY
+            // ALi feng rtsp server responds to PLAY with '200 OK' or custom '903 Ali Rtsp reqeuset Server response'
             val playReq = "PLAY rtsp://$stbIp:554/stream=$streamId RTSP/1.0\r\n" +
                     "CSeq: $cseq\r\n" +
                     "Session: $sessionId\r\n" +
@@ -78,7 +79,8 @@ class SatIpSession(
                 if (line!!.isBlank()) break
             }
 
-            if (!playResp.contains("200 OK")) {
+            val playRespStr = playResp.toString()
+            if (!playRespStr.contains("200 OK") && !playRespStr.contains("Ali Rtsp") && !playRespStr.contains("903")) {
                 stop()
                 return@withContext false
             }
