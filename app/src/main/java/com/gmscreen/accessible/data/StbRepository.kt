@@ -87,7 +87,7 @@ class StbRepository(context: Context) {
                 try {
                     val pid = client.getPlayingChannel()
                     if (!pid.isNullOrBlank() && pid != _currentChannel.value?.serviceId) {
-                        val ch = _channels.value.find { it.serviceId == pid }
+                        val ch = _channels.value.find { it.serviceId == pid || it.serviceId.endsWith(pid) }
                         if (ch != null) {
                             _currentChannel.value = ch
                         }
@@ -122,7 +122,7 @@ class StbRepository(context: Context) {
 
             val playingPid = if (state.playingServiceId.isNotBlank()) state.playingServiceId else client.getPlayingChannel()
             if (!playingPid.isNullOrBlank()) {
-                _currentChannel.value = chList.find { it.serviceId == playingPid }
+                _currentChannel.value = chList.find { it.serviceId == playingPid || it.serviceId.endsWith(playingPid) }
             }
 
             refreshTimers()

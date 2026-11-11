@@ -259,7 +259,16 @@ class StbClient {
                                         }
                                     }
                                 } else if (parsed.isJsonObject) {
-                                    resultList.add(jsonObjectToMap(parsed.asJsonObject))
+                                    val obj = parsed.asJsonObject
+                                    if (obj.has("array") && obj.get("array").isJsonArray) {
+                                        for (elem in obj.getAsJsonArray("array")) {
+                                            if (elem.isJsonObject) {
+                                                resultList.add(jsonObjectToMap(elem.asJsonObject))
+                                            }
+                                        }
+                                    } else {
+                                        resultList.add(jsonObjectToMap(obj))
+                                    }
                                 }
                             } catch (e: Exception) {
                                 e.printStackTrace()
@@ -333,7 +342,10 @@ class StbClient {
     }
 
     suspend fun fetchStbState(): StbState = withContext(Dispatchers.IO) {
-        var res = sendCmd(14, timeoutMs = 4000)
+        var res = sendCmd(21, timeoutMs = 4000)
+        if (res.isNullOrEmpty()) {
+            res = sendCmd(14, timeoutMs = 4000)
+        }
         if (res.isNullOrEmpty()) {
             res = sendCmd(15, timeoutMs = 4000)
         }
@@ -341,7 +353,8 @@ class StbClient {
         if (!res.isNullOrEmpty()) {
             val d = res[0]
             val chNum = d["ChannelNum"]?.toString()?.toIntOrNull() ?: 0
-            val playing = if (playingPid.isNotBlank()) playingPid else (d["playingServiceId"]?.toString() ?: "")
+            val curProg = d["CurProgNumber"]?.toString() ?: ""
+            val playing = if (playingPid.isNotBlank()) playingPid else if (curProg.isNotBlank()) curProg else (d["playingServiceId"]?.toString() ?: "")
             val power = d["PowerMode"]?.toString()?.toIntOrNull() ?: 1
             return@withContext StbState(
                 channelNum = chNum,
