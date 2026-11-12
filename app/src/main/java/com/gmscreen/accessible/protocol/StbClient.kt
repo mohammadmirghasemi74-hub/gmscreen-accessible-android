@@ -116,16 +116,8 @@ class StbClient {
 
     private fun startKeepalive() {
         keepaliveJob?.cancel()
-        keepaliveJob = clientScope.launch {
-            while (isActive && isConnected) {
-                delay(10000)
-                if (!isConnected) break
-                try {
-                    // Request 26 holds the session open on ALi firmware
-                    sendCmd(26, expectReply = false, timeoutMs = 2000)
-                } catch (_: Exception) {}
-            }
-        }
+        // No periodic sendCmd(26) - ALi receiver maintains connection on port 20000 without polling,
+        // matching Windows implementation. Background sendCmd causes lock contention on the socket.
     }
 
     fun disconnect() {
@@ -428,10 +420,17 @@ class StbClient {
                     )
                 )
             )
-            val res = sendCmd(0, fields, expectReply = true, timeoutMs = 8000) ?: break
-            if (res.isEmpty()) break
+            var res = sendCmd(0, fields, expectReply = true, timeoutMs = 8000)
+            if (res.isNullOrEmpty()) {
+                kotlinx.coroutines.delay(200)
+                res = sendCmd(0, fields, expectReply = true, timeoutMs = 8000)
+            }
+            if (res.isNullOrEmpty()) break
 
-            for (c in res) {
+            val validBatch = res.filter { it["ServiceID"] != null }
+            if (validBatch.isEmpty()) break
+
+            for (c in validBatch) {
                 val sid = c["ServiceID"]?.toString() ?: continue
                 val sName = c["ServiceName"]?.toString() ?: "کانال"
                 val isRadio = (c["Radio"]?.toString() == "1")
@@ -458,13 +457,13 @@ class StbClient {
                         videoPid = vPid,
                         audioPid = aPid,
                         pmtPid = pmt,
-                        realChannelNum = channels.size + 1,
                         frequency = freq
                     )
                 )
             }
-            if (res.size < (stop - cur + 1)) break
+            if (validBatch.size < (stop - cur + 1)) break
             cur = stop + 1
+            kotlinx.coroutines.delay(50)
         }
         channels
     }

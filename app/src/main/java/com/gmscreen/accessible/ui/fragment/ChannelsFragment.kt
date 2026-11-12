@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.gmscreen.accessible.GMScreenApplication
 import com.gmscreen.accessible.R
 import com.gmscreen.accessible.data.model.Channel
@@ -45,6 +46,7 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
     private lateinit var btnClearSearch: ImageButton
     private lateinit var txtChannelCount: TextView
     private lateinit var recyclerViewChannels: RecyclerView
+    private lateinit var fabRefreshChannels: ExtendedFloatingActionButton
 
     private var streamPlayer: SatIpStreamPlayer? = null
     private var channelsAdapter: ChannelsAdapter? = null
@@ -73,6 +75,7 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         btnClearSearch = view.findViewById(R.id.btnClearSearch)
         txtChannelCount = view.findViewById(R.id.txtChannelCount)
         recyclerViewChannels = view.findViewById(R.id.recyclerViewChannels)
+        fabRefreshChannels = view.findViewById(R.id.fabRefreshChannels)
 
         recyclerViewChannels.layoutManager = LinearLayoutManager(requireContext())
         recyclerViewChannels.setHasFixedSize(true)
@@ -121,6 +124,10 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             AccessibilityHelper.announce(edtSearch, "جستجو پاک شد")
         }
 
+        fabRefreshChannels.setOnClickListener {
+            refreshChannelsFromStb()
+        }
+
         edtSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -140,31 +147,93 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         })
     }
 
+    private fun refreshChannelsFromStb() {
+        val ip = repository.connectedIp.value
+        if (ip.isBlank() || !repository.isConnected.value) {
+            AccessibilityHelper.announce(txtChannelCount, "رسیور متصل نیست")
+            Toast.makeText(requireContext(), "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        fabRefreshChannels.isEnabled = false
+        AccessibilityHelper.announce(txtChannelCount, "در حال دریافت شبکه‌ها از رسیور...")
+        txtChannelCount.text = "در حال دریافت اطلاعات از رسیور..."
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                repository.refreshData()
+                val count = repository.channels.value.size
+                if (count > 0) {
+                    val tvCount = repository.channels.value.count { it.serviceType == 1 || it.serviceType == 0 }
+                    val radioCount = repository.channels.value.count { it.serviceType == 2 }
+                    AccessibilityHelper.announce(txtChannelCount, "به‌روزرسانی انجام شد. $count کانال شامل $tvCount تلویزیونی و $radioCount رادیویی دریافت شد.")
+                } else {
+                    AccessibilityHelper.announce(txtChannelCount, "شبکه‌ای از رسیور دریافت نشد.")
+                }
+            } catch (e: Exception) {
+                AccessibilityHelper.announce(txtChannelCount, "خطا در دریافت شبکه‌ها از رسیور.")
+            } finally {
+                fabRefreshChannels.isEnabled = true
+            }
+        }
+    }
+
     private fun showSatelliteSelectionDialog() {
-        val satellites = repository.satellites.value
-        val items = mutableListOf("همه ماهواره‌ها (عموم شبکه‌ها)")
-        items.addAll(satellites.map { it.satelliteName })
+        val allChannels = repository.channels.value
+        if (allChannels.isEmpty()) {
+            Toast.makeText(requireContext(), "هنوز شبکه‌ای دریافت نشده است", Toast.LENGTH_SHORT).show()
+            AccessibilityHelper.announce(btnSatelliteFilter, "هنوز شبکه‌ای از رسیور دریافت نشده است")
+            return
+        }
+
+        // Count channels per satellite index (matching Windows main.py)
+        val satChannelCounts = mutableMapOf<Int, Int>()
+        for (c in allChannels) {
+            satChannelCounts[c.satIndex] = (satChannelCounts[c.satIndex] ?: 0) + 1
+        }
+
+        val allSats = repository.satellites.value
+        val satNameMap = allSats.associate { it.satelliteId to it.satelliteName }
+
+        // Only include satellites that actually have tuned channels on this receiver
+        val activeSats = satChannelCounts.keys.sorted().map { satId ->
+            val name = satNameMap[satId] ?: "ماهواره #$satId"
+            Triple(satId, name, satChannelCounts[satId] ?: 0)
+        }
+
+        val items = mutableListOf<String>()
+        items.add("همه ماهواره‌ها (${allChannels.size} شبکه)")
+        for (sat in activeSats) {
+            items.add("${sat.second} (${sat.third} شبکه)")
+        }
 
         var selectedIndex = 0
         if (selectedSatelliteId != -1) {
-            val idx = satellites.indexOfFirst { it.satelliteId == selectedSatelliteId }
-            if (idx >= 0) selectedIndex = idx + 1
+            val idx = activeSats.indexOfFirst { it.first == selectedSatelliteId }
+            if (idx >= 0) {
+                selectedIndex = idx + 1
+            } else {
+                selectedSatelliteId = -1
+            }
         }
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("انتخاب و فیلتر ماهواره")
+            .setTitle("انتخاب و فیلتر ماهواره‌های فعال")
             .setSingleChoiceItems(items.toTypedArray(), selectedIndex) { dialog, which ->
                 if (which == 0) {
                     selectedSatelliteId = -1
                     btnSatelliteFilter.text = "همه ماهواره‌ها"
+                    AccessibilityHelper.announce(btnSatelliteFilter, "فیلتر بر روی همه ماهواره‌ها تنظیم شد")
                 } else {
-                    val sat = satellites.getOrNull(which - 1)
-                    selectedSatelliteId = sat?.satelliteId ?: -1
-                    btnSatelliteFilter.text = sat?.satelliteName ?: "ماهواره"
+                    val sat = activeSats.getOrNull(which - 1)
+                    if (sat != null) {
+                        selectedSatelliteId = sat.first
+                        btnSatelliteFilter.text = sat.second
+                        AccessibilityHelper.announce(btnSatelliteFilter, "فیلتر اعمال شد: ${sat.second}، شامل ${sat.third} شبکه")
+                    }
                 }
                 filterChannels()
                 dialog.dismiss()
-                AccessibilityHelper.announce(btnSatelliteFilter, "فیلتر اعمال شد: ${btnSatelliteFilter.text}")
             }
             .setNegativeButton("انصراف", null)
             .show()

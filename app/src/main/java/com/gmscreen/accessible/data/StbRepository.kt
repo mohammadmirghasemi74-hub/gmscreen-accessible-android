@@ -62,9 +62,7 @@ class StbRepository(context: Context) {
                 appConfig.lastConnectedIp = ip
                 _deviceModel.value = client.formattedModel
 
-                startChannelMonitor()
-
-                // Launch initial data fetch in background without blocking connect UI
+                // Launch initial data fetch in background cleanly without monitor thread interference
                 repoScope.launch {
                     refreshData()
                 }
@@ -82,7 +80,7 @@ class StbRepository(context: Context) {
         monitorJob?.cancel()
         monitorJob = repoScope.launch {
             while (isActive && client.isConnected) {
-                delay(1500)
+                delay(2000)
                 if (!client.isConnected) break
                 try {
                     val pid = client.getPlayingChannel()
@@ -109,6 +107,7 @@ class StbRepository(context: Context) {
 
     suspend fun refreshData() {
         if (!client.isConnected) return
+        monitorJob?.cancel()
         try {
             client.fetchTransponders()
             val sats = client.fetchSatellites()
@@ -117,7 +116,21 @@ class StbRepository(context: Context) {
             val state = client.fetchStbState()
             _currentState.value = state
 
-            val chList = client.fetchChannels(toIndex = if (state.channelNum > 0) state.channelNum else 800)
+            val toIdx = if (state.channelNum > 0) state.channelNum - 1 else 800
+            val chList = client.fetchChannels(toIndex = toIdx)
+
+            val satMap = sats.associate { it.satelliteId to it.satelliteName }
+            var tvCounter = 1
+            var radioCounter = 1
+            for (ch in chList) {
+                ch.satelliteName = satMap[ch.satIndex] ?: "ماهواره #${ch.satIndex}"
+                if (ch.isRadio) {
+                    ch.realChannelNum = radioCounter++
+                } else {
+                    ch.realChannelNum = tvCounter++
+                }
+            }
+
             _channels.value = chList
 
             val playingPid = if (state.playingServiceId.isNotBlank()) state.playingServiceId else client.getPlayingChannel()
@@ -129,6 +142,8 @@ class StbRepository(context: Context) {
             refreshPvrFiles()
         } catch (e: Exception) {
             e.printStackTrace()
+        } finally {
+            startChannelMonitor()
         }
     }
 

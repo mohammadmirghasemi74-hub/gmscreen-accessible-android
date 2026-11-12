@@ -136,13 +136,32 @@
             app:use_controller="true" />
     </LinearLayout>
 
-    <!-- Channels RecyclerView: takes entire remaining screen -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewChannels"
+    <!-- Channels Container with Refresh FAB -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingVertical="4dp"
-        android:clipToPadding="false" />
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewChannels"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingVertical="4dp"
+            android:clipToPadding="false" />
+
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+            android:id="@+id/fabRefreshChannels"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:text="به‌روزرسانی"
+            android:contentDescription="به‌روزرسانی لیست شبکه‌ها از رسیور"
+            android:textColor="@color/white"
+            app:icon="@android:drawable/ic_popup_sync"
+            app:iconTint="@color/white"
+            app:backgroundTint="@color/primary" />
+
+    </FrameLayout>
 
 </LinearLayout>
