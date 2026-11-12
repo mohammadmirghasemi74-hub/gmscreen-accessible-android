@@ -2,43 +2,42 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
   workflow_dispatch:
-
-concurrency:
-  group: build-apk
-  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      - name: Restore Fixed Keystore
+        run: |
+          mkdir -p keystore
+          echo "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" | base64 -d > keystore/gmscreen.keystore
 
-    - name: Restore Keystore from base64
-      run: |
-        mkdir -p keystore
-        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/gmscreen.keystore
+      - name: Make Gradle Wrapper Executable
+        run: chmod +x gradlew
 
-    - name: Build with Gradle
-      run: ./gradlew assembleRelease --no-daemon --stacktrace
+      - name: Build Release APK
+        run: |
+          ./gradlew assembleRelease --stacktrace
+          cp keystore/gmscreen.keystore app/build/outputs/apk/release/gmscreen.keystore
 
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: gmscreen-accessible-release
-        path: app/build/outputs/apk/release/*.apk
-        retention-days: 7
+      - name: Upload Release APK and Keystore Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GMScreen-Accessible-APK
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/release/gmscreen.keystore
+          retention-days: 7
