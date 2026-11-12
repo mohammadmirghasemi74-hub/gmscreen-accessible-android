@@ -39,7 +39,7 @@ class StbClient {
     var formattedModel: String = ""
         private set
 
-    private val transponders = mutableMapOf<Int, Map<String, Any>>()
+    val transponders = mutableMapOf<Int, Map<String, Any>>()
     private var keepaliveJob: Job? = null
     private val clientScope = CoroutineScope(Dispatchers.IO)
 
