@@ -109,37 +109,43 @@ class StbRepository(context: Context) {
         if (!client.isConnected) return
         monitorJob?.cancel()
         try {
-            client.fetchTransponders()
-            val sats = client.fetchSatellites()
-            _satellites.value = sats
-
+            // 1. Fetch STB State first to get channel count
             val state = client.fetchStbState()
             _currentState.value = state
 
+            // 2. Fetch Satellites for names
+            val sats = client.fetchSatellites()
+            _satellites.value = sats
+
+            // 3. Fetch Channels in 100-channel pages
             val toIdx = if (state.channelNum > 0) state.channelNum - 1 else 800
             val chList = client.fetchChannels(toIndex = toIdx)
 
-            val satMap = sats.associate { it.satelliteId to it.satelliteName }
-            var tvCounter = 1
-            var radioCounter = 1
-            for (ch in chList) {
-                ch.satelliteName = satMap[ch.satIndex] ?: "ماهواره #${ch.satIndex}"
-                if (ch.isRadio) {
-                    ch.realChannelNum = radioCounter++
-                } else {
-                    ch.realChannelNum = tvCounter++
+            if (chList.isNotEmpty()) {
+                val satMap = sats.associate { it.satelliteId to it.satelliteName }
+                var tvCounter = 1
+                var radioCounter = 1
+                for (ch in chList) {
+                    ch.satelliteName = satMap[ch.satIndex] ?: "ماهواره #${ch.satIndex}"
+                    if (ch.isRadio) {
+                        ch.realChannelNum = radioCounter++
+                    } else {
+                        ch.realChannelNum = tvCounter++
+                    }
                 }
+                _channels.value = chList
             }
 
-            _channels.value = chList
-
+            // 4. Update currently playing channel
             val playingPid = if (state.playingServiceId.isNotBlank()) state.playingServiceId else client.getPlayingChannel()
             if (!playingPid.isNullOrBlank()) {
-                _currentChannel.value = chList.find { it.serviceId == playingPid || it.serviceId.endsWith(playingPid) }
+                _currentChannel.value = _channels.value.find { it.serviceId == playingPid || it.serviceId.endsWith(playingPid) }
             }
 
-            refreshTimers()
-            refreshPvrFiles()
+            // 5. Fetch transponders in background only if not cached yet (needed for stream playback)
+            if (client.transponders.isEmpty()) {
+                client.fetchTransponders()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {

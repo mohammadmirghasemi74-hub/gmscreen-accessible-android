@@ -99,15 +99,16 @@ class StbClient {
                     val endIdx = modelBytes.indexOf(0).let { if (it >= 0) it else modelBytes.size }
                     rawModel = String(modelBytes, 0, endIdx, Charsets.US_ASCII).trim()
                     formattedModel = ProtocolConstants.formatStbProductName(rawModel)
+                    if (formattedModel.isBlank()) {
+                        formattedModel = "رسیور مدیااستار ($ip)"
+                    }
+                    isConnected = true
+                    return true
                 }
             }
 
-            if (formattedModel.isBlank()) {
-                formattedModel = "رسیور مدیااستار ($ip)"
-            }
-
-            isConnected = true
-            return true
+            disconnectLocked()
+            return false
         } catch (e: Exception) {
             disconnectLocked()
             return false
@@ -169,19 +170,34 @@ class StbClient {
     }
 
     private fun decompressZlib(raw: ByteArray): String {
-        val inflater = Inflater(false)
-        inflater.setInput(raw)
-        val bos = java.io.ByteArrayOutputStream(raw.size * 4)
-        val buf = ByteArray(4096)
-        while (!inflater.finished()) {
-            val count = inflater.inflate(buf)
-            if (count <= 0 && inflater.needsInput()) break
-            if (count > 0) {
-                bos.write(buf, 0, count)
+        return try {
+            val bais = java.io.ByteArrayInputStream(raw)
+            val iis = java.util.zip.InflaterInputStream(bais)
+            val bos = java.io.ByteArrayOutputStream(maxOf(raw.size * 6, 8192))
+            val buf = ByteArray(4096)
+            var n: Int
+            while (iis.read(buf).also { n = it } != -1) {
+                bos.write(buf, 0, n)
+            }
+            iis.close()
+            bos.toString("UTF-8")
+        } catch (e: Exception) {
+            try {
+                val bais = java.io.ByteArrayInputStream(raw)
+                val iis = java.util.zip.InflaterInputStream(bais, java.util.zip.Inflater(true))
+                val bos = java.io.ByteArrayOutputStream(maxOf(raw.size * 6, 8192))
+                val buf = ByteArray(4096)
+                var n: Int
+                while (iis.read(buf).also { n = it } != -1) {
+                    bos.write(buf, 0, n)
+                }
+                iis.close()
+                bos.toString("UTF-8")
+            } catch (e2: Exception) {
+                android.util.Log.e("StbClient", "decompressZlib failed: ${e2.message}")
+                ""
             }
         }
-        inflater.end()
-        return bos.toString("UTF-8")
     }
 
     fun sendCmd(
