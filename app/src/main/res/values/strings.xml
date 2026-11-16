@@ -89,7 +89,7 @@
     <string name="btn_backup_phone">پشتیبان‌گیری از کانال‌ها روی حافظه گوشی (JSON)</string>
     <string name="btn_export_m3u">صدور فایل پلی‌لیست شبکه‌ها (M3U Playlist)</string>
     <string name="btn_backup_stb_usb">پشتیبان‌گیری کانال‌ها روی فلش رسیور (SDX)</string>
-    <string name="backup_list_title">پشتیبان‌های ذخیره شده در پوشه gm screen android:</string>
+    <string name="backup_list_title">پشتیبان‌های ذخیره شده در پوشه GMScreen:</string>
 
     <!-- تنظیمات -->
     <string name="settings_title">دسته‌بندی‌های تنظیمات برنامه</string>

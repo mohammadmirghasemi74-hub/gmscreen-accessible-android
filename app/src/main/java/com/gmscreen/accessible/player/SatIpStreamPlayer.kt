@@ -5,7 +5,6 @@ import android.net.Uri
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -15,18 +14,10 @@ import com.gmscreen.accessible.data.model.Channel
 import com.gmscreen.accessible.protocol.StbClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.OutputStream
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetSocketAddress
-import java.net.ServerSocket
-import java.net.Socket
 
 @OptIn(UnstableApi::class)
 class SatIpStreamPlayer(
@@ -43,21 +34,11 @@ class SatIpStreamPlayer(
     }
 
     private var exoPlayer: ExoPlayer? = null
-    private var satIpSession: SatIpSession? = null
-    private var inSocket: DatagramSocket? = null
-    private var httpServer: ServerSocket? = null
-    private var serverJob: Job? = null
-    private var streamJob: Job? = null
     private val playerScope = CoroutineScope(Dispatchers.IO)
     private var currentStbClient: StbClient? = null
 
-    @Volatile
-    private var activeClientOut: OutputStream? = null
-
     companion object {
         private const val TAG = "SatIpStreamPlayer"
-        private const val STB_STREAM_PORT = 5114
-        private const val LOCAL_HTTP_PORT = 8899
     }
 
     init {
@@ -74,17 +55,17 @@ class SatIpStreamPlayer(
         }
     }
 
-    fun playChannel(stbClient: StbClient, stbIp: String, channel: Channel) {
+    fun playChannel(stbClient: StbClient, stbIp: String, channel: Channel, isAudioOnly: Boolean = false) {
         stop()
         currentStbClient = stbClient
 
         playerScope.launch {
             try {
-                // 1. Wake STB SAT>IP server daemon
+                // 1. Wake STB RTSP server daemon on port 20000 (Request 1009)
                 stbClient.sendCmd(1009, expectReply = false)
                 delay(300)
 
-                // 2. Build ALi SAT>IP query (fetches transponders automatically if needed)
+                // 2. Build ALi SAT>IP query string
                 val query = stbClient.buildSatIpQuery(channel)
                 if (query.isNullOrBlank()) {
                     withContext(Dispatchers.Main) {
@@ -93,32 +74,13 @@ class SatIpStreamPlayer(
                     return@launch
                 }
 
-                // 3. Start local HTTP TS streaming server & UDP receiver
-                startHttpServerAndUdp()
-
-                // 4. Start RTSP Session (SETUP + PLAY)
-                val session = SatIpSession(stbIp, clientPort = STB_STREAM_PORT)
-                val ok = session.start(query)
-                if (!ok) {
-                    stop()
-                    withContext(Dispatchers.Main) {
-                        listener?.onPlaybackError("عدم دریافت سیگنال استریم از رسیور")
-                    }
-                    return@launch
-                }
-                satIpSession = session
-
-                // Wait for STB stream packets to arrive
-                delay(300)
+                val rtspUrl = "rtsp://$stbIp:554/$query"
+                Log.d(TAG, "Playing Native RTSP Stream: $rtspUrl")
 
                 withContext(Dispatchers.Main) {
                     initializePlayer()
 
-                    val mediaItem = MediaItem.Builder()
-                        .setUri(Uri.parse("http://127.0.0.1:$LOCAL_HTTP_PORT/live.ts"))
-                        .setMimeType(MimeTypes.VIDEO_MP2T)
-                        .build()
-
+                    val mediaItem = MediaItem.fromUri(Uri.parse(rtspUrl))
                     exoPlayer?.apply {
                         setMediaItem(mediaItem)
                         prepare()
@@ -134,117 +96,12 @@ class SatIpStreamPlayer(
         }
     }
 
-    private fun startHttpServerAndUdp() {
-        stopHttpServerAndUdp()
-        try {
-            // Setup UDP socket listening for STB RTP packets
-            val iSock = DatagramSocket(null).apply {
-                reuseAddress = true
-                bind(InetSocketAddress(STB_STREAM_PORT))
-                soTimeout = 2000
-                receiveBufferSize = 4 * 1024 * 1024
-            }
-            inSocket = iSock
-
-            // Start UDP reader loop
-            streamJob = playerScope.launch {
-                val buf = ByteArray(4096)
-                val packet = DatagramPacket(buf, buf.size)
-                while (isActive) {
-                    try {
-                        iSock.receive(packet)
-                        val len = packet.length
-                        if (len <= 0) continue
-
-                        // Check if RTP packet (12-byte header, sync byte 0x47 at index 12)
-                        val offset = if (len > 12 && (buf[0].toInt() and 0xC0) == 0x80 && buf[12] == 0x47.toByte()) {
-                            12
-                        } else {
-                            0
-                        }
-                        val tsLen = len - offset
-                        if (tsLen > 0) {
-                            val client = activeClientOut
-                            if (client != null) {
-                                try {
-                                    client.write(buf, offset, tsLen)
-                                } catch (_: Exception) {
-                                    activeClientOut = null
-                                }
-                            }
-                        }
-                    } catch (_: Exception) {
-                        if (!isActive) break
-                    }
-                }
-            }
-
-            // Setup lightweight local HTTP server
-            val sServer = ServerSocket().apply {
-                reuseAddress = true
-                bind(InetSocketAddress("127.0.0.1", LOCAL_HTTP_PORT))
-            }
-            httpServer = sServer
-
-            serverJob = playerScope.launch {
-                while (isActive) {
-                    try {
-                        val clientSocket: Socket = sServer.accept()
-                        handleHttpClient(clientSocket)
-                    } catch (_: Exception) {
-                        if (!isActive) break
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun handleHttpClient(socket: Socket) {
-        playerScope.launch {
-            try {
-                val reader = socket.getInputStream().bufferedReader()
-                // Read HTTP request line
-                var line: String? = reader.readLine()
-                while (!line.isNullOrBlank()) {
-                    line = reader.readLine()
-                }
-
-                val out = socket.getOutputStream()
-                val responseHeaders = "HTTP/1.1 200 OK\r\n" +
-                        "Content-Type: video/mp2t\r\n" +
-                        "Connection: close\r\n" +
-                        "Access-Control-Allow-Origin: *\r\n\r\n"
-                out.write(responseHeaders.toByteArray(Charsets.UTF_8))
-                out.flush()
-
-                activeClientOut = out
-            } catch (e: Exception) {
-                try { socket.close() } catch (_: Exception) {}
-            }
-        }
-    }
-
-    private fun stopHttpServerAndUdp() {
-        activeClientOut = null
-        streamJob?.cancel()
-        streamJob = null
-        serverJob?.cancel()
-        serverJob = null
-        try { inSocket?.close() } catch (_: Exception) {}
-        try { httpServer?.close() } catch (_: Exception) {}
-        inSocket = null
-        httpServer = null
-    }
-
     fun stop() {
-        stopHttpServerAndUdp()
-        satIpSession?.stop()
-        satIpSession = null
-        currentStbClient?.let { client ->
+        val client = currentStbClient
+        if (client != null) {
             playerScope.launch {
                 try {
+                    // Send Request 1012 to deactivate STB RTSP daemon & free hardware tuner
                     client.sendCmd(1012, expectReply = true, timeoutMs = 2000)
                 } catch (_: Exception) {}
             }

@@ -85,7 +85,7 @@ class BackupFragment : Fragment() {
             }
 
             val file = StorageManager.exportM3uPlaylist(requireContext(), channels, ip)
-            val msg = "پلی‌لیست M3U در مسیر gm screen android/playlists ذخیره شد."
+            val msg = "پلی‌لیست M3U در مسیر GMScreen/playlists ذخیره شد."
             txtBackupStatus.text = msg
             AccessibilityHelper.announce(txtBackupStatus, msg)
             Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()

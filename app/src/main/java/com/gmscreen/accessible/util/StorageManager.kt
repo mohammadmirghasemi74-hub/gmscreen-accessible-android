@@ -12,31 +12,20 @@ import java.util.Locale
 
 object StorageManager {
 
-    private const val ROOT_DIR_NAME = "gm screen android"
+    // Strictly in root of external storage ("کف گوشی") as requested by user
+    private const val ROOT_DIR_NAME = "GMScreen"
     private const val DIR_RECORDINGS = "recordings"
     private const val DIR_BACKUPS = "backups"
     private const val DIR_PLAYLISTS = "playlists"
 
     fun getAppRootDir(context: Context): File {
-        // Try external public storage first so user can easily browse files with any file manager
+        // Direct root of storage (/sdcard/GMScreen or /storage/emulated/0/GMScreen)
         val externalStorage = Environment.getExternalStorageDirectory()
-        val publicDir = File(externalStorage, ROOT_DIR_NAME)
-        if (publicDir.exists() || publicDir.mkdirs()) {
-            return publicDir
+        val rootDir = File(externalStorage, ROOT_DIR_NAME)
+        if (!rootDir.exists()) {
+            rootDir.mkdirs()
         }
-
-        // Fallback to Documents directory
-        val docsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-        val docTarget = File(docsDir, ROOT_DIR_NAME)
-        if (docTarget.exists() || docTarget.mkdirs()) {
-            return docTarget
-        }
-
-        // Final fallback to app-specific external files dir
-        val base = context.getExternalFilesDir(null) ?: context.filesDir
-        val fallback = File(base, ROOT_DIR_NAME)
-        if (!fallback.exists()) fallback.mkdirs()
-        return fallback
+        return rootDir
     }
 
     fun getRecordingsDir(context: Context): File {

@@ -304,7 +304,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="فایل‌های ضبط شده در پوشه gm screen android/recordings:"
+                    android:text="فایل‌های ضبط شده در پوشه GMScreen/recordings:"
                     android:textColor="@color/accent_yellow"
                     android:textSize="14sp"
                     android:textStyle="bold"

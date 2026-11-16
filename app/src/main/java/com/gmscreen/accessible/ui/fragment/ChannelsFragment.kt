@@ -3,6 +3,8 @@ package com.gmscreen.accessible.ui.fragment
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -14,6 +16,8 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,7 +28,6 @@ import com.google.android.material.floatingactionbutton.ExtendedFloatingActionBu
 import com.gmscreen.accessible.GMScreenApplication
 import com.gmscreen.accessible.R
 import com.gmscreen.accessible.data.model.Channel
-import com.gmscreen.accessible.data.model.Satellite
 import com.gmscreen.accessible.player.SatIpStreamPlayer
 import com.gmscreen.accessible.ui.adapter.ChannelsAdapter
 import com.gmscreen.accessible.util.AccessibilityHelper
@@ -34,6 +37,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
 
@@ -47,6 +51,7 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
     private lateinit var txtChannelCount: TextView
     private lateinit var recyclerViewChannels: RecyclerView
     private lateinit var fabRefreshChannels: ExtendedFloatingActionButton
+    private lateinit var fabRecordings: ExtendedFloatingActionButton
 
     private var streamPlayer: SatIpStreamPlayer? = null
     private var channelsAdapter: ChannelsAdapter? = null
@@ -76,6 +81,7 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         txtChannelCount = view.findViewById(R.id.txtChannelCount)
         recyclerViewChannels = view.findViewById(R.id.recyclerViewChannels)
         fabRefreshChannels = view.findViewById(R.id.fabRefreshChannels)
+        fabRecordings = view.findViewById(R.id.fabRecordings)
 
         recyclerViewChannels.layoutManager = LinearLayoutManager(requireContext())
         recyclerViewChannels.setHasFixedSize(true)
@@ -95,23 +101,21 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         btnStopPlayer.setOnClickListener {
             streamPlayer?.stop()
             containerPlayer.visibility = View.GONE
-            AccessibilityHelper.announce(txtChannelCount, "پخش زنده شبکه متوقف شد")
+            AccessibilityHelper.announce(txtChannelCount, "پخش زنده شبکه در گوشی متوقف شد")
         }
     }
 
     private fun setupControls() {
+        updateTvRadioToggleUI()
+
         btnTvRadioToggle.setOnClickListener {
             isRadioMode = !isRadioMode
-            if (isRadioMode) {
-                btnTvRadioToggle.text = getString(R.string.mode_radio)
-                btnTvRadioToggle.setBackgroundColor(resources.getColor(R.color.secondary, null))
-                AccessibilityHelper.announce(btnTvRadioToggle, "حالت به کانال‌های رادیویی تغییر کرد")
-            } else {
-                btnTvRadioToggle.text = getString(R.string.mode_tv)
-                btnTvRadioToggle.setBackgroundColor(resources.getColor(R.color.primary, null))
-                AccessibilityHelper.announce(btnTvRadioToggle, "حالت به کانال‌های تلویزیونی تغییر کرد")
-            }
+            updateTvRadioToggleUI()
             filterChannels()
+            val modeText = if (isRadioMode) "رادیویی" else "تلویزیونی"
+            val count = (recyclerViewChannels.adapter as? ChannelsAdapter)?.itemCount ?: 0
+            AccessibilityHelper.announce(recyclerViewChannels, "حالت به کانال‌های $modeText تغییر کرد. $count کانال پیدا شد")
+            recyclerViewChannels.scrollToPosition(0)
         }
 
         btnSatelliteFilter.setOnClickListener {
@@ -128,6 +132,10 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             refreshChannelsFromStb()
         }
 
+        fabRecordings.setOnClickListener {
+            showRecordingsDialog()
+        }
+
         edtSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -135,7 +143,6 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
                 btnClearSearch.visibility = if (searchQuery.isNotEmpty()) View.VISIBLE else View.GONE
                 filterChannels()
 
-                // Real-time voice announcement like Windows app with 400ms debounce
                 announceJob?.cancel()
                 announceJob = viewLifecycleOwner.lifecycleScope.launch {
                     delay(400)
@@ -145,6 +152,18 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             }
             override fun afterTextChanged(s: Editable?) {}
         })
+    }
+
+    private fun updateTvRadioToggleUI() {
+        if (isRadioMode) {
+            btnTvRadioToggle.text = "رادیو (فعال)"
+            btnTvRadioToggle.contentDescription = "در حال حاضر در حالت رادیو هستید. ضربه بزنید تا به شبکه‌های تلویزیونی تغییر کند"
+            btnTvRadioToggle.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.secondary))
+        } else {
+            btnTvRadioToggle.text = "تلویزیون (فعال)"
+            btnTvRadioToggle.contentDescription = "در حال حاضر در حالت تلویزیون هستید. ضربه بزنید تا به شبکه‌های رادیویی تغییر کند"
+            btnTvRadioToggle.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.primary))
+        }
     }
 
     private fun refreshChannelsFromStb() {
@@ -162,10 +181,11 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 repository.refreshData()
-                val count = repository.channels.value.size
+                val allCh = repository.channels.value
+                val count = allCh.size
                 if (count > 0) {
-                    val tvCount = repository.channels.value.count { it.serviceType == 1 || it.serviceType == 0 }
-                    val radioCount = repository.channels.value.count { it.serviceType == 2 }
+                    val radioCount = allCh.count { it.isRadio }
+                    val tvCount = count - radioCount
                     AccessibilityHelper.announce(txtChannelCount, "به‌روزرسانی انجام شد. $count کانال شامل $tvCount تلویزیونی و $radioCount رادیویی دریافت شد.")
                 } else {
                     AccessibilityHelper.announce(txtChannelCount, "شبکه‌ای از رسیور دریافت نشد.")
@@ -186,7 +206,6 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             return
         }
 
-        // Count channels per satellite index (matching Windows main.py)
         val satChannelCounts = mutableMapOf<Int, Int>()
         for (c in allChannels) {
             satChannelCounts[c.satIndex] = (satChannelCounts[c.satIndex] ?: 0) + 1
@@ -195,7 +214,6 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         val allSats = repository.satellites.value
         val satNameMap = allSats.associate { it.satelliteId to it.satelliteName }
 
-        // Only include satellites that actually have tuned channels on this receiver
         val activeSats = satChannelCounts.keys.sorted().map { satId ->
             val name = satNameMap[satId] ?: "ماهواره #$satId"
             Triple(satId, name, satChannelCounts[satId] ?: 0)
@@ -247,8 +265,8 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
                 filterChannels()
                 if (allCh.isNotEmpty() && !hasAnnouncedChannelsIntro) {
                     hasAnnouncedChannelsIntro = true
-                    val tvCount = allCh.count { it.serviceType == 1 || it.serviceType == 0 }
-                    val radioCount = allCh.count { it.serviceType == 2 }
+                    val radioCount = allCh.count { it.isRadio }
+                    val tvCount = allCh.size - radioCount
                     val introMsg = "شبکه‌ها از رسیور دریافت شد. ${allCh.size} کانال شامل $tvCount تلویزیونی و $radioCount رادیویی پیدا شد. با ضربه زدن روی هر کانال پخش آغاز می‌شود و با لمس طولانی گزینه‌های بیشتر نمایش داده می‌شود."
                     AccessibilityHelper.announce(txtChannelCount, introMsg)
                 }
@@ -270,8 +288,8 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         val keepGlobal = appConfig.keepGlobalChannelNum
 
         val filtered = allChannels.filter { ch ->
-            val matchesType = if (isRadioMode) ch.serviceType == 2 else (ch.serviceType == 1 || ch.serviceType == 0)
-            val matchesSat = if (selectedSatelliteId == -1) true else ch.satelliteId == selectedSatelliteId
+            val matchesType = if (isRadioMode) ch.isRadio else !ch.isRadio
+            val matchesSat = if (selectedSatelliteId == -1) true else ch.satIndex == selectedSatelliteId
             val matchesSearch = if (searchQuery.isBlank()) {
                 true
             } else {
@@ -281,15 +299,17 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             matchesType && matchesSat && matchesSearch
         }
 
-        val countMsg = getString(R.string.channel_count_info, filtered.size)
+        val typeName = if (isRadioMode) "رادیویی" else "تلویزیونی"
+        val countMsg = "${filtered.size} کانال $typeName"
         txtChannelCount.text = countMsg
 
         if (channelsAdapter == null) {
             channelsAdapter = ChannelsAdapter(
                 filtered,
                 keepGlobal,
-                onChannelClick = { onChannelSelected(it, isAudioOnly = false) },
-                onChannelLongClick = { showChannelContextMenu(it) }
+                onChannelClick = { channel -> tuneChannelOnTv(channel) },
+                onPlayClick = { channel -> playStreamOnPhone(channel, isAudioOnly = channel.isRadio) },
+                onChannelLongClick = { channel -> showChannelContextMenu(channel) }
             ).apply {
                 setCurrentPlayingChannel(repository.currentChannel.value?.serviceId)
             }
@@ -300,7 +320,8 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         }
     }
 
-    private fun onChannelSelected(channel: Channel, isAudioOnly: Boolean) {
+    // Tuning TV on the receiver: DOES NOT stream to phone!
+    private fun tuneChannelOnTv(channel: Channel) {
         val ip = repository.connectedIp.value
         if (ip.isBlank()) {
             AccessibilityHelper.announce(txtChannelCount, "رسیور متصل نیست")
@@ -323,14 +344,157 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
                     if (appConfig.hapticFeedbackEnabled) {
                         AccessibilityHelper.vibrateSuccess(requireContext())
                     }
-                    containerPlayer.visibility = View.VISIBLE
-                    txtPlayerTitle.text = if (isAudioOnly) "پخش صوتی: ${channel.serviceName}" else "پخش زنده: ${channel.serviceName}"
-                    streamPlayer?.playChannel(repository.client, ip, channel)
+                    channelsAdapter?.setCurrentPlayingChannel(channel.serviceId)
                 } else {
-                    AccessibilityHelper.announce(txtChannelCount, "خطا در تعویض کانال")
+                    AccessibilityHelper.announce(txtChannelCount, "خطا در تعویض کانال روی رسیور")
                     Toast.makeText(requireContext(), "خطا در تعویض کانال روی رسیور", Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+    }
+
+    // Streaming to phone: ONLY called when user explicitly taps "پخش در گوشی"
+    private fun playStreamOnPhone(channel: Channel, isAudioOnly: Boolean) {
+        val ip = repository.connectedIp.value
+        if (ip.isBlank()) {
+            AccessibilityHelper.announce(txtChannelCount, "رسیور متصل نیست")
+            Toast.makeText(requireContext(), "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        containerPlayer.visibility = View.VISIBLE
+        txtPlayerTitle.text = if (isAudioOnly) "پخش صوتی: ${channel.serviceName}" else "پخش زنده: ${channel.serviceName}"
+        AccessibilityHelper.announce(txtPlayerTitle, "در حال اتصال به استریم زنده ${channel.serviceName} در گوشی...")
+
+        streamPlayer?.playChannel(repository.client, ip, channel, isAudioOnly)
+    }
+
+    private fun openStreamInExternalPlayer(channel: Channel) {
+        val ip = repository.connectedIp.value
+        if (ip.isBlank()) {
+            Toast.makeText(requireContext(), "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                repository.client.sendCmd(1009, expectReply = false)
+                val query = repository.client.buildSatIpQuery(channel)
+                if (query.isNullOrBlank()) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "اطلاعات فرکانس کانال یافت نشد", Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
+                val rtspUrl = "rtsp://$ip:554/$query"
+                withContext(Dispatchers.Main) {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(Uri.parse(rtspUrl), "video/*")
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        startActivity(Intent.createChooser(intent, "پخش استریم در پلیر ویدیویی"))
+                    } catch (e: Exception) {
+                        Toast.makeText(requireContext(), "پلیر ویدیویی خارجی در گوشی یافت نشد", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "خطا در آماده‌سازی استریم: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun showRecordingsDialog() {
+        val files = StorageManager.listRecordedFiles(requireContext())
+        if (files.isEmpty()) {
+            val msg = "هیچ فایل ضبط‌شده‌ای در پوشه GMScreen یافت نشد"
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+            AccessibilityHelper.announce(txtChannelCount, msg)
+            return
+        }
+
+        val items = files.map { file ->
+            val sizeMb = String.format("%.1f", file.length() / (1024f * 1024f))
+            "${file.name} ($sizeMb MB)"
+        }.toTypedArray()
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("فایل‌های ضبط‌شده در حافظه گوشی (${files.size} فایل)")
+            .setItems(items) { _, which ->
+                val file = files.getOrNull(which)
+                if (file != null) {
+                    showFileActionsDialog(file)
+                }
+            }
+            .setPositiveButton("باز کردن پوشه در مدیریت فایل") { _, _ ->
+                openRecordingsFolder()
+            }
+            .setNegativeButton("بستن", null)
+            .show()
+    }
+
+    private fun showFileActionsDialog(file: File) {
+        val options = arrayOf("۱. پخش فایل", "۲. اشتراک‌گذاری", "۳. حذف فایل")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(file.name)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> playLocalFile(file)
+                    1 -> shareLocalFile(file)
+                    2 -> {
+                        file.delete()
+                        val msg = "فایل ${file.name} حذف شد"
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                        AccessibilityHelper.announce(txtChannelCount, msg)
+                    }
+                }
+            }
+            .setNegativeButton("بستن", null)
+            .show()
+    }
+
+    private fun playLocalFile(file: File) {
+        try {
+            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
+            val mime = if (file.name.endsWith(".mp3") || file.name.endsWith(".aac")) "audio/*" else "video/*"
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, mime)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "پلیر مناسب در گوشی یافت نشد: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun shareLocalFile(file: File) {
+        try {
+            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
+            val mime = if (file.name.endsWith(".mp3") || file.name.endsWith(".aac")) "audio/*" else "video/*"
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = mime
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(intent, "اشتراک‌گذاری فایل ضبط‌شده"))
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "خطا در اشتراک‌گذاری: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun openRecordingsFolder() {
+        try {
+            val recDir = StorageManager.getRecordingsDir(requireContext())
+            val uri = Uri.parse(recDir.absolutePath)
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "resource/folder")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), "مسیر فایل‌ها: /sdcard/GMScreen/recordings", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -339,33 +503,35 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         val lockTitle = if (isLocked) "بازگشایی موقت کانال کارتی (با پین رسیور)" else "قفل کانال (Parental Lock)"
 
         val options = arrayOf(
-            "۱. پخش تصویری زنده",
-            "۲. پخش صوتی زنده (Audio Only)",
-            "۳. شروع ضبط زنده روی گوشی (MP4/MP3)",
-            "۴. $lockTitle",
-            "۵. مشخصات و اطلاعات فنی کانال",
-            "۶. کپی آدرس استریم زنده (RTSP URL)",
-            "۷. افزودن به زمان‌بندی ضبط روی فلش رسیور",
-            "۸. افزودن به زمان‌بندی ضبط روی حافظه گوشی"
+            "۱. پخش تصویری زنده در گوشی",
+            "۲. پخش صوتی زنده در گوشی (Audio Only)",
+            "۳. پخش در برنامه خارجی (مانند VLC یا MX Player)",
+            "۴. شروع ضبط زنده روی گوشی (MP4/MP3)",
+            "۵. $lockTitle",
+            "۶. مشخصات و اطلاعات فنی کانال",
+            "۷. کپی آدرس استریم زنده (RTSP URL)",
+            "۸. افزودن به زمان‌بندی ضبط روی فلش رسیور",
+            "۹. افزودن به زمان‌بندی ضبط روی حافظه گوشی"
         )
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.channel_menu_title, channel.serviceName))
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> onChannelSelected(channel, isAudioOnly = false)
-                    1 -> onChannelSelected(channel, isAudioOnly = true)
-                    2 -> {
+                    0 -> playStreamOnPhone(channel, isAudioOnly = false)
+                    1 -> playStreamOnPhone(channel, isAudioOnly = true)
+                    2 -> openStreamInExternalPlayer(channel)
+                    3 -> {
                         val file = StorageManager.generateRecordingFile(requireContext(), channel.serviceName, isAudioOnly = false)
-                        val msg = "فایل ذخیره‌سازی ایجاد شد: ${file.name}"
+                        val msg = "فایل ذخیره‌سازی در GMScreen ایجاد شد: ${file.name}"
                         Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
                         AccessibilityHelper.announce(txtChannelCount, msg)
                     }
-                    3 -> {
+                    4 -> {
                         Toast.makeText(requireContext(), "دستور قفل/بازگشایی با پین 0000 ارسال شد", Toast.LENGTH_SHORT).show()
                     }
-                    4 -> showChannelInfoDialog(channel)
-                    5 -> {
+                    5 -> showChannelInfoDialog(channel)
+                    6 -> {
                         val ip = repository.connectedIp.value
                         val url = channel.toSatIpUrl(ip)
                         val clip = ClipData.newPlainText("Stream URL", url)
@@ -375,13 +541,11 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
                         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                         AccessibilityHelper.announce(txtChannelCount, msg)
                     }
-                    6 -> {
-                        // Switch to Record Tab to configure STB Timer
+                    7 -> {
                         (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
                         Toast.makeText(requireContext(), "در سربرگ ضبط، دکمه افزودن زمان‌بندی رسیور را بزنید", Toast.LENGTH_LONG).show()
                     }
-                    7 -> {
-                        // Switch to Record Tab to configure Phone Timer
+                    8 -> {
                         (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
                         Toast.makeText(requireContext(), "در سربرگ ضبط، دکمه افزودن زمان‌بندی گوشی را بزنید", Toast.LENGTH_LONG).show()
                     }
@@ -397,7 +561,7 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             شماره کانال در رسیور: ${channel.channelNumber}
             ماهواره: ${channel.satelliteName}
             فرکانس: ${channel.frequency} MHz
-            نوع سرویس: ${if (channel.serviceType == 2) "رادیو" else "تلویزیون"}
+            نوع سرویس: ${if (channel.isRadio) "رادیو" else "تلویزیون"}
             کیفیت تصویر: ${if (channel.isHd) "HD با کیفیت بالا" else "SD معمولی"}
             وضعیت رمزگذاری: ${if (channel.isScrambled) "شبکه کارتی (Scrambled $)" else "رایگان (FTA)"}
             شناسه تصویر (Video PID): ${channel.videoPid}
@@ -415,11 +579,11 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
     }
 
     override fun onPlaybackStarted() {
-        AccessibilityHelper.announce(txtPlayerTitle, "پخش زنده با موفقیت آغاز شد")
+        AccessibilityHelper.announce(txtPlayerTitle, "پخش زنده در گوشی آغاز شد")
     }
 
     override fun onPlaybackBuffering() {
-        AccessibilityHelper.announce(txtPlayerTitle, "در حال بافر استریم زنده رسیور…")
+        AccessibilityHelper.announce(txtPlayerTitle, "در حال بافر استریم زنده...")
     }
 
     override fun onPlaybackEnded() {

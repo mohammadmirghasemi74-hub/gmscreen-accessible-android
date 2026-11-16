@@ -539,7 +539,7 @@ class RecordFragment : Fragment() {
         btnStopPhoneRec.visibility = View.GONE
 
         val fileName = currentRecordingFile?.name ?: "فایل"
-        txtInstantRecStatus.text = "ضبط متوقف شد. فایل در gm screen android/recordings ذخیره شد"
+        txtInstantRecStatus.text = "ضبط متوقف شد. فایل در GMScreen/recordings ذخیره شد"
         val msg = "ضبط پایان یافت: $fileName"
         AccessibilityHelper.announce(txtInstantRecStatus, msg)
         Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()

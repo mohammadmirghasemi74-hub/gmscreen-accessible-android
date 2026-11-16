@@ -11,8 +11,8 @@ android {
         applicationId 'com.gmscreen.accessible'
         minSdk 24
         targetSdk 34
-        versionCode 14
-        versionName '2.3.11'
+        versionCode 15
+        versionName '2.3.12'
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }

@@ -14,6 +14,7 @@ class ChannelsAdapter(
     private var channels: List<Channel>,
     private val keepGlobalNumber: Boolean,
     private val onChannelClick: (Channel) -> Unit,
+    private val onPlayClick: (Channel) -> Unit,
     private val onChannelLongClick: (Channel) -> Unit
 ) : RecyclerView.Adapter<ChannelsAdapter.ChannelViewHolder>() {
 
@@ -56,7 +57,7 @@ class ChannelsAdapter(
             position + 1
         }
         val isPlaying = (ch.serviceId == currentPlayingServiceId)
-        holder.bind(ch, displayNum, isPlaying, onChannelClick, onChannelLongClick)
+        holder.bind(ch, displayNum, isPlaying, onChannelClick, onPlayClick, onChannelLongClick)
     }
 
     override fun getItemCount(): Int = channels.size
@@ -75,6 +76,7 @@ class ChannelsAdapter(
             displayNumber: Int,
             isCurrentlyPlaying: Boolean,
             onClick: (Channel) -> Unit,
+            onPlayClick: (Channel) -> Unit,
             onLongClick: (Channel) -> Unit
         ) {
             txtNum.text = displayNumber.toString()
@@ -94,12 +96,10 @@ class ChannelsAdapter(
                 itemView.background = null
             }
 
-            // Accessibility label: clean, short and concise
+            // Concise TalkBack announcement: no repetitive instructions
+            val typePrefix = if (channel.isRadio) "رادیو" else "کانال"
             val accessibilityDescription = buildString {
-                append("کانال ")
-                append(displayNumber)
-                append("، ")
-                append(channel.serviceName)
+                append("$typePrefix $displayNumber، ${channel.serviceName}")
                 if (isCurrentlyPlaying) {
                     append("، در حال پخش")
                 }
@@ -108,13 +108,15 @@ class ChannelsAdapter(
             }
             itemView.contentDescription = accessibilityDescription
 
+            // Tapping the channel tunes TV
             itemView.setOnClickListener {
                 onClick(channel)
             }
 
-            btnLivePlay.contentDescription = "پخش زنده"
+            // Tapping the play button streams to phone
+            btnLivePlay.contentDescription = "پخش زنده ${channel.serviceName} در گوشی"
             btnLivePlay.setOnClickListener {
-                onClick(channel)
+                onPlayClick(channel)
             }
 
             itemView.setOnLongClickListener {
