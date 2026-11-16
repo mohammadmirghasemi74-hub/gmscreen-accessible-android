@@ -350,12 +350,9 @@ class StbClient {
     }
 
     suspend fun fetchStbState(): StbState = withContext(Dispatchers.IO) {
-        var res = sendCmd(21, timeoutMs = 4000)
+        var res = sendCmd(14, timeoutMs = 5000)
         if (res.isNullOrEmpty()) {
-            res = sendCmd(14, timeoutMs = 4000)
-        }
-        if (res.isNullOrEmpty()) {
-            res = sendCmd(15, timeoutMs = 4000)
+            res = sendCmd(15, timeoutMs = 5000)
         }
         val playingPid = getPlayingChannel() ?: ""
         if (!res.isNullOrEmpty()) {
@@ -399,11 +396,16 @@ class StbClient {
         transponders
     }
 
-    fun buildSatIpQuery(channel: Channel): String? {
+    suspend fun buildSatIpQuery(channel: Channel): String? = withContext(Dispatchers.IO) {
         val sid = channel.serviceId
-        if (sid.length < 9) return null
-        val tpIdx = sid.substring(4, 9).toIntOrNull() ?: return null
-        val tp = transponders[tpIdx] ?: return null
+        if (sid.length < 9) return@withContext null
+        val tpIdx = sid.substring(4, 9).toIntOrNull() ?: return@withContext null
+        var tp = transponders[tpIdx]
+        if (tp == null) {
+            fetchTransponders()
+            tp = transponders[tpIdx]
+        }
+        if (tp == null) return@withContext null
 
         val isRadio = channel.isRadio
         val vpid = if (isRadio) 0 else channel.videoPid
@@ -418,7 +420,7 @@ class StbClient {
         val sr = tp["SR"] ?: 0
         val fec = tp["FEC"] ?: 0
 
-        return "?alisatid=$satIdx&freq=$freq&pol=$pol&msys=dvbs2&mtype=8psk&ro=0.35&plts=on&sr=$sr&fec=$fec&camode=0&vpid=$vpid&apid=$apid&ttxpid=8191&subtpid=0&pmt=$pmt&prognumber=$prognumber&pids=$pidsStr"
+        "?alisatid=$satIdx&freq=$freq&pol=$pol&msys=dvbs2&mtype=8psk&ro=0.35&plts=on&sr=$sr&fec=$fec&camode=0&vpid=$vpid&apid=$apid&ttxpid=8191&subtpid=0&pmt=$pmt&prognumber=$prognumber&pids=$pidsStr"
     }
 
     suspend fun fetchChannels(toIndex: Int? = null): List<Channel> = withContext(Dispatchers.IO) {

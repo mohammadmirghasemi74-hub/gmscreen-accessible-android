@@ -49,6 +49,7 @@ class SatIpStreamPlayer(
     private var serverJob: Job? = null
     private var streamJob: Job? = null
     private val playerScope = CoroutineScope(Dispatchers.IO)
+    private var currentStbClient: StbClient? = null
 
     @Volatile
     private var activeClientOut: OutputStream? = null
@@ -75,14 +76,15 @@ class SatIpStreamPlayer(
 
     fun playChannel(stbClient: StbClient, stbIp: String, channel: Channel) {
         stop()
+        currentStbClient = stbClient
 
         playerScope.launch {
             try {
                 // 1. Wake STB SAT>IP server daemon
                 stbClient.sendCmd(1009, expectReply = false)
-                delay(200)
+                delay(300)
 
-                // 2. Build ALi SAT>IP query
+                // 2. Build ALi SAT>IP query (fetches transponders automatically if needed)
                 val query = stbClient.buildSatIpQuery(channel)
                 if (query.isNullOrBlank()) {
                     withContext(Dispatchers.Main) {
@@ -106,8 +108,8 @@ class SatIpStreamPlayer(
                 }
                 satIpSession = session
 
-                // Wait 200ms for STB stream packets to arrive
-                delay(200)
+                // Wait for STB stream packets to arrive
+                delay(300)
 
                 withContext(Dispatchers.Main) {
                     initializePlayer()
@@ -240,6 +242,13 @@ class SatIpStreamPlayer(
         stopHttpServerAndUdp()
         satIpSession?.stop()
         satIpSession = null
+        currentStbClient?.let { client ->
+            playerScope.launch {
+                try {
+                    client.sendCmd(1012, expectReply = true, timeoutMs = 2000)
+                } catch (_: Exception) {}
+            }
+        }
         val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
         mainHandler.post {
             exoPlayer?.stop()
