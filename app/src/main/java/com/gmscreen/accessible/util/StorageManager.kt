@@ -49,7 +49,7 @@ object StorageManager {
     fun generateRecordingFile(context: Context, channelName: String, isAudioOnly: Boolean): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val cleanName = channelName.replace(Regex("[^a-zA-Z0-9_\u0600-\u06FF-]"), "_")
-        val ext = if (isAudioOnly) ".mp3" else ".mp4"
+        val ext = if (isAudioOnly) ".ts" else ".ts"
         val fileName = "REC_${cleanName}_$timeStamp$ext"
         return File(getRecordingsDir(context), fileName)
     }

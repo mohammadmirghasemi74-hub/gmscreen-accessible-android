@@ -68,7 +68,8 @@ class RecordFragment : Fragment() {
                 recSeconds++
                 val mins = recSeconds / 60
                 val secs = recSeconds % 60
-                txtInstantRecStatus.text = "در حال ضبط روی گوشی… مدت زمان: %02d:%02d".format(mins, secs)
+                val mb = String.format(Locale.US, "%.1f", com.gmscreen.accessible.player.StreamRecorderManager.recordedBytes / (1024f * 1024f))
+                txtInstantRecStatus.text = "در حال ضبط روی گوشی… %02d:%02d ($mb MB)".format(mins, secs)
                 timerHandler.postDelayed(this, 1000)
             }
         }
@@ -512,21 +513,46 @@ class RecordFragment : Fragment() {
     }
 
     private fun startPhoneRecording(isAudioOnly: Boolean) {
-        val currentChannelName = repository.currentChannel.value?.serviceName ?: "Live_Stream"
-        val file = StorageManager.generateRecordingFile(requireContext(), currentChannelName, isAudioOnly)
-        currentRecordingFile = file
-        isRecordingOnPhone = true
-        recSeconds = 0
+        val ip = repository.connectedIp.value
+        val channel = repository.currentChannel.value
+        if (ip.isBlank() || channel == null) {
+            val msg = "رسیور متصل نیست یا شبکه‌ای انتخاب نشده است"
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            AccessibilityHelper.announce(txtInstantRecStatus, msg)
+            return
+        }
 
-        btnStartPhoneVideoRec.visibility = View.GONE
-        btnStartPhoneAudioRec.visibility = View.GONE
-        btnStopPhoneRec.visibility = View.VISIBLE
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val file = com.gmscreen.accessible.player.StreamRecorderManager.startRecording(
+                requireContext(),
+                repository.client,
+                ip,
+                channel,
+                isAudioOnly = isAudioOnly || channel.isRadio
+            )
+            withContext(Dispatchers.Main) {
+                if (file != null) {
+                    currentRecordingFile = file
+                    isRecordingOnPhone = true
+                    recSeconds = 0
 
-        timerHandler.post(timerRunnable)
+                    btnStartPhoneVideoRec.visibility = View.GONE
+                    btnStartPhoneAudioRec.visibility = View.GONE
+                    btnStopPhoneRec.visibility = View.VISIBLE
 
-        val msg = if (isAudioOnly) "ضبط صوتی گوشی آغاز شد" else "ضبط تصویری گوشی آغاز شد"
-        AccessibilityHelper.announce(txtInstantRecStatus, msg)
-        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    timerHandler.post(timerRunnable)
+
+                    val typeStr = if (isAudioOnly) "صوتی" else "تصویری"
+                    val msg = "ضبط $typeStr شبکه ${channel.serviceName} در گوشی آغاز شد"
+                    AccessibilityHelper.announce(txtInstantRecStatus, msg)
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                } else {
+                    val msg = "خطا در شروع ضبط زنده روی گوشی"
+                    AccessibilityHelper.announce(txtInstantRecStatus, msg)
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     private fun stopPhoneRecording() {
@@ -538,13 +564,19 @@ class RecordFragment : Fragment() {
         btnStartPhoneAudioRec.visibility = View.VISIBLE
         btnStopPhoneRec.visibility = View.GONE
 
-        val fileName = currentRecordingFile?.name ?: "فایل"
-        txtInstantRecStatus.text = "ضبط متوقف شد. فایل در GMScreen/recordings ذخیره شد"
-        val msg = "ضبط پایان یافت: $fileName"
-        AccessibilityHelper.announce(txtInstantRecStatus, msg)
-        Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val file = com.gmscreen.accessible.player.StreamRecorderManager.stopRecording()
+            withContext(Dispatchers.Main) {
+                val fileName = file?.name ?: currentRecordingFile?.name ?: "فایل"
+                val sizeMb = String.format(Locale.US, "%.1f", (file?.length() ?: 0L) / (1024f * 1024f))
+                txtInstantRecStatus.text = "ضبط متوقف شد. ذخیره در: $fileName ($sizeMb MB)"
+                val msg = "ضبط پایان یافت: $fileName به حجم $sizeMb مگابایت"
+                AccessibilityHelper.announce(txtInstantRecStatus, msg)
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
 
-        loadRecordedFiles()
+                loadRecordedFiles()
+            }
+        }
     }
 
     private fun loadRecordedFiles() {

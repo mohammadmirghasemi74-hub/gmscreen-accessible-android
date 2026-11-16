@@ -5,6 +5,7 @@ import com.gmscreen.accessible.data.model.Channel
 import com.gmscreen.accessible.data.model.Satellite
 import com.gmscreen.accessible.data.model.StbDevice
 import com.gmscreen.accessible.data.model.StbState
+import com.gmscreen.accessible.protocol.RcuKey
 import com.gmscreen.accessible.protocol.StbClient
 import com.gmscreen.accessible.protocol.StbDiscovery
 import com.gmscreen.accessible.util.AppConfig
@@ -18,6 +19,8 @@ class StbRepository(context: Context) {
     private val appConfig = AppConfig(context)
     private val discovery = StbDiscovery(context)
     val client = StbClient()
+
+    var currentStbMode: Int = 0 // 0 = TV, 1 = Radio
 
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
@@ -112,6 +115,7 @@ class StbRepository(context: Context) {
             // 1. Fetch STB State first to get channel count
             val state = client.fetchStbState()
             _currentState.value = state
+            currentStbMode = if (state.curChannelType == 1) 1 else 0
 
             // 2. Fetch Satellites for names
             val sats = client.fetchSatellites()
@@ -167,6 +171,12 @@ class StbRepository(context: Context) {
 
     suspend fun switchChannel(channel: Channel): Boolean {
         if (!client.isConnected) return false
+        val targetMode = if (channel.isRadio) 1 else 0
+        if (currentStbMode != targetMode) {
+            client.sendRcuKey(RcuKey.TV_RADIO)
+            delay(350)
+            currentStbMode = targetMode
+        }
         val success = client.switchChannel(channel.serviceId, channel.isRadio)
         if (success) {
             _currentChannel.value = channel

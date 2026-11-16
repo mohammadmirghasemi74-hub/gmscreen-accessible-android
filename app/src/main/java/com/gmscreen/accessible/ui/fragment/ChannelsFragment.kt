@@ -116,6 +116,16 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             val count = (recyclerViewChannels.adapter as? ChannelsAdapter)?.itemCount ?: 0
             AccessibilityHelper.announce(recyclerViewChannels, "حالت به کانال‌های $modeText تغییر کرد. $count کانال پیدا شد")
             recyclerViewChannels.scrollToPosition(0)
+
+            if (repository.isConnected.value) {
+                val targetMode = if (isRadioMode) 1 else 0
+                if (repository.currentStbMode != targetMode) {
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        repository.sendRcuKey(com.gmscreen.accessible.protocol.RcuKey.TV_RADIO)
+                        repository.currentStbMode = targetMode
+                    }
+                }
+            }
         }
 
         btnSatelliteFilter.setOnClickListener {
@@ -378,22 +388,25 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
-                repository.client.sendCmd(1009, expectReply = false)
-                val query = repository.client.buildSatIpQuery(channel)
-                if (query.isNullOrBlank()) {
+                val httpUrl = com.gmscreen.accessible.player.StreamRecorderManager.startStream(
+                    requireContext(),
+                    repository.client,
+                    ip,
+                    channel
+                )
+                if (httpUrl.isNullOrBlank()) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "اطلاعات فرکانس کانال یافت نشد", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "خطا در برقراری اتصال استریم زنده", Toast.LENGTH_SHORT).show()
                     }
                     return@launch
                 }
-                val rtspUrl = "rtsp://$ip:554/$query"
                 withContext(Dispatchers.Main) {
                     try {
                         val intent = Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(Uri.parse(rtspUrl), "video/*")
+                            setDataAndType(Uri.parse(httpUrl), "video/*")
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
-                        startActivity(Intent.createChooser(intent, "پخش استریم در پلیر ویدیویی"))
+                        startActivity(Intent.createChooser(intent, "پخش استریم در پلیر خارجی (VLC / MX Player)"))
                     } catch (e: Exception) {
                         Toast.makeText(requireContext(), "پلیر ویدیویی خارجی در گوشی یافت نشد", Toast.LENGTH_SHORT).show()
                     }
@@ -522,10 +535,7 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
                     1 -> playStreamOnPhone(channel, isAudioOnly = true)
                     2 -> openStreamInExternalPlayer(channel)
                     3 -> {
-                        val file = StorageManager.generateRecordingFile(requireContext(), channel.serviceName, isAudioOnly = false)
-                        val msg = "فایل ذخیره‌سازی در GMScreen ایجاد شد: ${file.name}"
-                        Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                        AccessibilityHelper.announce(txtChannelCount, msg)
+                        startPhoneRecordingFromChannel(channel)
                     }
                     4 -> {
                         Toast.makeText(requireContext(), "دستور قفل/بازگشایی با پین 0000 ارسال شد", Toast.LENGTH_SHORT).show()
@@ -576,6 +586,35 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             .show()
 
         AccessibilityHelper.announce(txtChannelCount, "مشخصات شبکه ${channel.serviceName}: فرکانس ${channel.frequency}، ماهواره ${channel.satelliteName}")
+    }
+
+    private fun startPhoneRecordingFromChannel(channel: Channel) {
+        val ip = repository.connectedIp.value
+        if (ip.isBlank()) {
+            Toast.makeText(requireContext(), "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val file = com.gmscreen.accessible.player.StreamRecorderManager.startRecording(
+                requireContext(),
+                repository.client,
+                ip,
+                channel,
+                isAudioOnly = channel.isRadio
+            )
+            withContext(Dispatchers.Main) {
+                if (file != null) {
+                    val msg = "ضبط زنده شبکه ${channel.serviceName} در گوشی آغاز شد: ${file.name}"
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(txtChannelCount, msg)
+                } else {
+                    val msg = "خطا در شروع ضبط زنده روی گوشی"
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    AccessibilityHelper.announce(txtChannelCount, msg)
+                }
+            }
+        }
     }
 
     override fun onPlaybackStarted() {

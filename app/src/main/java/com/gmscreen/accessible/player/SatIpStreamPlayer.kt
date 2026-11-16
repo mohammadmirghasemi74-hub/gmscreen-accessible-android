@@ -15,16 +15,16 @@ import com.gmscreen.accessible.protocol.StbClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 @OptIn(UnstableApi::class)
 class SatIpStreamPlayer(
     private val context: Context,
     private val playerView: PlayerView,
     private val listener: PlayerEventListener? = null
-) : Player.Listener {
+) : Player.Listener, StreamRecorderManager.StreamStateListener {
 
     interface PlayerEventListener {
         fun onPlaybackStarted()
@@ -34,14 +34,14 @@ class SatIpStreamPlayer(
     }
 
     private var exoPlayer: ExoPlayer? = null
-    private val playerScope = CoroutineScope(Dispatchers.IO)
-    private var currentStbClient: StbClient? = null
+    private val playerScope = CoroutineScope(Dispatchers.Main)
 
     companion object {
         private const val TAG = "SatIpStreamPlayer"
     }
 
     init {
+        StreamRecorderManager.addListener(this)
         initializePlayer()
     }
 
@@ -57,72 +57,44 @@ class SatIpStreamPlayer(
 
     fun playChannel(stbClient: StbClient, stbIp: String, channel: Channel, isAudioOnly: Boolean = false) {
         stop()
-        currentStbClient = stbClient
 
         playerScope.launch {
             try {
-                // 1. Wake STB RTSP server daemon on port 20000 (Request 1009)
-                stbClient.sendCmd(1009, expectReply = false)
-                delay(300)
-
-                // 2. Build ALi SAT>IP query string
-                val query = stbClient.buildSatIpQuery(channel)
-                if (query.isNullOrBlank()) {
-                    withContext(Dispatchers.Main) {
-                        listener?.onPlaybackError("اطلاعات فرکانس و ترنسپوندر کانال یافت نشد")
-                    }
+                listener?.onPlaybackBuffering()
+                val httpUrl = StreamRecorderManager.startStream(context, stbClient, stbIp, channel)
+                if (httpUrl.isNullOrBlank()) {
+                    listener?.onPlaybackError("خطا در برقراری اتصال استریم زنده")
                     return@launch
                 }
 
-                val rtspUrl = "rtsp://$stbIp:554/$query"
-                Log.d(TAG, "Playing Native RTSP Stream: $rtspUrl")
-
-                withContext(Dispatchers.Main) {
-                    initializePlayer()
-
-                    val mediaItem = MediaItem.fromUri(Uri.parse(rtspUrl))
-                    exoPlayer?.apply {
-                        setMediaItem(mediaItem)
-                        prepare()
-                        play()
-                    }
+                initializePlayer()
+                val mediaItem = MediaItem.fromUri(Uri.parse(httpUrl))
+                exoPlayer?.apply {
+                    setMediaItem(mediaItem)
+                    prepare()
+                    play()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
-                withContext(Dispatchers.Main) {
-                    listener?.onPlaybackError("خطا در راه‌اندازی استریم: ${e.message}")
-                }
+                Log.e(TAG, "Error playing stream", e)
+                listener?.onPlaybackError("خطا در پخش استریم: ${e.message}")
             }
         }
     }
 
     fun stop() {
-        val client = currentStbClient
-        if (client != null) {
-            playerScope.launch {
-                try {
-                    // Send Request 1012 to deactivate STB RTSP daemon & free hardware tuner
-                    client.sendCmd(1012, expectReply = true, timeoutMs = 2000)
-                } catch (_: Exception) {}
-            }
-        }
-        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
-        mainHandler.post {
-            exoPlayer?.stop()
-            exoPlayer?.clearMediaItems()
-        }
+        exoPlayer?.stop()
+        exoPlayer?.clearMediaItems()
+        StreamRecorderManager.stopStream(keepRecording = StreamRecorderManager.isRecording)
     }
 
     fun release() {
+        StreamRecorderManager.removeListener(this)
         stop()
         playerScope.cancel()
-        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
-        mainHandler.post {
-            exoPlayer?.removeListener(this@SatIpStreamPlayer)
-            exoPlayer?.release()
-            exoPlayer = null
-            playerView.player = null
-        }
+        exoPlayer?.removeListener(this)
+        exoPlayer?.release()
+        exoPlayer = null
+        playerView.player = null
     }
 
     fun isPlaying(): Boolean = exoPlayer?.isPlaying == true
@@ -138,7 +110,24 @@ class SatIpStreamPlayer(
 
     override fun onPlayerError(error: PlaybackException) {
         Log.e(TAG, "ExoPlayer playback error", error)
-        val msg = "خطا در پخش استریم زنده: ${error.localizedMessage ?: "عدم پاسخ از تیونر رسیور"}"
+        val msg = "خطا در دیکد استریم: ${error.localizedMessage ?: "فرمت تصویر یا صدای کانال پشتیبانی نشد"}"
         listener?.onPlaybackError(msg)
+    }
+
+    // StreamRecorderManager Callbacks
+    override fun onStreamingStarted(httpUrl: String) {}
+    override fun onStreamingStopped() {
+        playerScope.launch {
+            exoPlayer?.stop()
+            listener?.onPlaybackEnded()
+        }
+    }
+    override fun onRecordingStarted(file: File) {}
+    override fun onRecordingProgress(bytesWritten: Long) {}
+    override fun onRecordingStopped(file: File, totalBytes: Long) {}
+    override fun onError(error: String) {
+        playerScope.launch {
+            listener?.onPlaybackError(error)
+        }
     }
 }

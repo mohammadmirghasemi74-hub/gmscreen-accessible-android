@@ -455,7 +455,16 @@ class StbClient {
                 val isHd = (c["HD"]?.toString() == "1")
                 val isLocked = (c["Lock"]?.toString() == "1")
                 val vPid = c["VideoPID"]?.toString()?.toIntOrNull() ?: 0
-                val aPid = c["AudioPID"]?.toString()?.toIntOrNull() ?: 0
+                val aPid = when (val audioArr = c["AudioArray"]) {
+                    is List<*> -> {
+                        val first = audioArr.firstOrNull()
+                        if (first is Map<*, *>) {
+                            first["PID"]?.toString()?.toIntOrNull() ?: 0
+                        } else 0
+                    }
+                    is Map<*, *> -> audioArr["PID"]?.toString()?.toIntOrNull() ?: 0
+                    else -> c["AudioPID"]?.toString()?.toIntOrNull() ?: 0
+                }
                 val pmt = c["PMTPID"]?.toString()?.toIntOrNull() ?: 0
                 val satIdx = if (sid.length >= 4) sid.substring(0, 4).toIntOrNull() ?: 0 else 0
                 val tpIdx = if (sid.length >= 9) sid.substring(4, 9).toIntOrNull() ?: 0 else 0
