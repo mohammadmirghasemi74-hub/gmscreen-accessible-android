@@ -41,6 +41,30 @@ class MainActivity : AppCompatActivity() {
 
         setupViewPager()
         setupTabSelectorDialog()
+        checkStoragePermission()
+    }
+
+    private fun checkStoragePermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R && !android.os.Environment.isExternalStorageManager()) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("دسترسی به حافظه برای ذخیره فایل‌های ضبط")
+                .setMessage("برای ذخیره مستقیم فایل‌های ضبط‌شده در پوشه GMScreen حافظه اصلی گوشی، نیاز به دسترسی مدیریت فایل‌ها است. آیا مایلید اکنون فعال شود؟")
+                .setPositiveButton("فعال‌سازی دسترسی") { _, _ ->
+                    try {
+                        val intent = android.content.Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+                            data = android.net.Uri.parse("package:$packageName")
+                        }
+                        startActivity(intent)
+                    } catch (_: Exception) {
+                        try {
+                            val intent = android.content.Intent(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                            startActivity(intent)
+                        } catch (_: Exception) {}
+                    }
+                }
+                .setNegativeButton("بعداً", null)
+                .show()
+        }
     }
 
     private fun setupViewPager() {

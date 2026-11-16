@@ -39,11 +39,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
+class ChannelsFragment : Fragment() {
 
-    private lateinit var containerPlayer: LinearLayout
-    private lateinit var txtPlayerTitle: TextView
-    private lateinit var btnStopPlayer: MaterialButton
+    private lateinit var layoutAudioPlayingBar: LinearLayout
+    private lateinit var txtAudioPlayingChannel: TextView
+    private lateinit var btnStopAudioPlayback: MaterialButton
     private lateinit var btnTvRadioToggle: MaterialButton
     private lateinit var btnSatelliteFilter: MaterialButton
     private lateinit var edtSearch: EditText
@@ -53,7 +53,9 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
     private lateinit var fabRefreshChannels: ExtendedFloatingActionButton
     private lateinit var fabRecordings: ExtendedFloatingActionButton
 
-    private var streamPlayer: SatIpStreamPlayer? = null
+    private var audioExoPlayer: androidx.media3.exoplayer.ExoPlayer? = null
+    private var isAudioStreaming = false
+    private var currentAudioChannel: Channel? = null
     private var channelsAdapter: ChannelsAdapter? = null
 
     private var isRadioMode = false
@@ -71,9 +73,9 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_channels, container, false)
 
-        containerPlayer = view.findViewById(R.id.containerPlayer)
-        txtPlayerTitle = view.findViewById(R.id.txtPlayerTitle)
-        btnStopPlayer = view.findViewById(R.id.btnStopPlayer)
+        layoutAudioPlayingBar = view.findViewById(R.id.layoutAudioPlayingBar)
+        txtAudioPlayingChannel = view.findViewById(R.id.txtAudioPlayingChannel)
+        btnStopAudioPlayback = view.findViewById(R.id.btnStopAudioPlayback)
         btnTvRadioToggle = view.findViewById(R.id.btnTvRadioToggle)
         btnSatelliteFilter = view.findViewById(R.id.btnSatelliteFilter)
         edtSearch = view.findViewById(R.id.edtSearch)
@@ -87,21 +89,19 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         recyclerViewChannels.setHasFixedSize(true)
         recyclerViewChannels.setItemViewCacheSize(20)
 
-        setupPlayer(view)
+        setupAudioPlayerBar()
         setupControls()
         observeData()
 
         return view
     }
 
-    private fun setupPlayer(rootView: View) {
-        val playerView = rootView.findViewById<androidx.media3.ui.PlayerView>(R.id.playerView)
-        streamPlayer = SatIpStreamPlayer(requireContext(), playerView, this)
-
-        btnStopPlayer.setOnClickListener {
-            streamPlayer?.stop()
-            containerPlayer.visibility = View.GONE
-            AccessibilityHelper.announce(txtChannelCount, "پخش زنده شبکه در گوشی متوقف شد")
+    private fun setupAudioPlayerBar() {
+        btnStopAudioPlayback.setOnClickListener {
+            stopAudioPlayback()
+            val msg = "پخش صوتی شبکه متوقف شد"
+            AccessibilityHelper.announce(txtChannelCount, msg)
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -285,10 +285,6 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         viewLifecycleOwner.lifecycleScope.launch {
             repository.currentChannel.collect { currCh ->
                 channelsAdapter?.setCurrentPlayingChannel(currCh?.serviceId)
-                if (currCh != null) {
-                    val statusText = "در حال پخش در تلویزیون: ${currCh.serviceName}"
-                    txtPlayerTitle.text = statusText
-                }
             }
         }
     }
@@ -318,7 +314,9 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
                 filtered,
                 keepGlobal,
                 onChannelClick = { channel -> tuneChannelOnTv(channel) },
-                onPlayClick = { channel -> playStreamOnPhone(channel, isAudioOnly = channel.isRadio) },
+                onPlayClick = { channel ->
+                    if (channel.isRadio) playAudioOnPhone(channel) else playVideoOnPhone(channel)
+                },
                 onChannelLongClick = { channel -> showChannelContextMenu(channel) }
             ).apply {
                 setCurrentPlayingChannel(repository.currentChannel.value?.serviceId)
@@ -348,6 +346,13 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         }
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            if (isAudioStreaming || com.gmscreen.accessible.player.StreamRecorderManager.isStreaming) {
+                withContext(Dispatchers.Main) {
+                    stopAudioPlayback()
+                }
+                delay(250)
+            }
+
             val switched = if (isAlreadyPlaying) true else repository.switchChannel(channel)
             withContext(Dispatchers.Main) {
                 if (switched) {
@@ -363,8 +368,7 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         }
     }
 
-    // Streaming to phone: ONLY called when user explicitly taps "پخش در گوشی"
-    private fun playStreamOnPhone(channel: Channel, isAudioOnly: Boolean) {
+    private fun playVideoOnPhone(channel: Channel) {
         val ip = repository.connectedIp.value
         if (ip.isBlank()) {
             AccessibilityHelper.announce(txtChannelCount, "رسیور متصل نیست")
@@ -372,11 +376,91 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             return
         }
 
-        containerPlayer.visibility = View.VISIBLE
-        txtPlayerTitle.text = if (isAudioOnly) "پخش صوتی: ${channel.serviceName}" else "پخش زنده: ${channel.serviceName}"
-        AccessibilityHelper.announce(txtPlayerTitle, "در حال اتصال به استریم زنده ${channel.serviceName} در گوشی...")
+        stopAudioPlayback()
 
-        streamPlayer?.playChannel(repository.client, ip, channel, isAudioOnly)
+        val intent = Intent(requireContext(), com.gmscreen.accessible.ui.VideoPlayerActivity::class.java).apply {
+            putExtra("EXTRA_CHANNEL_NAME", channel.serviceName)
+            putExtra("EXTRA_SERVICE_ID", channel.serviceId)
+        }
+        startActivity(intent)
+    }
+
+    private fun playAudioOnPhone(channel: Channel) {
+        val ip = repository.connectedIp.value
+        if (ip.isBlank()) {
+            AccessibilityHelper.announce(txtChannelCount, "رسیور متصل نیست")
+            Toast.makeText(requireContext(), "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        stopAudioPlayback()
+
+        currentAudioChannel = channel
+        layoutAudioPlayingBar.visibility = View.VISIBLE
+        txtAudioPlayingChannel.text = "در حال اتصال به پخش صوتی ${channel.serviceName}..."
+        AccessibilityHelper.announce(layoutAudioPlayingBar, "در حال اتصال به پخش صوتی ${channel.serviceName}...")
+
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            com.gmscreen.accessible.player.StreamRecorderManager.stopStream(keepRecording = false)
+            delay(250)
+
+            repository.switchChannel(channel)
+            delay(300)
+
+            val httpUrl = com.gmscreen.accessible.player.StreamRecorderManager.startStream(
+                requireContext(),
+                repository.client,
+                ip,
+                channel
+            )
+
+            withContext(Dispatchers.Main) {
+                if (httpUrl != null) {
+                    initAudioPlayer()
+                    val mediaItem = androidx.media3.common.MediaItem.fromUri(Uri.parse(httpUrl))
+                    audioExoPlayer?.apply {
+                        setMediaItem(mediaItem)
+                        prepare()
+                        play()
+                    }
+                    isAudioStreaming = true
+                    txtAudioPlayingChannel.text = "در حال پخش صوتی: ${channel.serviceName}"
+                    val msg = "پخش صوتی شبکه ${channel.serviceName} با کیفیت عالی آغاز شد. دکمه توقف پخش در پایین صفحه فعال است."
+                    AccessibilityHelper.announce(layoutAudioPlayingBar, msg)
+                } else {
+                    layoutAudioPlayingBar.visibility = View.GONE
+                    val msg = "خطا در اتصال به استریم صوتی رسیور"
+                    AccessibilityHelper.announce(txtChannelCount, msg)
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun initAudioPlayer() {
+        if (audioExoPlayer == null) {
+            val audioAttributes = androidx.media3.common.AudioAttributes.Builder()
+                .setUsage(androidx.media3.common.C.USAGE_MEDIA)
+                .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC)
+                .build()
+
+            audioExoPlayer = androidx.media3.exoplayer.ExoPlayer.Builder(requireContext())
+                .setAudioAttributes(audioAttributes, true)
+                .build().apply {
+                    playWhenReady = true
+                }
+        }
+    }
+
+    private fun stopAudioPlayback() {
+        audioExoPlayer?.stop()
+        audioExoPlayer?.clearMediaItems()
+        audioExoPlayer?.release()
+        audioExoPlayer = null
+        isAudioStreaming = false
+        currentAudioChannel = null
+        layoutAudioPlayingBar.visibility = View.GONE
+        com.gmscreen.accessible.player.StreamRecorderManager.stopStream(keepRecording = false)
     }
 
     private fun openStreamInExternalPlayer(channel: Channel) {
@@ -531,8 +615,8 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
             .setTitle(getString(R.string.channel_menu_title, channel.serviceName))
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> playStreamOnPhone(channel, isAudioOnly = false)
-                    1 -> playStreamOnPhone(channel, isAudioOnly = true)
+                    0 -> playVideoOnPhone(channel)
+                    1 -> playAudioOnPhone(channel)
                     2 -> openStreamInExternalPlayer(channel)
                     3 -> {
                         startPhoneRecordingFromChannel(channel)
@@ -617,26 +701,9 @@ class ChannelsFragment : Fragment(), SatIpStreamPlayer.PlayerEventListener {
         }
     }
 
-    override fun onPlaybackStarted() {
-        AccessibilityHelper.announce(txtPlayerTitle, "پخش زنده در گوشی آغاز شد")
-    }
-
-    override fun onPlaybackBuffering() {
-        AccessibilityHelper.announce(txtPlayerTitle, "در حال بافر استریم زنده...")
-    }
-
-    override fun onPlaybackEnded() {
-        containerPlayer.visibility = View.GONE
-    }
-
-    override fun onPlaybackError(errorMsg: String) {
-        AccessibilityHelper.announce(txtPlayerTitle, errorMsg)
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         announceJob?.cancel()
-        streamPlayer?.release()
-        streamPlayer = null
+        stopAudioPlayback()
     }
 }

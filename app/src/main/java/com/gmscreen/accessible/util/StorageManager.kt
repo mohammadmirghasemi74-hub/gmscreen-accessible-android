@@ -1,47 +1,60 @@
 package com.gmscreen.accessible.util
 
 import android.content.Context
+import android.os.Build
 import android.os.Environment
 import com.gmscreen.accessible.data.model.Channel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 object StorageManager {
 
-    // Strictly in root of external storage ("کف گوشی") as requested by user
     private const val ROOT_DIR_NAME = "GMScreen"
     private const val DIR_RECORDINGS = "recordings"
     private const val DIR_BACKUPS = "backups"
     private const val DIR_PLAYLISTS = "playlists"
 
     fun getAppRootDir(context: Context): File {
-        // Direct root of storage (/sdcard/GMScreen or /storage/emulated/0/GMScreen)
-        val externalStorage = Environment.getExternalStorageDirectory()
-        val rootDir = File(externalStorage, ROOT_DIR_NAME)
-        if (!rootDir.exists()) {
-            rootDir.mkdirs()
+        // 1. If permission is granted or older Android, use /sdcard/GMScreen
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()) {
+            try {
+                val externalStorage = Environment.getExternalStorageDirectory()
+                val rootDir = File(externalStorage, ROOT_DIR_NAME)
+                if (rootDir.exists() || rootDir.mkdirs()) {
+                    if (rootDir.canWrite()) return rootDir
+                }
+            } catch (_: Exception) {}
         }
-        return rootDir
+
+        // 2. Fallback to app external storage (guaranteed 100% writeable without permissions)
+        val extAppDir = context.getExternalFilesDir(null) ?: context.filesDir
+        val fallbackRoot = File(extAppDir, ROOT_DIR_NAME)
+        if (!fallbackRoot.exists()) fallbackRoot.mkdirs()
+        return fallbackRoot
     }
 
     fun getRecordingsDir(context: Context): File {
-        val dir = File(getAppRootDir(context), DIR_RECORDINGS)
+        val root = getAppRootDir(context)
+        val dir = File(root, DIR_RECORDINGS)
         if (!dir.exists()) dir.mkdirs()
         return dir
     }
 
     fun getBackupsDir(context: Context): File {
-        val dir = File(getAppRootDir(context), DIR_BACKUPS)
+        val root = getAppRootDir(context)
+        val dir = File(root, DIR_BACKUPS)
         if (!dir.exists()) dir.mkdirs()
         return dir
     }
 
     fun getPlaylistsDir(context: Context): File {
-        val dir = File(getAppRootDir(context), DIR_PLAYLISTS)
+        val root = getAppRootDir(context)
+        val dir = File(root, DIR_PLAYLISTS)
         if (!dir.exists()) dir.mkdirs()
         return dir
     }
@@ -49,9 +62,27 @@ object StorageManager {
     fun generateRecordingFile(context: Context, channelName: String, isAudioOnly: Boolean): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val cleanName = channelName.replace(Regex("[^a-zA-Z0-9_\u0600-\u06FF-]"), "_")
-        val ext = if (isAudioOnly) ".ts" else ".ts"
-        val fileName = "REC_${cleanName}_$timeStamp$ext"
-        return File(getRecordingsDir(context), fileName)
+        val fileName = "REC_${cleanName}_$timeStamp.ts"
+
+        val primaryDir = getRecordingsDir(context)
+        var targetFile = File(primaryDir, fileName)
+
+        // Verify write access; if blocked by Scoped Storage, fallback safely to app storage
+        try {
+            if (!primaryDir.exists()) primaryDir.mkdirs()
+            val testFos = FileOutputStream(targetFile, true)
+            testFos.close()
+        } catch (_: Exception) {
+            val appStorageDir = File(context.getExternalFilesDir(null) ?: context.filesDir, DIR_RECORDINGS)
+            if (!appStorageDir.exists()) appStorageDir.mkdirs()
+            targetFile = File(appStorageDir, fileName)
+            try {
+                val test2 = FileOutputStream(targetFile, true)
+                test2.close()
+            } catch (_: Exception) {}
+        }
+
+        return targetFile
     }
 
     fun saveBackupChannels(context: Context, channels: List<Channel>, modelName: String): File {
@@ -86,9 +117,33 @@ object StorageManager {
     }
 
     fun listRecordedFiles(context: Context): List<File> {
-        val dir = getRecordingsDir(context)
-        return dir.listFiles { f -> f.isFile && (f.name.endsWith(".mp4") || f.name.endsWith(".mp3") || f.name.endsWith(".ts") || f.name.endsWith(".aac")) }
-            ?.sortedByDescending { it.lastModified() } ?: emptyList()
+        val files = mutableListOf<File>()
+
+        // 1. Files from primary root (/sdcard/GMScreen/recordings)
+        try {
+            val primaryDir = File(File(Environment.getExternalStorageDirectory(), ROOT_DIR_NAME), DIR_RECORDINGS)
+            if (primaryDir.exists()) {
+                val rootFiles = primaryDir.listFiles { f -> f.isFile && (f.name.endsWith(".ts") || f.name.endsWith(".mp4") || f.name.endsWith(".mp3") || f.name.endsWith(".aac")) }
+                if (rootFiles != null) files.addAll(rootFiles)
+            }
+        } catch (_: Exception) {}
+
+        // 2. Files from app external files dir
+        try {
+            val appDir = File(context.getExternalFilesDir(null) ?: context.filesDir, DIR_RECORDINGS)
+            if (appDir.exists()) {
+                val appFiles = appDir.listFiles { f -> f.isFile && (f.name.endsWith(".ts") || f.name.endsWith(".mp4") || f.name.endsWith(".mp3") || f.name.endsWith(".aac")) }
+                if (appFiles != null) {
+                    for (af in appFiles) {
+                        if (files.none { it.name == af.name }) {
+                            files.add(af)
+                        }
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+
+        return files.sortedByDescending { it.lastModified() }
     }
 
     fun listBackupFiles(context: Context): List<File> {

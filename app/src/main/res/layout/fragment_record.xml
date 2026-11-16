@@ -99,35 +99,27 @@
                     app:backgroundTint="@color/secondary"
                     app:cornerRadius="8dp" />
 
-                <LinearLayout
+                <TextView
+                    android:id="@+id/txtStbRecordStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:text="وضعیت ضبط رسیور: غیرفعال"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="6dp" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnStbInstantRecord"
-                        android:layout_width="0dp"
-                        android:layout_height="50dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:text="شروع ضبط فلش رسیور"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        app:backgroundTint="@color/accent_green"
-                        app:cornerRadius="8dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnStbStopRecord"
-                        android:layout_width="0dp"
-                        android:layout_height="50dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:text="توقف ضبط رسیور"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        app:backgroundTint="@color/secondary"
-                        app:cornerRadius="8dp" />
-                </LinearLayout>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnStbToggleRecord"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="شروع ضبط روی فلش رسیور"
+                    android:contentDescription="شروع یا توقف ضبط کانال روی حافظه فلش متصل به رسیور"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/accent_green"
+                    app:cornerRadius="8dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

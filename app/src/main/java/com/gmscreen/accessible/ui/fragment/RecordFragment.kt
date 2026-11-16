@@ -40,8 +40,9 @@ class RecordFragment : Fragment() {
     private lateinit var btnStartPhoneVideoRec: MaterialButton
     private lateinit var btnStartPhoneAudioRec: MaterialButton
     private lateinit var btnStopPhoneRec: MaterialButton
-    private lateinit var btnStbInstantRecord: MaterialButton
-    private lateinit var btnStbStopRecord: MaterialButton
+    private lateinit var btnStbToggleRecord: MaterialButton
+    private lateinit var txtStbRecordStatus: TextView
+    private var isStbRecording = false
 
     private lateinit var btnAddStbTimer: MaterialButton
     private lateinit var containerStbTimers: LinearLayout
@@ -102,8 +103,8 @@ class RecordFragment : Fragment() {
         btnStartPhoneVideoRec = view.findViewById(R.id.btnStartPhoneVideoRec)
         btnStartPhoneAudioRec = view.findViewById(R.id.btnStartPhoneAudioRec)
         btnStopPhoneRec = view.findViewById(R.id.btnStopPhoneRec)
-        btnStbInstantRecord = view.findViewById(R.id.btnStbInstantRecord)
-        btnStbStopRecord = view.findViewById(R.id.btnStbStopRecord)
+        btnStbToggleRecord = view.findViewById(R.id.btnStbToggleRecord)
+        txtStbRecordStatus = view.findViewById(R.id.txtStbRecordStatus)
 
         btnAddStbTimer = view.findViewById(R.id.btnAddStbTimer)
         containerStbTimers = view.findViewById(R.id.containerStbTimers)
@@ -142,32 +143,32 @@ class RecordFragment : Fragment() {
             stopPhoneRecording()
         }
 
-        btnStbInstantRecord.setOnClickListener {
+        btnStbToggleRecord.setOnClickListener {
             if (repository.connectedIp.value.isBlank()) {
                 val msg = "رسیور متصل نیست. ابتدا در سربرگ اتصال وصل شوید."
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(txtInstantRecStatus, msg)
+                AccessibilityHelper.announce(txtStbRecordStatus, msg)
                 return@setOnClickListener
             }
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                repository.sendRcuKey(RcuKey.RECORD)
-                withContext(Dispatchers.Main) {
-                    val msg = "دستور شروع ضبط روی فلش مموری رسیور ارسال شد"
-                    txtInstantRecStatus.text = msg
-                    AccessibilityHelper.announce(txtInstantRecStatus, msg)
-                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-
-        btnStbStopRecord.setOnClickListener {
-            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                repository.sendRcuKey(RcuKey.STOP)
-                withContext(Dispatchers.Main) {
-                    val msg = "دستور توقف ضبط به رسیور ارسال شد"
-                    txtInstantRecStatus.text = msg
-                    AccessibilityHelper.announce(txtInstantRecStatus, msg)
-                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                if (!isStbRecording) {
+                    repository.sendRcuKey(RcuKey.RECORD)
+                    withContext(Dispatchers.Main) {
+                        isStbRecording = true
+                        updateStbRecordButtonUi()
+                        val msg = "دستور شروع ضبط روی فلش مموری رسیور ارسال شد"
+                        AccessibilityHelper.announce(btnStbToggleRecord, msg)
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    repository.sendRcuKey(RcuKey.STOP)
+                    withContext(Dispatchers.Main) {
+                        isStbRecording = false
+                        updateStbRecordButtonUi()
+                        val msg = "دستور توقف ضبط به رسیور ارسال شد"
+                        AccessibilityHelper.announce(btnStbToggleRecord, msg)
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -184,6 +185,24 @@ class RecordFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 repository.refreshPvrFiles()
             }
+        }
+        updateStbRecordButtonUi()
+    }
+
+    private fun updateStbRecordButtonUi() {
+        if (!isAdded) return
+        if (isStbRecording) {
+            btnStbToggleRecord.text = "توقف ضبط رسیور (در حال حاضر فعال)"
+            btnStbToggleRecord.contentDescription = "رسیور در حال ضبط روی فلش است. برای توقف ضربه بزنید."
+            btnStbToggleRecord.setBackgroundColor(resources.getColor(R.color.accent_red, null))
+            txtStbRecordStatus.text = "وضعیت: رسیور در حال حاضر مشغول ضبط روی فلش مموری است"
+            txtStbRecordStatus.setTextColor(resources.getColor(R.color.accent_red, null))
+        } else {
+            btnStbToggleRecord.text = "شروع ضبط روی فلش رسیور"
+            btnStbToggleRecord.contentDescription = "شروع ضبط کانال جاری بر روی حافظه فلش متصل به رسیور"
+            btnStbToggleRecord.setBackgroundColor(resources.getColor(R.color.accent_green, null))
+            txtStbRecordStatus.text = "وضعیت ضبط رسیور: غیرفعال"
+            txtStbRecordStatus.setTextColor(resources.getColor(R.color.text_secondary, null))
         }
     }
 

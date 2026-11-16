@@ -92,48 +92,38 @@
         android:textSize="13sp"
         android:focusable="true" />
 
-    <!-- Live Player View (Collapsible) -->
+    <!-- Persistent Audio Playback Bar (Shown only when playing audio-only) -->
     <LinearLayout
-        android:id="@+id/containerPlayer"
+        android:id="@+id/layoutAudioPlayingBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@color/black"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="#1B5E20"
+        android:paddingHorizontal="12dp"
         android:visibility="gone">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/txtAudioPlayingChannel"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="6dp">
+            android:layout_weight="1"
+            android:text="در حال پخش صوتی: ..."
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:singleLine="true" />
 
-            <TextView
-                android:id="@+id/txtPlayerTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="پخش زنده"
-                android:textColor="@color/white"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnStopPlayer"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="@string/btn_stop_stream"
-                android:textColor="@color/white"
-                android:textSize="12sp"
-                app:backgroundTint="@color/accent_red"
-                app:cornerRadius="6dp" />
-        </LinearLayout>
-
-        <androidx.media3.ui.PlayerView
-            android:id="@+id/playerView"
-            android:layout_width="match_parent"
-            android:layout_height="220dp"
-            app:use_controller="true" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnStopAudioPlayback"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:text="توقف پخش صوتی"
+            android:contentDescription="توقف پخش صوتی در گوشی"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            app:backgroundTint="#B71C1C"
+            app:cornerRadius="8dp" />
     </LinearLayout>
 
     <!-- Channels Container with Refresh FAB -->

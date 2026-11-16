@@ -63,6 +63,13 @@ class ConnectionFragment : Fragment() {
             edtIpAddress.setText(lastIp)
         }
 
+        btnAutoDiscover.text = "جستجوی مجدد رسیور"
+        btnAutoDiscover.contentDescription = "جستجوی مجدد رسیورهای موجود در شبکه وای‌فای"
+
+        if (!repository.isConnected.value) {
+            startDiscovery()
+        }
+
         return view
     }
 
