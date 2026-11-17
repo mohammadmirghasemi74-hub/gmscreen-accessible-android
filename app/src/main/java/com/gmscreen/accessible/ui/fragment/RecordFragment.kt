@@ -41,6 +41,7 @@ class RecordFragment : Fragment() {
     private lateinit var btnStartPhoneAudioRec: MaterialButton
     private lateinit var btnStopPhoneRec: MaterialButton
     private lateinit var btnStbToggleRecord: MaterialButton
+    private lateinit var btnViewRecordings: MaterialButton
     private lateinit var txtStbRecordStatus: TextView
     private var isStbRecording = false
 
@@ -104,6 +105,7 @@ class RecordFragment : Fragment() {
         btnStartPhoneAudioRec = view.findViewById(R.id.btnStartPhoneAudioRec)
         btnStopPhoneRec = view.findViewById(R.id.btnStopPhoneRec)
         btnStbToggleRecord = view.findViewById(R.id.btnStbToggleRecord)
+        btnViewRecordings = view.findViewById(R.id.btnViewRecordings)
         txtStbRecordStatus = view.findViewById(R.id.txtStbRecordStatus)
 
         btnAddStbTimer = view.findViewById(R.id.btnAddStbTimer)
@@ -126,8 +128,24 @@ class RecordFragment : Fragment() {
         loadPhoneTimers()
         loadRecordedFiles()
         startPhoneTimerWatcher()
+        updateFormatLabels()
 
         return view
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateFormatLabels()
+    }
+
+    private fun updateFormatLabels() {
+        if (!isAdded) return
+        val vidFmt = appConfig.videoRecFormat.uppercase()
+        val audFmt = appConfig.audioRecFormat.uppercase()
+        btnStartPhoneVideoRec.text = "تصویری گوشی ($vidFmt)"
+        btnStartPhoneVideoRec.contentDescription = "شروع ضبط تصویری با فرمت $vidFmt بر روی حافظه گوشی"
+        btnStartPhoneAudioRec.text = "صوتی گوشی ($audFmt)"
+        btnStartPhoneAudioRec.contentDescription = "شروع ضبط صوتی با فرمت $audFmt بر روی حافظه گوشی"
     }
 
     private fun setupListeners() {
@@ -141,6 +159,12 @@ class RecordFragment : Fragment() {
 
         btnStopPhoneRec.setOnClickListener {
             stopPhoneRecording()
+        }
+
+        btnViewRecordings.setOnClickListener {
+            com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext(), btnViewRecordings) {
+                loadRecordedFiles()
+            }
         }
 
         btnStbToggleRecord.setOnClickListener {

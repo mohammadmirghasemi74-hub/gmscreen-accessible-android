@@ -142,8 +142,9 @@ class ChannelsFragment : Fragment() {
             refreshChannelsFromStb()
         }
 
+        fabRecordings.visibility = if (appConfig.showRecordingsInChannels) View.VISIBLE else View.GONE
         fabRecordings.setOnClickListener {
-            showRecordingsDialog()
+            com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext(), fabRecordings)
         }
 
         edtSearch.addTextChangedListener(object : TextWatcher {
@@ -278,13 +279,19 @@ class ChannelsFragment : Fragment() {
                     hasAnnouncedChannelsIntro = true
                     val radioCount = allCh.count { it.isRadio }
                     val tvCount = allCh.size - radioCount
-                    val introMsg = "شبکه‌ها از رسیور دریافت شد. ${allCh.size} کانال شامل $tvCount تلویزیونی و $radioCount رادیویی پیدا شد."
-                    AccessibilityHelper.announce(txtChannelCount, introMsg)
-
-                    delay(350)
                     val playingCh = repository.currentChannel.value
+
+                    val sb = java.lang.StringBuilder()
+                    sb.append("تعداد کل ${allCh.size} کانال با موفقیت دریافت شد: شامل $tvCount شبکه تلویزیونی و $radioCount شبکه رادیویی.")
                     if (playingCh != null) {
-                        focusAndScrollToChannel(playingCh, isInitial = true)
+                        val typePrefix = if (playingCh.isRadio) "رادیو" else "شبکه"
+                        val chNum = if (playingCh.realChannelNum > 0) "شماره ${playingCh.realChannelNum}" else ""
+                        sb.append(" در حال پخش در تلویزیون: $typePrefix ${playingCh.serviceName} $chNum.")
+                    }
+                    AccessibilityHelper.announce(txtChannelCount, sb.toString())
+
+                    if (playingCh != null) {
+                        focusAndScrollToChannel(playingCh, isInitial = true, announce = false)
                     }
                 }
             }
@@ -297,7 +304,7 @@ class ChannelsFragment : Fragment() {
                         val wasFirstTime = (lastObservedPlayingPid == null)
                         lastObservedPlayingPid = currCh.serviceId
                         if (!wasFirstTime && hasAnnouncedChannelsIntro) {
-                            focusAndScrollToChannel(currCh, isInitial = false)
+                            focusAndScrollToChannel(currCh, isInitial = false, announce = true)
                         } else {
                             recyclerViewChannels.post {
                                 channelsAdapter?.setCurrentPlayingChannel(currCh.serviceId)
@@ -309,7 +316,7 @@ class ChannelsFragment : Fragment() {
         }
     }
 
-    private fun focusAndScrollToChannel(channel: Channel, isInitial: Boolean) {
+    private fun focusAndScrollToChannel(channel: Channel, isInitial: Boolean, announce: Boolean = true) {
         val typePrefix = if (channel.isRadio) "رادیو" else "شبکه"
         val channelNum = if (channel.realChannelNum > 0) "شماره ${channel.realChannelNum}" else ""
         val announceMsg = if (isInitial) {
@@ -337,7 +344,9 @@ class ChannelsFragment : Fragment() {
                     } catch (_: Exception) {}
                 }, 200)
             }
-            AccessibilityHelper.announce(recyclerViewChannels, announceMsg)
+            if (announce) {
+                AccessibilityHelper.announce(recyclerViewChannels, announceMsg)
+            }
         }
     }
 
@@ -560,95 +569,10 @@ class ChannelsFragment : Fragment() {
         }
     }
 
-    private fun showRecordingsDialog() {
-        val files = StorageManager.listRecordedFiles(requireContext())
-        if (files.isEmpty()) {
-            val msg = "هیچ فایل ضبط‌شده‌ای در پوشه GMScreen یافت نشد"
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-            AccessibilityHelper.announce(txtChannelCount, msg)
-            return
-        }
-
-        val items = files.map { file ->
-            val sizeMb = String.format("%.1f", file.length() / (1024f * 1024f))
-            "${file.name} ($sizeMb MB)"
-        }.toTypedArray()
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("فایل‌های ضبط‌شده در حافظه گوشی (${files.size} فایل)")
-            .setItems(items) { _, which ->
-                val file = files.getOrNull(which)
-                if (file != null) {
-                    showFileActionsDialog(file)
-                }
-            }
-            .setPositiveButton("باز کردن پوشه در مدیریت فایل") { _, _ ->
-                openRecordingsFolder()
-            }
-            .setNegativeButton("بستن", null)
-            .show()
-    }
-
-    private fun showFileActionsDialog(file: File) {
-        val options = arrayOf("۱. پخش فایل", "۲. اشتراک‌گذاری", "۳. حذف فایل")
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(file.name)
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> playLocalFile(file)
-                    1 -> shareLocalFile(file)
-                    2 -> {
-                        file.delete()
-                        val msg = "فایل ${file.name} حذف شد"
-                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                        AccessibilityHelper.announce(txtChannelCount, msg)
-                    }
-                }
-            }
-            .setNegativeButton("بستن", null)
-            .show()
-    }
-
-    private fun playLocalFile(file: File) {
-        try {
-            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
-            val mime = if (file.name.endsWith(".mp3") || file.name.endsWith(".aac")) "audio/*" else "video/*"
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, mime)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "پلیر مناسب در گوشی یافت نشد: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun shareLocalFile(file: File) {
-        try {
-            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
-            val mime = if (file.name.endsWith(".mp3") || file.name.endsWith(".aac")) "audio/*" else "video/*"
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = mime
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            startActivity(Intent.createChooser(intent, "اشتراک‌گذاری فایل ضبط‌شده"))
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "خطا در اشتراک‌گذاری: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun openRecordingsFolder() {
-        try {
-            val recDir = StorageManager.getRecordingsDir(requireContext())
-            val uri = Uri.parse(recDir.absolutePath)
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "resource/folder")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(intent)
-        } catch (_: Exception) {
-            Toast.makeText(requireContext(), "مسیر فایل‌ها: /sdcard/GMScreen/recordings", Toast.LENGTH_LONG).show()
+    override fun onResume() {
+        super.onResume()
+        if (::fabRecordings.isInitialized) {
+            fabRecordings.visibility = if (appConfig.showRecordingsInChannels) View.VISIBLE else View.GONE
         }
     }
 

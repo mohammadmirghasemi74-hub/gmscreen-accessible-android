@@ -16,7 +16,12 @@ class AppConfig(context: Context) {
         private const val KEY_VOICE_WAKE_WORD = "voice_wake_word"
         private const val KEY_AUTO_ANNOUNCE = "auto_announce_channel"
         private const val KEY_AUDIO_REC_FORMAT = "audio_rec_format"
+        private const val KEY_AUDIO_REC_BITRATE = "audio_rec_bitrate"
+        private const val KEY_AUDIO_REC_SAMPLERATE = "audio_rec_samplerate"
+        private const val KEY_AUDIO_REC_CHANNELS = "audio_rec_channels"
         private const val KEY_VIDEO_REC_FORMAT = "video_rec_format"
+        private const val KEY_VIDEO_REC_QUALITY = "video_rec_quality"
+        private const val KEY_SHOW_RECORDINGS_IN_CHANNELS = "show_recordings_in_channels"
         private const val KEY_PARENTAL_PIN = "parental_pin"
         private const val KEY_SLEEP_TIMER = "sleep_timer"
         private const val KEY_POWER_MODE = "power_mode"
@@ -51,13 +56,33 @@ class AppConfig(context: Context) {
         get() = prefs.getBoolean(KEY_AUTO_ANNOUNCE, true)
         set(value) = prefs.edit().putBoolean(KEY_AUTO_ANNOUNCE, value).apply()
 
+    var showRecordingsInChannels: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_RECORDINGS_IN_CHANNELS, true)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_RECORDINGS_IN_CHANNELS, value).apply()
+
     var audioRecFormat: String
         get() = prefs.getString(KEY_AUDIO_REC_FORMAT, "mp3") ?: "mp3"
         set(value) = prefs.edit().putString(KEY_AUDIO_REC_FORMAT, value).apply()
 
+    var audioRecBitrate: String
+        get() = prefs.getString(KEY_AUDIO_REC_BITRATE, "128k") ?: "128k"
+        set(value) = prefs.edit().putString(KEY_AUDIO_REC_BITRATE, value).apply()
+
+    var audioRecSampleRate: String
+        get() = prefs.getString(KEY_AUDIO_REC_SAMPLERATE, "auto") ?: "auto"
+        set(value) = prefs.edit().putString(KEY_AUDIO_REC_SAMPLERATE, value).apply()
+
+    var audioRecChannels: String
+        get() = prefs.getString(KEY_AUDIO_REC_CHANNELS, "stereo") ?: "stereo"
+        set(value) = prefs.edit().putString(KEY_AUDIO_REC_CHANNELS, value).apply()
+
     var videoRecFormat: String
         get() = prefs.getString(KEY_VIDEO_REC_FORMAT, "mp4") ?: "mp4"
         set(value) = prefs.edit().putString(KEY_VIDEO_REC_FORMAT, value).apply()
+
+    var videoRecQuality: String
+        get() = prefs.getString(KEY_VIDEO_REC_QUALITY, "copy") ?: "copy"
+        set(value) = prefs.edit().putString(KEY_VIDEO_REC_QUALITY, value).apply()
 
     var parentalPin: String
         get() = prefs.getString(KEY_PARENTAL_PIN, "0000") ?: "0000"

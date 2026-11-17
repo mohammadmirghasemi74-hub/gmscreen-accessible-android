@@ -59,10 +59,28 @@ object StorageManager {
         return dir
     }
 
-    fun generateRecordingFile(context: Context, channelName: String, isAudioOnly: Boolean): File {
+    fun generateRecordingFile(
+        context: Context,
+        channelName: String,
+        isAudioOnly: Boolean,
+        customExtension: String? = null
+    ): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val cleanName = channelName.replace(Regex("[^a-zA-Z0-9_\u0600-\u06FF-]"), "_")
-        val fileName = "REC_${cleanName}_$timeStamp.ts"
+        
+        val appConfig = AppConfig(context)
+        val ext = when {
+            !customExtension.isNullOrBlank() -> if (customExtension.startsWith(".")) customExtension else ".$customExtension"
+            isAudioOnly -> {
+                val f = appConfig.audioRecFormat.lowercase()
+                if (f.startsWith(".")) f else ".$f"
+            }
+            else -> {
+                val f = appConfig.videoRecFormat.lowercase()
+                if (f.startsWith(".")) f else ".$f"
+            }
+        }
+        val fileName = "REC_${cleanName}_$timeStamp$ext"
 
         val primaryDir = getRecordingsDir(context)
         var targetFile = File(primaryDir, fileName)
@@ -116,6 +134,8 @@ object StorageManager {
         return file
     }
 
+    private val RECORDED_EXTENSIONS = listOf(".ts", ".mp4", ".mkv", ".mp3", ".m4a", ".wav", ".aac", ".ogg")
+
     fun listRecordedFiles(context: Context): List<File> {
         val files = mutableListOf<File>()
 
@@ -123,7 +143,9 @@ object StorageManager {
         try {
             val primaryDir = File(File(Environment.getExternalStorageDirectory(), ROOT_DIR_NAME), DIR_RECORDINGS)
             if (primaryDir.exists()) {
-                val rootFiles = primaryDir.listFiles { f -> f.isFile && (f.name.endsWith(".ts") || f.name.endsWith(".mp4") || f.name.endsWith(".mp3") || f.name.endsWith(".aac")) }
+                val rootFiles = primaryDir.listFiles { f ->
+                    f.isFile && RECORDED_EXTENSIONS.any { ext -> f.name.lowercase().endsWith(ext) }
+                }
                 if (rootFiles != null) files.addAll(rootFiles)
             }
         } catch (_: Exception) {}
@@ -132,7 +154,9 @@ object StorageManager {
         try {
             val appDir = File(context.getExternalFilesDir(null) ?: context.filesDir, DIR_RECORDINGS)
             if (appDir.exists()) {
-                val appFiles = appDir.listFiles { f -> f.isFile && (f.name.endsWith(".ts") || f.name.endsWith(".mp4") || f.name.endsWith(".mp3") || f.name.endsWith(".aac")) }
+                val appFiles = appDir.listFiles { f ->
+                    f.isFile && RECORDED_EXTENSIONS.any { ext -> f.name.lowercase().endsWith(ext) }
+                }
                 if (appFiles != null) {
                     for (af in appFiles) {
                         if (files.none { it.name == af.name }) {

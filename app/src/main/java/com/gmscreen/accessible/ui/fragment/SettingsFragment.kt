@@ -158,22 +158,241 @@ class SettingsFragment : Fragment() {
     }
 
     private fun openRecordingSettingsDialog() {
+        val showBtnText = if (appConfig.showRecordingsInChannels) "فعال (پیش‌فرض)" else "غیرفعال"
+        val vidFmtText = appConfig.videoRecFormat.uppercase()
+        val vidQualText = getVideoQualityTitle(appConfig.videoRecQuality)
+        val audFmtText = appConfig.audioRecFormat.uppercase()
+        val audBrText = appConfig.audioRecBitrate
+        val audSrText = getSampleRateTitle(appConfig.audioRecSampleRate)
+        val audChText = if (appConfig.audioRecChannels == "mono") "مونو (تک کاناله)" else "استریو (دو کاناله - پیش‌فرض)"
+
+        val items = arrayOf(
+            "۱. نمایش دکمه فایل‌های ضبط‌شده در بخش کانال‌ها: $showBtnText",
+            "۲. فرمت ضبط تصویری (ویدیو): $vidFmtText",
+            "۳. کیفیت و نحوه ذخیره ویدیو: $vidQualText",
+            "۴. فرمت ضبط صوتی (صدا): $audFmtText",
+            "۵. بیت‌ریت صدای ضبط: $audBrText",
+            "۶. نرخ نمونه‌برداری صدا (Sample Rate): $audSrText",
+            "۷. کانال صدا: $audChText",
+            "۸. 📁 مشاهده و مدیریت فایل‌های ضبط‌شده در حافظه گوشی",
+            "۹. اطلاعات پوشه اصلی ذخیره‌سازی"
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("تنظیمات جامع ضبط و ذخیره‌سازی")
+            .setItems(items) { _, which ->
+                when (which) {
+                    0 -> toggleShowRecordingsInChannels()
+                    1 -> showVideoFormatDialog()
+                    2 -> showVideoQualityDialog()
+                    3 -> showAudioFormatDialog()
+                    4 -> showAudioBitrateDialog()
+                    5 -> showAudioSampleRateDialog()
+                    6 -> showAudioChannelsDialog()
+                    7 -> com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext())
+                    8 -> showStorageFolderInfoDialog()
+                }
+            }
+            .setNegativeButton("بستن", null)
+            .show()
+    }
+
+    private fun toggleShowRecordingsInChannels() {
+        appConfig.showRecordingsInChannels = !appConfig.showRecordingsInChannels
+        val state = if (appConfig.showRecordingsInChannels) "فعال شد" else "غیرفعال شد"
+        val msg = "دکمه مشاهده فایل‌های ضبط‌شده در بخش کانال‌ها: $state"
+        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+        AccessibilityHelper.announce(containerSettingsList, msg)
+        openRecordingSettingsDialog()
+    }
+
+    private fun showVideoFormatDialog() {
+        val formats = arrayOf(
+            "MP4 (پیش‌فرض - سازگار با همه دستگاه‌ها و پلیرها)",
+            "MKV (فرمت چندرسانه‌ای باکیفیت)",
+            "TS (جریان اصلی ضبط رسیور بدون تغییر کانتینر)"
+        )
+        val values = arrayOf("mp4", "mkv", "ts")
+        val currentIdx = values.indexOf(appConfig.videoRecFormat).let { if (it >= 0) it else 0 }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("انتخاب فرمت ضبط تصویری")
+            .setSingleChoiceItems(formats, currentIdx) { dialog, which ->
+                val chosen = values[which]
+                appConfig.videoRecFormat = chosen
+                val msg = "فرمت ضبط تصویری روی ${chosen.uppercase()} تنظیم شد"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(containerSettingsList, msg)
+                dialog.dismiss()
+                openRecordingSettingsDialog()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun showVideoQualityDialog() {
+        val qualities = arrayOf(
+            "کیفیت اصلی شبکه (کپی مستقیم - بدون افت کیفیت و بدون مصرف پردازنده - پیش‌فرض)",
+            "فشرده‌سازی با کیفیت بسیار بالا (H.264 - CRF 18)",
+            "فشرده‌سازی متعادل (H.264 - CRF 23)",
+            "فشرده‌سازی کم‌حجم و سبک (H.264 - 720p - CRF 28)"
+        )
+        val values = arrayOf("copy", "high", "medium", "low")
+        val currentIdx = values.indexOf(appConfig.videoRecQuality).let { if (it >= 0) it else 0 }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("کیفیت و نحوه ذخیره ویدیو")
+            .setSingleChoiceItems(qualities, currentIdx) { dialog, which ->
+                val chosen = values[which]
+                appConfig.videoRecQuality = chosen
+                val title = getVideoQualityTitle(chosen)
+                val msg = "کیفیت ذخیره ویدیو تنظیم شد: $title"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(containerSettingsList, msg)
+                dialog.dismiss()
+                openRecordingSettingsDialog()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun showAudioFormatDialog() {
+        val formats = arrayOf(
+            "MP3 (پیش‌فرض - سازگار با کلیه دستگاه‌ها و پلیرها)",
+            "M4A (فرمت مدرن اپل و اندروید - کدک AAC با شفافیت بالا)",
+            "WAV (کیفیت خام استودیویی - بدون فشرده‌سازی)"
+        )
+        val values = arrayOf("mp3", "m4a", "wav")
+        val currentIdx = values.indexOf(appConfig.audioRecFormat).let { if (it >= 0) it else 0 }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("انتخاب فرمت ضبط صوتی")
+            .setSingleChoiceItems(formats, currentIdx) { dialog, which ->
+                val chosen = values[which]
+                appConfig.audioRecFormat = chosen
+                val msg = "فرمت ضبط صوتی روی ${chosen.uppercase()} تنظیم شد"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(containerSettingsList, msg)
+                dialog.dismiss()
+                openRecordingSettingsDialog()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun showAudioBitrateDialog() {
+        val bitrates = arrayOf(
+            "96 kbps (کم‌حجم - مناسب رادیو)",
+            "128 kbps (استاندارد - پیش‌فرض)",
+            "192 kbps (کیفیت عالی)",
+            "256 kbps (بسیار بالا)",
+            "320 kbps (حداکثر کیفیت)"
+        )
+        val values = arrayOf("96k", "128k", "192k", "256k", "320k")
+        val currentIdx = values.indexOf(appConfig.audioRecBitrate).let { if (it >= 0) it else 1 }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("انتخاب بیت‌ریت صدای ضبط")
+            .setSingleChoiceItems(bitrates, currentIdx) { dialog, which ->
+                val chosen = values[which]
+                appConfig.audioRecBitrate = chosen
+                val msg = "بیت‌ریت صدا روی $chosen تنظیم شد"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(containerSettingsList, msg)
+                dialog.dismiss()
+                openRecordingSettingsDialog()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun showAudioSampleRateDialog() {
+        val rates = arrayOf(
+            "خودکار (نرخ شبکه رسیور - پیش‌فرض)",
+            "44100 هرتز (کیفیت صوتی CD)",
+            "48000 هرتز (استاندارد شبکه‌های تلویزیونی)"
+        )
+        val values = arrayOf("auto", "44100", "48000")
+        val currentIdx = values.indexOf(appConfig.audioRecSampleRate).let { if (it >= 0) it else 0 }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("انتخاب نرخ نمونه‌برداری صدا (Sample Rate)")
+            .setSingleChoiceItems(rates, currentIdx) { dialog, which ->
+                val chosen = values[which]
+                appConfig.audioRecSampleRate = chosen
+                val msg = "نرخ نمونه‌برداری روی ${getSampleRateTitle(chosen)} تنظیم شد"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(containerSettingsList, msg)
+                dialog.dismiss()
+                openRecordingSettingsDialog()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun showAudioChannelsDialog() {
+        val channels = arrayOf(
+            "استریو (دو کاناله - تفکیک کامل صدا - پیش‌فرض)",
+            "مونو (تک کاناله - نصف شدن حجم فایل)"
+        )
+        val values = arrayOf("stereo", "mono")
+        val currentIdx = values.indexOf(appConfig.audioRecChannels).let { if (it >= 0) it else 0 }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("انتخاب کانال صدای ضبط")
+            .setSingleChoiceItems(channels, currentIdx) { dialog, which ->
+                val chosen = values[which]
+                appConfig.audioRecChannels = chosen
+                val msg = if (chosen == "mono") "کانال صدا روی مونو تنظیم شد" else "کانال صدا روی استریو تنظیم شد"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(containerSettingsList, msg)
+                dialog.dismiss()
+                openRecordingSettingsDialog()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun showStorageFolderInfoDialog() {
         val rootPath = StorageManager.getAppRootDir(requireContext()).absolutePath
+        val recPath = StorageManager.getRecordingsDir(requireContext()).absolutePath
         val msg = """
-            پوشه اصلی ذخیره‌سازی:
+            پوشه اصلی برنامه در حافظه:
             $rootPath
             
-            زیرپوشه‌های خودکار:
-            • recordings: فایل‌های ویدیویی و صوتی ضبط شده
-            • backups: فایل‌های پشتیبان کانال‌ها
-            • playlists: فایل‌های پلی‌لیست M3U
+            پوشه ذخیره فایل‌های ضبط شده:
+            $recPath
+            
+            کلیه فایل‌های ضبط شده با فرمت‌های انتخاب شده شما در این پوشه ذخیره می‌شوند و در هر زمان از دکمه مشاهده فایل‌ها قابل مدیریت هستند.
         """.trimIndent()
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("تنظیمات ضبط و ذخیره‌سازی")
+            .setTitle("اطلاعات پوشه ذخیره‌سازی")
             .setMessage(msg)
-            .setPositiveButton("بستن", null)
+            .setPositiveButton("باز کردن در مدیریت فایل") { _, _ ->
+                com.gmscreen.accessible.util.RecordingsDialogHelper.openRecordingsFolder(requireContext())
+            }
+            .setNegativeButton("بستن", null)
             .show()
+    }
+
+    private fun getVideoQualityTitle(quality: String): String {
+        return when (quality.lowercase()) {
+            "copy" -> "کیفیت اصلی شبکه (کپی مستقیم - پیش‌فرض)"
+            "high" -> "فشرده‌سازی بسیار بالا (H.264 - CRF 18)"
+            "medium" -> "فشرده‌سازی متعادل (H.264 - CRF 23)"
+            "low" -> "فشرده‌سازی کم‌حجم (H.264 - 720p - CRF 28)"
+            else -> quality
+        }
+    }
+
+    private fun getSampleRateTitle(rate: String): String {
+        return when (rate.lowercase()) {
+            "auto" -> "خودکار (نرخ شبکه رسیور - پیش‌فرض)"
+            "44100" -> "44100 هرتز (CD)"
+            "48000" -> "48000 هرتز (تلویزیون)"
+            else -> "$rate هرتز"
+        }
     }
 
     private fun openEpgSettingsDialog() {

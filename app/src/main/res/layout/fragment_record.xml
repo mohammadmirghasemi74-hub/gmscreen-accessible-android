@@ -120,6 +120,20 @@
                     android:textStyle="bold"
                     app:backgroundTint="@color/accent_green"
                     app:cornerRadius="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnViewRecordings"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:text="📁 مشاهده فایل‌های ضبط‌شده"
+                    android:contentDescription="مشاهده و مدیریت فایل‌های ضبط شده در حافظه گوشی"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:layout_marginTop="8dp"
+                    app:strokeColor="@color/divider"
+                    app:strokeWidth="1dp"
+                    app:backgroundTint="@color/card_bg"
+                    app:cornerRadius="8dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
