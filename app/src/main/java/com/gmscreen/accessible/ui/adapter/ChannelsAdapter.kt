@@ -28,6 +28,8 @@ class ChannelsAdapter(
         return channels[position].serviceId.hashCode().toLong()
     }
 
+    fun getChannels(): List<Channel> = channels
+
     fun updateChannels(newChannels: List<Channel>) {
         channels = newChannels
         notifyDataSetChanged()
@@ -38,9 +40,10 @@ class ChannelsAdapter(
             val oldIdx = channels.indexOfFirst { it.serviceId == currentPlayingServiceId }
             val newIdx = channels.indexOfFirst { it.serviceId == serviceId }
             currentPlayingServiceId = serviceId
-            if (oldIdx >= 0) notifyItemChanged(oldIdx)
-            if (newIdx >= 0) notifyItemChanged(newIdx)
-            if (oldIdx < 0 && newIdx < 0) notifyDataSetChanged()
+            try {
+                if (oldIdx in channels.indices) notifyItemChanged(oldIdx)
+                if (newIdx in channels.indices) notifyItemChanged(newIdx)
+            } catch (_: Exception) {}
         }
     }
 

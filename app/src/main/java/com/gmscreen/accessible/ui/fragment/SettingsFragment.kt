@@ -219,12 +219,14 @@ class SettingsFragment : Fragment() {
     }
 
     private fun openAccessibilitySettingsDialog() {
+        val currentOrientation = if (appConfig.videoLandscapeOrientation) "افقی (Landscape)" else "عمودی (Portrait)"
         val items = arrayOf(
             "ویبره و بازخورد لمسی (Haptic): ${if (appConfig.hapticFeedbackEnabled) "فعال" else "غیرفعال"}",
-            "حفظ شماره سراسری کانال‌ها در فیلترها: ${if (appConfig.keepGlobalChannelNum) "فعال" else "غیرفعال"}"
+            "حفظ شماره سراسری کانال‌ها در فیلترها: ${if (appConfig.keepGlobalChannelNum) "فعال" else "غیرفعال"}",
+            "جهت صفحه در پخش زنده ویدیویی: $currentOrientation"
         )
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("تنظیمات دسترس‌پذیری")
+            .setTitle("تنظیمات دسترس‌پذیری و نمایش")
             .setItems(items) { _, which ->
                 when (which) {
                     0 -> {
@@ -236,6 +238,13 @@ class SettingsFragment : Fragment() {
                         appConfig.keepGlobalChannelNum = !appConfig.keepGlobalChannelNum
                         val state = if (appConfig.keepGlobalChannelNum) "فعال" else "غیرفعال"
                         Toast.makeText(requireContext(), "شماره سراسری کانال‌ها: $state", Toast.LENGTH_SHORT).show()
+                    }
+                    2 -> {
+                        appConfig.videoLandscapeOrientation = !appConfig.videoLandscapeOrientation
+                        val state = if (appConfig.videoLandscapeOrientation) "افقی (مناسب افراد بینا)" else "عمودی (پیش‌فرض)"
+                        val msg = "جهت تصویر در پخش زنده: $state"
+                        AccessibilityHelper.announce(containerSettingsList, msg)
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                     }
                 }
             }

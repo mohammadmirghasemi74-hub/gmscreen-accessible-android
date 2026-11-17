@@ -1,9 +1,10 @@
 package com.gmscreen.accessible.ui
 
+import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
 import android.view.WindowManager
-import android.widget.TextView
+import android.widget.ImageButton
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
@@ -20,7 +21,6 @@ import com.gmscreen.accessible.GMScreenApplication
 import com.gmscreen.accessible.R
 import com.gmscreen.accessible.player.StreamRecorderManager
 import com.gmscreen.accessible.util.AccessibilityHelper
-import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,30 +29,35 @@ import kotlinx.coroutines.withContext
 class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
     private lateinit var playerView: PlayerView
-    private lateinit var btnExitPlayer: MaterialButton
-    private lateinit var txtPlayerOverlay: TextView
+    private lateinit var btnExitPlayer: ImageButton
 
     private var exoPlayer: ExoPlayer? = null
     private var channelName: String = "شبکه"
     private var serviceId: String = ""
 
     private val repository get() = GMScreenApplication.instance.repository
+    private val appConfig get() = GMScreenApplication.instance.appConfig
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // Set orientation based on user configuration
+        requestedOrientation = if (appConfig.videoLandscapeOrientation) {
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+
         setContentView(R.layout.activity_video_player)
 
         playerView = findViewById(R.id.playerViewFullscreen)
         btnExitPlayer = findViewById(R.id.btnExitPlayer)
-        txtPlayerOverlay = findViewById(R.id.txtPlayerOverlay)
 
         channelName = intent.getStringExtra("EXTRA_CHANNEL_NAME") ?: "شبکه"
         serviceId = intent.getStringExtra("EXTRA_SERVICE_ID") ?: ""
 
-        val initialMsg = "در حال بارگذاری پخش زنده $channelName..."
-        txtPlayerOverlay.text = initialMsg
-        AccessibilityHelper.announce(playerView, "صفحه پخش تمام‌صفحه باز شد. در حال اتصال به $channelName. برای خروج و توقف، کلید برگشت را بزنید.")
+        AccessibilityHelper.announce(playerView, "پخش ویدیویی تمام‌صفحه $channelName آغاز شد. برای بازگشت کلید برگشت را بزنید.")
 
         btnExitPlayer.setOnClickListener {
             finish()
@@ -88,17 +93,14 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
         val ip = repository.connectedIp.value
         val channel = repository.channels.value.find { it.serviceId == serviceId }
         if (ip.isBlank() || channel == null) {
-            txtPlayerOverlay.text = "خطا: اطلاعات شبکه یافت نشد"
             AccessibilityHelper.announce(playerView, "خطا در یافتن مشخصات شبکه")
             return
         }
 
         lifecycleScope.launch(Dispatchers.IO) {
-            // First stop any previous stream cleanly
             StreamRecorderManager.stopStream(keepRecording = false)
             kotlinx.coroutines.delay(250)
 
-            // Tune channel on STB if not already active
             repository.switchChannel(channel)
             kotlinx.coroutines.delay(300)
 
@@ -117,9 +119,7 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
                         prepare()
                         play()
                     }
-                    txtPlayerOverlay.text = "در حال پخش: $channelName"
                 } else if (!isFinishing) {
-                    txtPlayerOverlay.text = "خطا در برقراری ارتباط استریم با رسیور"
                     AccessibilityHelper.announce(playerView, "خطا در برقراری ارتباط استریم با رسیور")
                 }
             }
@@ -128,22 +128,18 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
     override fun onPlaybackStateChanged(playbackState: Int) {
         when (playbackState) {
-            Player.STATE_BUFFERING -> {
-                txtPlayerOverlay.text = "در حال بافر استریم: $channelName"
-            }
+            Player.STATE_BUFFERING -> {}
             Player.STATE_READY -> {
-                txtPlayerOverlay.text = "پخش زنده فعال: $channelName"
-                AccessibilityHelper.announce(playerView, "پخش زنده $channelName آغاز شد")
+                AccessibilityHelper.announce(playerView, "پخش زنده $channelName فعال است")
             }
             Player.STATE_ENDED -> {
-                txtPlayerOverlay.text = "پخش به پایان رسید"
+                finish()
             }
             Player.STATE_IDLE -> {}
         }
     }
 
     override fun onPlayerError(error: PlaybackException) {
-        txtPlayerOverlay.text = "خطا در دیکد تصویر یا صدا"
         AccessibilityHelper.announce(playerView, "خطا در پخش تصویر یا صدای شبکه")
     }
 

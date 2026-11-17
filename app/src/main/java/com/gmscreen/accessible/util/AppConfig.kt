@@ -20,6 +20,7 @@ class AppConfig(context: Context) {
         private const val KEY_PARENTAL_PIN = "parental_pin"
         private const val KEY_SLEEP_TIMER = "sleep_timer"
         private const val KEY_POWER_MODE = "power_mode"
+        private const val KEY_VIDEO_LANDSCAPE = "video_landscape_orientation"
     }
 
     var lastConnectedIp: String
@@ -69,4 +70,8 @@ class AppConfig(context: Context) {
     var powerMode: Int
         get() = prefs.getInt(KEY_POWER_MODE, 1)
         set(value) = prefs.edit().putInt(KEY_POWER_MODE, value).apply()
+
+    var videoLandscapeOrientation: Boolean
+        get() = prefs.getBoolean(KEY_VIDEO_LANDSCAPE, false)
+        set(value) = prefs.edit().putBoolean(KEY_VIDEO_LANDSCAPE, value).apply()
 }

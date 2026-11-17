@@ -83,7 +83,7 @@ class StbRepository(context: Context) {
         monitorJob?.cancel()
         monitorJob = repoScope.launch {
             while (isActive && client.isConnected) {
-                delay(2000)
+                delay(1200)
                 if (!client.isConnected) break
                 try {
                     val pid = client.getPlayingChannel()

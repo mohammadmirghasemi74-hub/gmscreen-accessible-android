@@ -268,6 +268,7 @@ class ChannelsFragment : Fragment() {
     }
 
     private var hasAnnouncedChannelsIntro = false
+    private var lastObservedPlayingPid: String? = null
 
     private fun observeData() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -277,15 +278,66 @@ class ChannelsFragment : Fragment() {
                     hasAnnouncedChannelsIntro = true
                     val radioCount = allCh.count { it.isRadio }
                     val tvCount = allCh.size - radioCount
-                    val introMsg = "شبکه‌ها از رسیور دریافت شد. ${allCh.size} کانال شامل $tvCount تلویزیونی و $radioCount رادیویی پیدا شد. با ضربه زدن روی هر کانال پخش آغاز می‌شود و با لمس طولانی گزینه‌های بیشتر نمایش داده می‌شود."
+                    val introMsg = "شبکه‌ها از رسیور دریافت شد. ${allCh.size} کانال شامل $tvCount تلویزیونی و $radioCount رادیویی پیدا شد."
                     AccessibilityHelper.announce(txtChannelCount, introMsg)
+
+                    delay(350)
+                    val playingCh = repository.currentChannel.value
+                    if (playingCh != null) {
+                        focusAndScrollToChannel(playingCh, isInitial = true)
+                    }
                 }
             }
         }
+
         viewLifecycleOwner.lifecycleScope.launch {
             repository.currentChannel.collect { currCh ->
-                channelsAdapter?.setCurrentPlayingChannel(currCh?.serviceId)
+                if (currCh != null) {
+                    if (currCh.serviceId != lastObservedPlayingPid) {
+                        val wasFirstTime = (lastObservedPlayingPid == null)
+                        lastObservedPlayingPid = currCh.serviceId
+                        if (!wasFirstTime && hasAnnouncedChannelsIntro) {
+                            focusAndScrollToChannel(currCh, isInitial = false)
+                        } else {
+                            recyclerViewChannels.post {
+                                channelsAdapter?.setCurrentPlayingChannel(currCh.serviceId)
+                            }
+                        }
+                    }
+                }
             }
+        }
+    }
+
+    private fun focusAndScrollToChannel(channel: Channel, isInitial: Boolean) {
+        val typePrefix = if (channel.isRadio) "رادیو" else "شبکه"
+        val channelNum = if (channel.realChannelNum > 0) "شماره ${channel.realChannelNum}" else ""
+        val announceMsg = if (isInitial) {
+            "کانال در حال پخش در رسیور: $typePrefix ${channel.serviceName} $channelNum"
+        } else {
+            "در حال پخش: $typePrefix ${channel.serviceName} $channelNum"
+        }
+
+        if (isRadioMode != channel.isRadio) {
+            isRadioMode = channel.isRadio
+            updateTvRadioToggleUI()
+            filterChannels()
+        }
+
+        recyclerViewChannels.post {
+            channelsAdapter?.setCurrentPlayingChannel(channel.serviceId)
+            val currentList = channelsAdapter?.getChannels() ?: emptyList()
+            val targetIdx = currentList.indexOfFirst { it.serviceId == channel.serviceId }
+            if (targetIdx >= 0) {
+                recyclerViewChannels.scrollToPosition(targetIdx)
+                recyclerViewChannels.postDelayed({
+                    try {
+                        val vh = recyclerViewChannels.findViewHolderForAdapterPosition(targetIdx)
+                        vh?.itemView?.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
+                    } catch (_: Exception) {}
+                }, 200)
+            }
+            AccessibilityHelper.announce(recyclerViewChannels, announceMsg)
         }
     }
 
@@ -339,11 +391,16 @@ class ChannelsFragment : Fragment() {
 
         val isAlreadyPlaying = (repository.currentChannel.value?.serviceId == channel.serviceId)
 
-        // Concise, natural announcement matching user request: simply announce channel name
-        if (!isAlreadyPlaying) {
-            val prefix = if (channel.isRadio) "رادیو" else "شبکه"
-            AccessibilityHelper.announce(txtChannelCount, "$prefix ${channel.serviceName}")
+        if (isAlreadyPlaying) {
+            val typePrefix = if (channel.isRadio) "رادیو" else "شبکه"
+            val msg = "همین $typePrefix (${channel.serviceName}) در حال پخش است"
+            AccessibilityHelper.announce(txtChannelCount, msg)
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            return
         }
+
+        val prefix = if (channel.isRadio) "رادیو" else "شبکه"
+        AccessibilityHelper.announce(txtChannelCount, "$prefix ${channel.serviceName}")
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             if (isAudioStreaming || com.gmscreen.accessible.player.StreamRecorderManager.isStreaming) {
@@ -353,7 +410,7 @@ class ChannelsFragment : Fragment() {
                 delay(250)
             }
 
-            val switched = if (isAlreadyPlaying) true else repository.switchChannel(channel)
+            val switched = repository.switchChannel(channel)
             withContext(Dispatchers.Main) {
                 if (switched) {
                     if (appConfig.hapticFeedbackEnabled) {
