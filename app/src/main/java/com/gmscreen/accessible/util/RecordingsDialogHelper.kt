@@ -11,14 +11,22 @@ import java.io.File
 
 object RecordingsDialogHelper {
 
+    private fun isMediaFile(f: File): Boolean {
+        val name = f.name.lowercase()
+        return name.endsWith(".mp4") || name.endsWith(".ts") || name.endsWith(".mkv") ||
+                name.endsWith(".mp3") || name.endsWith(".m4a") || name.endsWith(".wav") ||
+                name.endsWith(".aac") || name.endsWith(".ogg")
+    }
+
     fun showRecordingsDialog(
         context: Context,
         announceView: View? = null,
         onDismiss: (() -> Unit)? = null
     ) {
-        val files = StorageManager.listRecordedFiles(context)
-        if (files.isEmpty()) {
-            val msg = "هیچ فایل ضبط‌شده‌ای در پوشه GMScreen یافت نشد"
+        val baseDir = StorageManager.getRecordingsDir(context)
+        val allFiles = StorageManager.listRecordedFiles(context)
+        if (allFiles.isEmpty()) {
+            val msg = "هیچ فایل ضبط‌شده‌ای در پوشه ذخیره یافت نشد"
             Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
             if (announceView != null) {
                 AccessibilityHelper.announce(announceView, msg)
@@ -27,21 +35,36 @@ object RecordingsDialogHelper {
             return
         }
 
-        val items = files.map { file ->
-            val sizeMb = String.format("%.1f", file.length() / (1024f * 1024f))
-            val parentName = file.parentFile?.name ?: ""
-            val folderPrefix = if (parentName.isNotEmpty() && parentName != "recordings") "[$parentName] " else ""
-            "$folderPrefix${file.name} ($sizeMb MB)"
-        }.toTypedArray()
+        // Collect folders and loose files
+        val subDirs = baseDir.listFiles { f -> f.isDirectory }?.sortedBy { it.name } ?: emptyList()
+        val looseFiles = baseDir.listFiles { f -> f.isFile && isMediaFile(f) }?.sortedByDescending { it.lastModified() } ?: emptyList()
+
+        val folderItems = mutableListOf<Pair<String, File>>()
+
+        for (dir in subDirs) {
+            val filesInDir = dir.listFiles { f -> f.isFile && isMediaFile(f) } ?: emptyArray()
+            if (filesInDir.isNotEmpty()) {
+                val totalBytes = filesInDir.sumOf { it.length() }
+                val sizeMb = String.format("%.1f", totalBytes / (1024f * 1024f))
+                folderItems.add(Pair("📁 پوشه ${dir.name} (${filesInDir.size} فایل - $sizeMb MB)", dir))
+            }
+        }
+
+        if (looseFiles.isNotEmpty()) {
+            val totalBytes = looseFiles.sumOf { it.length() }
+            val sizeMb = String.format("%.1f", totalBytes / (1024f * 1024f))
+            folderItems.add(Pair("📁 فایل‌های عمومی و متفرقه (${looseFiles.size} فایل - $sizeMb MB)", baseDir))
+        }
+
+        // If only 1 folder exists or no subfolders, but subfolder structure was requested
+        val displayNames = folderItems.map { it.first }.toTypedArray()
 
         MaterialAlertDialogBuilder(context)
-            .setTitle("فایل‌های ضبط‌شده در گوشی (${files.size} فایل)")
-            .setItems(items) { _, which ->
-                val file = files.getOrNull(which)
-                if (file != null) {
-                    showFileActionsDialog(context, file, announceView) {
-                        showRecordingsDialog(context, announceView, onDismiss)
-                    }
+            .setTitle("پوشه‌های ضبط‌شده در گوشی (${allFiles.size} فایل کل)")
+            .setItems(displayNames) { _, which ->
+                val selected = folderItems.getOrNull(which)
+                if (selected != null) {
+                    showFolderContentsDialog(context, selected.second, announceView, onDismiss)
                 }
             }
             .setPositiveButton("پوشه فایل‌ها") { _, _ ->
@@ -49,13 +72,83 @@ object RecordingsDialogHelper {
                 onDismiss?.invoke()
             }
             .setNeutralButton("حذف کل فایل‌ها") { _, _ ->
-                confirmDeleteAllRecordings(context, files.size, announceView, onDismiss)
+                confirmDeleteAllRecordings(context, allFiles.size, announceView, onDismiss)
             }
             .setNegativeButton("بستن") { _, _ ->
                 onDismiss?.invoke()
             }
             .setOnDismissListener {
                 onDismiss?.invoke()
+            }
+            .show()
+    }
+
+    private fun showFolderContentsDialog(
+        context: Context,
+        folder: File,
+        announceView: View? = null,
+        onDismiss: (() -> Unit)? = null
+    ) {
+        val files = folder.listFiles { f -> f.isFile && isMediaFile(f) }
+            ?.sortedByDescending { it.lastModified() } ?: emptyList()
+
+        if (files.isEmpty()) {
+            Toast.makeText(context, "این پوشه خالی است", Toast.LENGTH_SHORT).show()
+            showRecordingsDialog(context, announceView, onDismiss)
+            return
+        }
+
+        val items = files.map { file ->
+            val sizeMb = String.format("%.1f", file.length() / (1024f * 1024f))
+            val isAudio = file.name.lowercase().let { it.endsWith(".mp3") || it.endsWith(".m4a") || it.endsWith(".wav") }
+            val icon = if (isAudio) "🎵" else "🎬"
+            "$icon ${file.name} ($sizeMb MB)"
+        }.toTypedArray()
+
+        val folderTitle = if (folder == StorageManager.getRecordingsDir(context)) "فایل‌های عمومی" else folder.name
+
+        MaterialAlertDialogBuilder(context)
+            .setTitle("پوشه «$folderTitle» (${files.size} فایل)")
+            .setItems(items) { _, which ->
+                val file = files.getOrNull(which)
+                if (file != null) {
+                    showFileActionsDialog(context, file, folder, announceView) {
+                        showFolderContentsDialog(context, folder, announceView, onDismiss)
+                    }
+                }
+            }
+            .setPositiveButton("حذف این پوشه") { _, _ ->
+                confirmDeleteFolder(context, folder, files.size, announceView) {
+                    showRecordingsDialog(context, announceView, onDismiss)
+                }
+            }
+            .setNegativeButton("بازگشت") { _, _ ->
+                showRecordingsDialog(context, announceView, onDismiss)
+            }
+            .show()
+    }
+
+    private fun confirmDeleteFolder(
+        context: Context,
+        folder: File,
+        fileCount: Int,
+        announceView: View? = null,
+        onCompleted: (() -> Unit)? = null
+    ) {
+        MaterialAlertDialogBuilder(context)
+            .setTitle("حذف کامل پوشه")
+            .setMessage("آیا مطمئن هستید که می‌خواهید پوشه «${folder.name}» و تمام $fileCount فایل داخل آن را حذف کنید؟")
+            .setPositiveButton("بله، حذف شود") { _, _ ->
+                val ok = folder.deleteRecursively()
+                val msg = if (ok) "پوشه «${folder.name}» با موفقیت حذف شد" else "خطا در حذف پوشه"
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                if (announceView != null) {
+                    AccessibilityHelper.announce(announceView, msg)
+                }
+                onCompleted?.invoke()
+            }
+            .setNegativeButton("انصراف") { _, _ ->
+                onCompleted?.invoke()
             }
             .show()
     }
@@ -85,6 +178,7 @@ object RecordingsDialogHelper {
     private fun showFileActionsDialog(
         context: Context,
         file: File,
+        parentFolder: File,
         announceView: View? = null,
         onFileChanged: (() -> Unit)? = null
     ) {
@@ -98,7 +192,9 @@ object RecordingsDialogHelper {
                     2 -> confirmDeleteSingleFile(context, file, announceView, onFileChanged)
                 }
             }
-            .setNegativeButton("انصراف", null)
+            .setNegativeButton("انصراف") { _, _ ->
+                onFileChanged?.invoke()
+            }
             .show()
     }
 
@@ -121,7 +217,9 @@ object RecordingsDialogHelper {
                 }
                 onFileDeleted?.invoke()
             }
-            .setNegativeButton("انصراف", null)
+            .setNegativeButton("انصراف") { _, _ ->
+                onFileDeleted?.invoke()
+            }
             .show()
     }
 
@@ -151,7 +249,17 @@ object RecordingsDialogHelper {
             }
             context.startActivity(chooser)
         } catch (e: Exception) {
-            Toast.makeText(context, "خطا در باز کردن پخش‌کننده: ${e.message}", Toast.LENGTH_SHORT).show()
+            // Fallback to internal video player
+            try {
+                val fallbackIntent = Intent(context, com.gmscreen.accessible.ui.VideoPlayerActivity::class.java).apply {
+                    putExtra("STREAM_URL", file.absolutePath)
+                    putExtra("CHANNEL_NAME", file.name)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(fallbackIntent)
+            } catch (ex: Exception) {
+                Toast.makeText(context, "خطا در پخش فایل: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -189,7 +297,7 @@ object RecordingsDialogHelper {
             }
             context.startActivity(intent)
         } catch (_: Exception) {
-            Toast.makeText(context, "مسیر فایل‌ها: /sdcard/GMScreen/recordings", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "مسیر فایل‌ها: ${StorageManager.getRecordingsDir(context).absolutePath}", Toast.LENGTH_LONG).show()
         }
     }
 }

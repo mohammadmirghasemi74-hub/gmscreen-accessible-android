@@ -1,14 +1,17 @@
 package com.gmscreen.accessible.ui.fragment
 
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -18,6 +21,11 @@ import com.gmscreen.accessible.protocol.RcuKey
 import com.gmscreen.accessible.ui.InternalBrowserActivity
 import com.gmscreen.accessible.util.AccessibilityHelper
 import com.gmscreen.accessible.util.StorageManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.util.Locale
 
 class SettingsFragment : Fragment() {
 
@@ -100,18 +108,70 @@ class SettingsFragment : Fragment() {
     }
 
     private fun openStbInfoDialog() {
-        val model = repository.deviceModel.value
-        val ip = repository.connectedIp.value
-        val msg = if (ip.isNotBlank()) {
-            "مدل رسیور: $model\nآدرس IP شبکه: $ip\nپورت ارتباطی: 20000\nپورت استریم SAT>IP: 554\nوضعیت اتصال: آنلاین و فعال"
-        } else {
-            "هیچ رسیوری در حال حاضر متصل نیست. لطفاً در سربرگ اتصال به رسیور وصل شوید."
+        val isConnected = repository.isConnected.value && repository.connectedIp.value.isNotBlank()
+        if (!isConnected) {
+            val msg = "وضعیت اتصال رسیور: رسیور در حال حاضر متصل نیست (قطع ارتباط).\n\nنکته: برای مشاهده مشخصات زنده، مدل، شماره سریال و ساعت رسیور، ابتدا در برگه اول به رسیور متصل شوید."
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("مشخصات و وضعیت سخت‌افزاری رسیور")
+                .setMessage(msg)
+                .setPositiveButton("بستن", null)
+                .show()
+            return
         }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("مشخصات سخت‌افزاری رسیور")
-            .setMessage(msg)
-            .setPositiveButton("بستن", null)
-            .show()
+
+        val ip = repository.connectedIp.value
+        val loadingDialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle("مشخصات و وضعیت سخت‌افزاری رسیور")
+            .setMessage("در حال استعلام مشخصات زنده از رسیور...")
+            .setCancelable(false)
+            .create()
+        loadingDialog.show()
+
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val info = repository.client.fetchBoxInfo()
+            val channelCount = repository.channels.value.size
+            val isRadio = repository.currentStbMode == 1
+
+            withContext(Dispatchers.Main) {
+                loadingDialog.dismiss()
+                val rawModel = info?.get("ProductName")?.toString()?.takeIf { it.isNotBlank() }
+                    ?: repository.deviceModel.value.takeIf { it.isNotBlank() } ?: "نامشخص"
+                val sw = info?.get("SoftwareVersion")?.toString()?.takeIf { it.isNotBlank() } ?: "نامشخص"
+                val hw = info?.get("HardWareVersion")?.toString()?.takeIf { it.isNotBlank() } ?: "نامشخص"
+                val sn = info?.get("SerialNumber")?.toString()?.takeIf { it.isNotBlank() } ?: "نامشخص"
+                val modeText = if (isRadio) "رادیو (Radio)" else "تلویزیون (TV)"
+                val chText = "$channelCount شبکه ذخیره شده"
+
+                val timeStr = if (info != null && info.containsKey("Year")) {
+                    val y = info["Year"]?.toString() ?: ""
+                    val m = info["Month"]?.toString() ?: ""
+                    val d = info["Day"]?.toString() ?: ""
+                    val h = info["Hour"]?.toString()?.toIntOrNull() ?: 0
+                    val min = info["Min"]?.toString()?.toIntOrNull() ?: 0
+                    val sec = info["Sec"]?.toString()?.toIntOrNull() ?: 0
+                    String.format(Locale.US, "%s/%s/%s - %02d:%02d:%02d", y, m, d, h, min, sec)
+                } else {
+                    "نامشخص"
+                }
+
+                val sb = StringBuilder()
+                sb.append("نام دستگاه (Product Name): $rawModel\n")
+                sb.append("وضعیت کارکرد (Working Mode): $modeText\n")
+                sb.append("نسخه نرم‌افزار (Software Version): $sw\n")
+                sb.append("نسخه سخت‌افزار (Hardware Version): $hw\n")
+                sb.append("شماره سریال (Serial Number): $sn\n")
+                sb.append("کانال‌های استفاده شده (Channel Used): $chText\n")
+                sb.append("ساعت داخلی رسیور (STB Clock): $timeStr\n")
+                sb.append("آدرس IP رسیور: $ip\n")
+                sb.append("پورت کنترل: 20000 | پورت استریم: 554")
+
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("مشخصات و وضعیت زنده رسیور (STB Info)")
+                    .setMessage(sb.toString())
+                    .setPositiveButton("بستن", null)
+                    .show()
+            }
+        }
     }
 
     private fun openStbSettingsDialog() {
@@ -158,226 +218,312 @@ class SettingsFragment : Fragment() {
     }
 
     private fun openRecordingSettingsDialog() {
-        val showBtnText = if (appConfig.showRecordingsInChannels) "فعال (پیش‌فرض)" else "غیرفعال"
-        val vidFmtText = appConfig.videoRecFormat.uppercase()
-        val vidQualText = getVideoQualityTitle(appConfig.videoRecQuality)
-        val patText = getNamingPatternTitle(appConfig.recNamingPattern)
-        val audFmtText = appConfig.audioRecFormat.uppercase()
-        val audBrText = appConfig.audioRecBitrate
-        val audSrText = getSampleRateTitle(appConfig.audioRecSampleRate)
-        val audChText = if (appConfig.audioRecChannels == "mono") "مونو (تک کاناله)" else "استریو (دو کاناله - پیش‌فرض)"
+        var draftShowInChannels = appConfig.showRecordingsInChannels
+        var draftCustomDir = appConfig.customRecordingsDir
+        var draftVideoFormat = appConfig.videoRecFormat
+        var draftVideoQuality = appConfig.videoRecQuality
+        var draftNamingPattern = appConfig.recNamingPattern
+        var draftAudioFormat = appConfig.audioRecFormat
+        var draftAudioBitrate = appConfig.audioRecBitrate
+        var draftAudioSampleRate = appConfig.audioRecSampleRate
+        var draftAudioChannels = appConfig.audioRecChannels
 
-        val items = arrayOf(
-            "۱. نمایش دکمه فایل‌های ضبط‌شده در بخش کانال‌ها: $showBtnText",
-            "۲. فرمت ضبط تصویری (ویدیو): $vidFmtText",
-            "۳. کیفیت و نحوه ذخیره ویدیو: $vidQualText",
-            "۴. الگوی نام‌گذاری فایل‌های ضبط: $patText",
-            "۵. فرمت ضبط صوتی (صدا): $audFmtText",
-            "۶. بیت‌ریت صدای ضبط: $audBrText",
-            "۷. نرخ نمونه‌برداری صدا (Sample Rate): $audSrText",
-            "۸. کانال صدا: $audChText",
-            "۹. 📁 مشاهده و مدیریت فایل‌های ضبط‌شده در حافظه گوشی",
-            "۱۰. اطلاعات پوشه اصلی ذخیره‌سازی"
-        )
+        val scrollView = ScrollView(requireContext()).apply {
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        val contentLayout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 20, 32, 20)
+        }
+        scrollView.addView(contentLayout)
+
+        fun addSettingRow(
+            title: String,
+            initialValueText: String,
+            onClick: (TextView, View) -> Unit
+        ): Pair<LinearLayout, TextView> {
+            val row = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(16, 18, 16, 18)
+                isClickable = true
+                isFocusable = true
+                setBackgroundResource(android.R.drawable.list_selector_background)
+            }
+            val txtTitle = TextView(requireContext()).apply {
+                text = title
+                setTextColor(resources.getColor(R.color.text_primary, null))
+                textSize = 15f
+                paint.isFakeBoldText = true
+            }
+            val txtVal = TextView(requireContext()).apply {
+                text = initialValueText
+                setTextColor(resources.getColor(R.color.accent_yellow, null))
+                textSize = 13f
+                setPadding(0, 4, 0, 0)
+            }
+            row.addView(txtTitle)
+            row.addView(txtVal)
+            row.contentDescription = "$title: $initialValueText. برای تغییر ضربه بزنید."
+            row.setOnClickListener {
+                onClick(txtVal, row)
+            }
+            contentLayout.addView(row)
+            return Pair(row, txtVal)
+        }
+
+        // 1. Show button in channels
+        addSettingRow(
+            "۱. نمایش دکمه فایل‌های ضبط‌شده در بخش کانال‌ها",
+            if (draftShowInChannels) "فعال (پیش‌فرض)" else "غیرفعال"
+        ) { txtVal, row ->
+            val options = arrayOf("فعال (نمایش دکمه شناور)", "غیرفعال (مخفی کردن از بخش کانال‌ها)")
+            val curIdx = if (draftShowInChannels) 0 else 1
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("نمایش دکمه در بخش کانال‌ها")
+                .setSingleChoiceItems(options, curIdx) { dlg, which ->
+                    draftShowInChannels = (which == 0)
+                    val label = if (draftShowInChannels) "فعال (پیش‌فرض)" else "غیرفعال"
+                    txtVal.text = label
+                    row.contentDescription = "نمایش دکمه فایل‌های ضبط در بخش کانال‌ها: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 2. Custom storage directory
+        val getDirDisplay: (String) -> String = { dir ->
+            when {
+                dir.isBlank() -> "پوشه پیش‌فرض برنامه (/sdcard/GMScreen/recordings)"
+                dir.contains("Download") -> "پوشه دانلودها ($dir)"
+                dir.contains("Movies") -> "پوشه فیلم‌ها ($dir)"
+                else -> "پوشه سفارشی: $dir"
+            }
+        }
+        addSettingRow("۲. پوشه ذخیره فایل‌های ضبط", getDirDisplay(draftCustomDir)) { txtVal, row ->
+            val dirs = arrayOf(
+                "پوشه پیش‌فرض برنامه (/sdcard/GMScreen/recordings)",
+                "پوشه دانلودهای گوشی (/sdcard/Download/GMScreen)",
+                "پوشه فیلم‌ها و ویدیوها (/sdcard/Movies/GMScreen)",
+                "ورود مسیر پوشه دلخواه دستی..."
+            )
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("انتخاب پوشه ذخیره فایل‌های ضبط")
+                .setItems(dirs) { _, which ->
+                    when (which) {
+                        0 -> {
+                            draftCustomDir = ""
+                            val label = getDirDisplay(draftCustomDir)
+                            txtVal.text = label
+                            row.contentDescription = "پوشه ذخیره: $label"
+                            AccessibilityHelper.announce(row, label)
+                        }
+                        1 -> {
+                            draftCustomDir = File(Environment.getExternalStorageDirectory(), "Download/GMScreen").absolutePath
+                            val label = getDirDisplay(draftCustomDir)
+                            txtVal.text = label
+                            row.contentDescription = "پوشه ذخیره: $label"
+                            AccessibilityHelper.announce(row, label)
+                        }
+                        2 -> {
+                            draftCustomDir = File(Environment.getExternalStorageDirectory(), "Movies/GMScreen").absolutePath
+                            val label = getDirDisplay(draftCustomDir)
+                            txtVal.text = label
+                            row.contentDescription = "پوشه ذخیره: $label"
+                            AccessibilityHelper.announce(row, label)
+                        }
+                        3 -> {
+                            val input = EditText(requireContext()).apply {
+                                hint = "/sdcard/..."
+                                setText(draftCustomDir.ifBlank { "/sdcard/GMScreen/recordings" })
+                            }
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setTitle("ورود مسیر پوشه دلخواه")
+                                .setView(input)
+                                .setPositiveButton("تأیید") { _, _ ->
+                                    val custom = input.text.toString().trim()
+                                    if (custom.isNotBlank()) {
+                                        draftCustomDir = custom
+                                        val label = getDirDisplay(draftCustomDir)
+                                        txtVal.text = label
+                                        row.contentDescription = "پوشه ذخیره: $label"
+                                        AccessibilityHelper.announce(row, label)
+                                    }
+                                }
+                                .setNegativeButton("انصراف", null)
+                                .show()
+                        }
+                    }
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 3. Video recording format
+        addSettingRow("۳. فرمت ضبط تصویری (ویدیو)", draftVideoFormat.uppercase()) { txtVal, row ->
+            val formats = arrayOf("MP4 (پیش‌فرض - سازگار با همه دستگاه‌ها)", "MKV (کیفیت چندرسانه‌ای)", "TS (جریان اصلی بدون تغییر کانتینر)")
+            val values = arrayOf("mp4", "mkv", "ts")
+            val cur = values.indexOf(draftVideoFormat).let { if (it >= 0) it else 0 }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("انتخاب فرمت ضبط تصویری")
+                .setSingleChoiceItems(formats, cur) { dlg, which ->
+                    draftVideoFormat = values[which]
+                    txtVal.text = draftVideoFormat.uppercase()
+                    row.contentDescription = "فرمت ویدیو: ${draftVideoFormat.uppercase()}"
+                    AccessibilityHelper.announce(row, draftVideoFormat.uppercase())
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 4. Video quality
+        addSettingRow("۴. کیفیت و نحوه ذخیره ویدیو", getVideoQualityTitle(draftVideoQuality)) { txtVal, row ->
+            val qualities = arrayOf(
+                "کیفیت اصلی شبکه (کپی مستقیم - بدون افت کیفیت و بدون مصرف پردازنده - پیش‌فرض)",
+                "فشرده‌سازی بسیار بالا (H.264 - CRF 18)",
+                "فشرده‌سازی متعادل (H.264 - CRF 23)",
+                "فشرده‌سازی کم‌حجم و سبک (H.264 - 720p - CRF 28)"
+            )
+            val values = arrayOf("copy", "high", "medium", "low")
+            val cur = values.indexOf(draftVideoQuality).let { if (it >= 0) it else 0 }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("کیفیت ذخیره ویدیو")
+                .setSingleChoiceItems(qualities, cur) { dlg, which ->
+                    draftVideoQuality = values[which]
+                    val label = getVideoQualityTitle(draftVideoQuality)
+                    txtVal.text = label
+                    row.contentDescription = "کیفیت ویدیو: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 5. Naming pattern
+        addSettingRow("۵. الگوی نام‌گذاری فایل‌های ضبط", getNamingPatternTitle(draftNamingPattern)) { txtVal, row ->
+            val patterns = arrayOf(
+                "شمسی عددی استاندارد (مثال: 1405-08-27) [پیش‌فرض]",
+                "شمسی با نام ماه و سال (مثال: 27 آبان 1405)",
+                "شمسی با نام ماه بدون سال (مثال: 27 آبان)",
+                "تاریخ و زمان میلادی (مثال: 2026-11-17)"
+            )
+            val values = arrayOf("jalali_numeric", "jalali_month_year", "jalali_month", "gregorian")
+            val cur = values.indexOf(draftNamingPattern).let { if (it >= 0) it else 0 }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("الگوی نام‌گذاری فایل‌های ضبط")
+                .setSingleChoiceItems(patterns, cur) { dlg, which ->
+                    draftNamingPattern = values[which]
+                    val label = getNamingPatternTitle(draftNamingPattern)
+                    txtVal.text = label
+                    row.contentDescription = "الگوی نام‌گذاری: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 6. Audio recording format
+        addSettingRow("۶. فرمت ضبط صوتی (صدا)", draftAudioFormat.uppercase()) { txtVal, row ->
+            val formats = arrayOf("MP3 (پیش‌فرض - سازگار با همه دستگاه‌ها)", "M4A (کدک مدرن AAC با شفافیت بالا)", "WAV (کیفیت خام استودیویی)")
+            val values = arrayOf("mp3", "m4a", "wav")
+            val cur = values.indexOf(draftAudioFormat).let { if (it >= 0) it else 0 }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("انتخاب فرمت ضبط صوتی")
+                .setSingleChoiceItems(formats, cur) { dlg, which ->
+                    draftAudioFormat = values[which]
+                    txtVal.text = draftAudioFormat.uppercase()
+                    row.contentDescription = "فرمت صوتی: ${draftAudioFormat.uppercase()}"
+                    AccessibilityHelper.announce(row, draftAudioFormat.uppercase())
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 7. Audio bitrate
+        addSettingRow("۷. بیت‌ریت صدای ضبط", draftAudioBitrate) { txtVal, row ->
+            val bitrates = arrayOf("96 kbps (کم‌حجم)", "128 kbps (استاندارد - پیش‌فرض)", "192 kbps (کیفیت عالی)", "256 kbps (بسیار بالا)", "320 kbps (حداکثر)")
+            val values = arrayOf("96k", "128k", "192k", "256k", "320k")
+            val cur = values.indexOf(draftAudioBitrate).let { if (it >= 0) it else 1 }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("انتخاب بیت‌ریت صدای ضبط")
+                .setSingleChoiceItems(bitrates, cur) { dlg, which ->
+                    draftAudioBitrate = values[which]
+                    txtVal.text = draftAudioBitrate
+                    row.contentDescription = "بیت‌ریت صدا: $draftAudioBitrate"
+                    AccessibilityHelper.announce(row, draftAudioBitrate)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 8. Audio sample rate
+        addSettingRow("۸. نرخ نمونه‌برداری صدا (Sample Rate)", getSampleRateTitle(draftAudioSampleRate)) { txtVal, row ->
+            val rates = arrayOf("خودکار (نرخ شبکه رسیور - پیش‌فرض)", "44100 هرتز (کیفیت صوتی CD)", "48000 هرتز (استاندارد شبکه‌های تلویزیونی)")
+            val values = arrayOf("auto", "44100", "48000")
+            val cur = values.indexOf(draftAudioSampleRate).let { if (it >= 0) it else 0 }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("نرخ نمونه‌برداری صدا")
+                .setSingleChoiceItems(rates, cur) { dlg, which ->
+                    draftAudioSampleRate = values[which]
+                    val label = getSampleRateTitle(draftAudioSampleRate)
+                    txtVal.text = label
+                    row.contentDescription = "نرخ نمونه‌برداری: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 9. Audio channels
+        addSettingRow("۹. کانال صدای ضبط", if (draftAudioChannels == "mono") "مونو (تک کاناله)" else "استریو (دو کاناله - پیش‌فرض)") { txtVal, row ->
+            val channels = arrayOf("استریو (دو کاناله - تفکیک کامل صدا - پیش‌فرض)", "مونو (تک کاناله - نصف شدن حجم فایل)")
+            val values = arrayOf("stereo", "mono")
+            val cur = values.indexOf(draftAudioChannels).let { if (it >= 0) it else 0 }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("کانال صدای ضبط")
+                .setSingleChoiceItems(channels, cur) { dlg, which ->
+                    draftAudioChannels = values[which]
+                    val label = if (draftAudioChannels == "mono") "مونو (تک کاناله)" else "استریو (دو کاناله - پیش‌فرض)"
+                    txtVal.text = label
+                    row.contentDescription = "کانال صدا: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("تنظیمات جامع ضبط و ذخیره‌سازی")
-            .setItems(items) { _, which ->
-                when (which) {
-                    0 -> toggleShowRecordingsInChannels()
-                    1 -> showVideoFormatDialog()
-                    2 -> showVideoQualityDialog()
-                    3 -> showNamingPatternDialog()
-                    4 -> showAudioFormatDialog()
-                    5 -> showAudioBitrateDialog()
-                    6 -> showAudioSampleRateDialog()
-                    7 -> showAudioChannelsDialog()
-                    8 -> com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext())
-                    9 -> showStorageFolderInfoDialog()
-                }
-            }
-            .setNegativeButton("بستن", null)
-            .show()
-    }
+            .setView(scrollView)
+            .setPositiveButton("ذخیره تنظیمات") { _, _ ->
+                appConfig.showRecordingsInChannels = draftShowInChannels
+                appConfig.customRecordingsDir = draftCustomDir
+                appConfig.videoRecFormat = draftVideoFormat
+                appConfig.videoRecQuality = draftVideoQuality
+                appConfig.recNamingPattern = draftNamingPattern
+                appConfig.audioRecFormat = draftAudioFormat
+                appConfig.audioRecBitrate = draftAudioBitrate
+                appConfig.audioRecSampleRate = draftAudioSampleRate
+                appConfig.audioRecChannels = draftAudioChannels
 
-    private fun toggleShowRecordingsInChannels() {
-        appConfig.showRecordingsInChannels = !appConfig.showRecordingsInChannels
-        val state = if (appConfig.showRecordingsInChannels) "فعال شد" else "غیرفعال شد"
-        val msg = "دکمه مشاهده فایل‌های ضبط‌شده در بخش کانال‌ها: $state"
-        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-        AccessibilityHelper.announce(containerSettingsList, msg)
-        openRecordingSettingsDialog()
-    }
-
-    private fun showVideoFormatDialog() {
-        val formats = arrayOf(
-            "MP4 (پیش‌فرض - سازگار با همه دستگاه‌ها و پلیرها)",
-            "MKV (فرمت چندرسانه‌ای باکیفیت)",
-            "TS (جریان اصلی ضبط رسیور بدون تغییر کانتینر)"
-        )
-        val values = arrayOf("mp4", "mkv", "ts")
-        val currentIdx = values.indexOf(appConfig.videoRecFormat).let { if (it >= 0) it else 0 }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("انتخاب فرمت ضبط تصویری")
-            .setSingleChoiceItems(formats, currentIdx) { dialog, which ->
-                val chosen = values[which]
-                appConfig.videoRecFormat = chosen
-                val msg = "فرمت ضبط تصویری روی ${chosen.uppercase()} تنظیم شد"
+                val msg = "تنظیمات ضبط با موفقیت ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                 AccessibilityHelper.announce(containerSettingsList, msg)
-                dialog.dismiss()
-                openRecordingSettingsDialog()
+            }
+            .setNeutralButton("📁 مشاهده فایل‌ها") { _, _ ->
+                com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext())
             }
             .setNegativeButton("انصراف", null)
             .show()
     }
-
-    private fun showVideoQualityDialog() {
-        val qualities = arrayOf(
-            "کیفیت اصلی شبکه (کپی مستقیم - بدون افت کیفیت و بدون مصرف پردازنده - پیش‌فرض)",
-            "فشرده‌سازی با کیفیت بسیار بالا (H.264 - CRF 18)",
-            "فشرده‌سازی متعادل (H.264 - CRF 23)",
-            "فشرده‌سازی کم‌حجم و سبک (H.264 - 720p - CRF 28)"
-        )
-        val values = arrayOf("copy", "high", "medium", "low")
-        val currentIdx = values.indexOf(appConfig.videoRecQuality).let { if (it >= 0) it else 0 }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("کیفیت و نحوه ذخیره ویدیو")
-            .setSingleChoiceItems(qualities, currentIdx) { dialog, which ->
-                val chosen = values[which]
-                appConfig.videoRecQuality = chosen
-                val title = getVideoQualityTitle(chosen)
-                val msg = "کیفیت ذخیره ویدیو تنظیم شد: $title"
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(containerSettingsList, msg)
-                dialog.dismiss()
-                openRecordingSettingsDialog()
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
-
-    private fun showNamingPatternDialog() {
-        val patterns = arrayOf(
-            "شمسی عددی استاندارد (مثال: 1405-08-27) [پیش‌فرض]",
-            "شمسی با نام ماه و سال (مثال: 27 آبان 1405)",
-            "شمسی با نام ماه بدون سال (مثال: 27 آبان)",
-            "تاریخ و زمان میلادی (مثال: 2026-11-17)"
-        )
-        val values = arrayOf("jalali_numeric", "jalali_month_year", "jalali_month", "gregorian")
-        val currentIdx = values.indexOf(appConfig.recNamingPattern).let { if (it >= 0) it else 0 }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("الگوی نام‌گذاری فایل‌های ضبط")
-            .setSingleChoiceItems(patterns, currentIdx) { dialog, which ->
-                val chosen = values[which]
-                appConfig.recNamingPattern = chosen
-                val title = getNamingPatternTitle(chosen)
-                val msg = "الگوی نام‌گذاری فایل‌ها تنظیم شد: $title"
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(containerSettingsList, msg)
-                dialog.dismiss()
-                openRecordingSettingsDialog()
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
-
-    private fun showAudioFormatDialog() {
-        val formats = arrayOf(
-            "MP3 (پیش‌فرض - سازگار با کلیه دستگاه‌ها و پلیرها)",
-            "M4A (فرمت مدرن اپل و اندروید - کدک AAC با شفافیت بالا)",
-            "WAV (کیفیت خام استودیویی - بدون فشرده‌سازی)"
-        )
-        val values = arrayOf("mp3", "m4a", "wav")
-        val currentIdx = values.indexOf(appConfig.audioRecFormat).let { if (it >= 0) it else 0 }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("انتخاب فرمت ضبط صوتی")
-            .setSingleChoiceItems(formats, currentIdx) { dialog, which ->
-                val chosen = values[which]
-                appConfig.audioRecFormat = chosen
-                val msg = "فرمت ضبط صوتی روی ${chosen.uppercase()} تنظیم شد"
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(containerSettingsList, msg)
-                dialog.dismiss()
-                openRecordingSettingsDialog()
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
-
-    private fun showAudioBitrateDialog() {
-        val bitrates = arrayOf(
-            "96 kbps (کم‌حجم - مناسب رادیو)",
-            "128 kbps (استاندارد - پیش‌فرض)",
-            "192 kbps (کیفیت عالی)",
-            "256 kbps (بسیار بالا)",
-            "320 kbps (حداکثر کیفیت)"
-        )
-        val values = arrayOf("96k", "128k", "192k", "256k", "320k")
-        val currentIdx = values.indexOf(appConfig.audioRecBitrate).let { if (it >= 0) it else 1 }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("انتخاب بیت‌ریت صدای ضبط")
-            .setSingleChoiceItems(bitrates, currentIdx) { dialog, which ->
-                val chosen = values[which]
-                appConfig.audioRecBitrate = chosen
-                val msg = "بیت‌ریت صدا روی $chosen تنظیم شد"
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(containerSettingsList, msg)
-                dialog.dismiss()
-                openRecordingSettingsDialog()
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
-
-    private fun showAudioSampleRateDialog() {
-        val rates = arrayOf(
-            "خودکار (نرخ شبکه رسیور - پیش‌فرض)",
-            "44100 هرتز (کیفیت صوتی CD)",
-            "48000 هرتز (استاندارد شبکه‌های تلویزیونی)"
-        )
-        val values = arrayOf("auto", "44100", "48000")
-        val currentIdx = values.indexOf(appConfig.audioRecSampleRate).let { if (it >= 0) it else 0 }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("انتخاب نرخ نمونه‌برداری صدا (Sample Rate)")
-            .setSingleChoiceItems(rates, currentIdx) { dialog, which ->
-                val chosen = values[which]
-                appConfig.audioRecSampleRate = chosen
-                val msg = "نرخ نمونه‌برداری روی ${getSampleRateTitle(chosen)} تنظیم شد"
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(containerSettingsList, msg)
-                dialog.dismiss()
-                openRecordingSettingsDialog()
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
-
-    private fun showAudioChannelsDialog() {
-        val channels = arrayOf(
-            "استریو (دو کاناله - تفکیک کامل صدا - پیش‌فرض)",
-            "مونو (تک کاناله - نصف شدن حجم فایل)"
-        )
-        val values = arrayOf("stereo", "mono")
-        val currentIdx = values.indexOf(appConfig.audioRecChannels).let { if (it >= 0) it else 0 }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("انتخاب کانال صدای ضبط")
-            .setSingleChoiceItems(channels, currentIdx) { dialog, which ->
-                val chosen = values[which]
-                appConfig.audioRecChannels = chosen
-                val msg = if (chosen == "mono") "کانال صدا روی مونو تنظیم شد" else "کانال صدا روی استریو تنظیم شد"
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(containerSettingsList, msg)
-                dialog.dismiss()
-                openRecordingSettingsDialog()
-            }
             .setNegativeButton("انصراف", null)
             .show()
     }

@@ -29,6 +29,7 @@ class AppConfig(context: Context) {
         private const val KEY_SLEEP_TIMER = "sleep_timer"
         private const val KEY_POWER_MODE = "power_mode"
         private const val KEY_VIDEO_LANDSCAPE = "video_landscape_orientation"
+        private const val KEY_CUSTOM_REC_DIR = "custom_rec_dir"
     }
 
     var lastConnectedIp: String
@@ -114,4 +115,8 @@ class AppConfig(context: Context) {
     var videoLandscapeOrientation: Boolean
         get() = prefs.getBoolean(KEY_VIDEO_LANDSCAPE, false)
         set(value) = prefs.edit().putBoolean(KEY_VIDEO_LANDSCAPE, value).apply()
+
+    var customRecordingsDir: String
+        get() = prefs.getString(KEY_CUSTOM_REC_DIR, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_CUSTOM_REC_DIR, value).apply()
 }

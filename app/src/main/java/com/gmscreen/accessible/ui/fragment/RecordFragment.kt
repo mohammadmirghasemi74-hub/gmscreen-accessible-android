@@ -53,14 +53,12 @@ class RecordFragment : Fragment() {
     private lateinit var containerPhoneTimers: LinearLayout
     private lateinit var txtNoPhoneTimers: TextView
 
-    private lateinit var containerRecordedFiles: LinearLayout
-    private lateinit var txtNoRecordings: TextView
-
     private lateinit var btnRefreshStbPvrFiles: MaterialButton
     private lateinit var containerStbPvrFiles: LinearLayout
     private lateinit var txtNoStbPvrFiles: TextView
 
     private var isRecordingOnPhone = false
+    private var lastRecordingWasAudio = false
     private var currentRecordingFile: File? = null
     private var recSeconds = 0
     private val timerHandler = Handler(Looper.getMainLooper())
@@ -116,9 +114,6 @@ class RecordFragment : Fragment() {
         containerPhoneTimers = view.findViewById(R.id.containerPhoneTimers)
         txtNoPhoneTimers = view.findViewById(R.id.txtNoPhoneTimers)
 
-        containerRecordedFiles = view.findViewById(R.id.containerRecordedFiles)
-        txtNoRecordings = view.findViewById(R.id.txtNoRecordings)
-
         btnRefreshStbPvrFiles = view.findViewById(R.id.btnRefreshStbPvrFiles)
         containerStbPvrFiles = view.findViewById(R.id.containerStbPvrFiles)
         txtNoStbPvrFiles = view.findViewById(R.id.txtNoStbPvrFiles)
@@ -126,7 +121,6 @@ class RecordFragment : Fragment() {
         setupListeners()
         observeData()
         loadPhoneTimers()
-        loadRecordedFiles()
         startPhoneTimerWatcher()
         updateFormatLabels()
 
@@ -150,11 +144,19 @@ class RecordFragment : Fragment() {
 
     private fun setupListeners() {
         btnStartPhoneVideoRec.setOnClickListener {
-            startPhoneRecording(isAudioOnly = false)
+            if (isRecordingOnPhone) {
+                stopPhoneRecording()
+            } else {
+                startPhoneRecording(isAudioOnly = false)
+            }
         }
 
         btnStartPhoneAudioRec.setOnClickListener {
-            startPhoneRecording(isAudioOnly = true)
+            if (isRecordingOnPhone) {
+                stopPhoneRecording()
+            } else {
+                startPhoneRecording(isAudioOnly = true)
+            }
         }
 
         btnStopPhoneRec.setOnClickListener {
@@ -162,9 +164,7 @@ class RecordFragment : Fragment() {
         }
 
         btnViewRecordings.setOnClickListener {
-            com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext(), btnViewRecordings) {
-                loadRecordedFiles()
-            }
+            com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext(), btnViewRecordings)
         }
 
         btnStbToggleRecord.setOnClickListener {
@@ -617,11 +617,22 @@ class RecordFragment : Fragment() {
                 if (file != null) {
                     currentRecordingFile = file
                     isRecordingOnPhone = true
+                    lastRecordingWasAudio = isAudioOnly
                     recSeconds = 0
 
-                    btnStartPhoneVideoRec.visibility = View.GONE
-                    btnStartPhoneAudioRec.visibility = View.GONE
-                    btnStopPhoneRec.visibility = View.VISIBLE
+                    if (isAudioOnly) {
+                        btnStartPhoneAudioRec.text = "■ توقف ضبط صوتی"
+                        btnStartPhoneAudioRec.contentDescription = "در حال ضبط صوتی در حافظه گوشی. برای توقف ضربه بزنید"
+                        btnStartPhoneVideoRec.isEnabled = false
+                        btnStartPhoneAudioRec.requestFocus()
+                        btnStartPhoneAudioRec.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
+                    } else {
+                        btnStartPhoneVideoRec.text = "■ توقف ضبط تصویری"
+                        btnStartPhoneVideoRec.contentDescription = "در حال ضبط تصویری در حافظه گوشی. برای توقف ضربه بزنید"
+                        btnStartPhoneAudioRec.isEnabled = false
+                        btnStartPhoneVideoRec.requestFocus()
+                        btnStartPhoneVideoRec.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
+                    }
 
                     timerHandler.post(timerRunnable)
 
@@ -643,9 +654,13 @@ class RecordFragment : Fragment() {
         isRecordingOnPhone = false
         timerHandler.removeCallbacks(timerRunnable)
 
-        btnStartPhoneVideoRec.visibility = View.VISIBLE
-        btnStartPhoneAudioRec.visibility = View.VISIBLE
-        btnStopPhoneRec.visibility = View.GONE
+        btnStartPhoneVideoRec.isEnabled = true
+        btnStartPhoneAudioRec.isEnabled = true
+        updateFormatLabels()
+
+        val activeBtn = if (lastRecordingWasAudio) btnStartPhoneAudioRec else btnStartPhoneVideoRec
+        activeBtn.requestFocus()
+        activeBtn.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val file = com.gmscreen.accessible.player.StreamRecorderManager.stopRecording()
@@ -656,65 +671,8 @@ class RecordFragment : Fragment() {
                 val msg = "ضبط پایان یافت: $fileName به حجم $sizeMb مگابایت"
                 AccessibilityHelper.announce(txtInstantRecStatus, msg)
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-
-                loadRecordedFiles()
             }
         }
-    }
-
-    private fun loadRecordedFiles() {
-        containerRecordedFiles.removeAllViews()
-        val files = StorageManager.listRecordedFiles(requireContext())
-        if (files.isEmpty()) {
-            txtNoRecordings.visibility = View.VISIBLE
-        } else {
-            txtNoRecordings.visibility = View.GONE
-            for (file in files) {
-                val btn = MaterialButton(requireContext()).apply {
-                    text = "${file.name} (${file.length() / 1024} KB)"
-                    contentDescription = "فایل ${file.name}. برای پخش یا مدیریت ضربه بزنید"
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        resources.getDimensionPixelSize(android.R.dimen.app_icon_size) + 12
-                    ).apply { setMargins(0, 4, 0, 6) }
-                    setBackgroundColor(resources.getColor(R.color.card_bg, null))
-                    setTextColor(resources.getColor(R.color.text_primary, null))
-                    textSize = 13f
-                    setOnClickListener {
-                        showFileOptions(file)
-                    }
-                }
-                containerRecordedFiles.addView(btn)
-            }
-        }
-    }
-
-    private fun showFileOptions(file: File) {
-        val options = arrayOf("۱. پخش فایل", "۲. اشتراک‌گذاری فایل", "۳. حذف فایل")
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(file.name)
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> com.gmscreen.accessible.util.RecordingsDialogHelper.playLocalFile(requireContext(), file)
-                    1 -> com.gmscreen.accessible.util.RecordingsDialogHelper.shareLocalFile(requireContext(), file)
-                    2 -> {
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("حذف فایل ضبط‌شده")
-                            .setMessage("آیا از حذف فایل «${file.name}» مطمئن هستید؟")
-                            .setPositiveButton("بله، حذف شود") { _, _ ->
-                                val ok = file.delete()
-                                val msg = if (ok) "فایل ${file.name} با موفقیت حذف شد" else "خطا در حذف فایل"
-                                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                                AccessibilityHelper.announce(txtInstantRecStatus, msg)
-                                loadRecordedFiles()
-                            }
-                            .setNegativeButton("انصراف", null)
-                            .show()
-                    }
-                }
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
     }
 
     override fun onDestroyView() {

@@ -370,6 +370,14 @@ class StbClient {
         StbState(playingServiceId = playingPid)
     }
 
+    suspend fun fetchBoxInfo(): Map<String, Any>? = withContext(Dispatchers.IO) {
+        var res = sendCmd(14, timeoutMs = 6000)
+        if (res.isNullOrEmpty()) {
+            res = sendCmd(15, timeoutMs = 6000)
+        }
+        res?.firstOrNull()
+    }
+
     suspend fun fetchSatellites(): List<Satellite> = withContext(Dispatchers.IO) {
         val sats = mutableListOf<Satellite>()
         val res = sendCmd(22, timeoutMs = 5000) ?: return@withContext sats
@@ -509,6 +517,22 @@ class StbClient {
             )
         )
         val res = sendCmd(1000, payload, expectReply = true, timeoutMs = 5000)
+        res != null
+    }
+
+    suspend fun moveChannel(programId: String, targetProgramId: String, isRadio: Boolean): Boolean = withContext(Dispatchers.IO) {
+        val radioStr = if (isRadio) "1" else "0"
+        val payload = mapOf(
+            "TotalNum" to "1",
+            "array" to listOf(
+                mapOf(
+                    "TvState" to radioStr,
+                    "ProgramId" to programId,
+                    "MoveToPosition" to targetProgramId
+                )
+            )
+        )
+        val res = sendCmd(1005, payload, expectReply = true, timeoutMs = 6000)
         res != null
     }
 

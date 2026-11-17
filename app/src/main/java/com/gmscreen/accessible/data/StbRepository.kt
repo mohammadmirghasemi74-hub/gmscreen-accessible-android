@@ -83,7 +83,7 @@ class StbRepository(context: Context) {
         monitorJob?.cancel()
         monitorJob = repoScope.launch {
             while (isActive && client.isConnected) {
-                delay(1200)
+                delay(800)
                 if (!client.isConnected) break
                 try {
                     val pid = client.getPlayingChannel()
@@ -137,13 +137,15 @@ class StbRepository(context: Context) {
                         ch.realChannelNum = tvCounter++
                     }
                 }
-                _channels.value = chList
-            }
 
-            // 4. Update currently playing channel
-            val playingPid = if (state.playingServiceId.isNotBlank()) state.playingServiceId else client.getPlayingChannel()
-            if (!playingPid.isNullOrBlank()) {
-                _currentChannel.value = _channels.value.find { it.serviceId == playingPid || it.serviceId.endsWith(playingPid) }
+                // 4. Update currently playing channel BEFORE setting channels to avoid race conditions
+                val playingPid = if (state.playingServiceId.isNotBlank()) state.playingServiceId else client.getPlayingChannel()
+                val matched = if (!playingPid.isNullOrBlank()) {
+                    chList.find { it.serviceId == playingPid || it.serviceId.endsWith(playingPid) }
+                } else null
+
+                _currentChannel.value = matched
+                _channels.value = chList
             }
 
             // 5. Fetch transponders in background only if not cached yet (needed for stream playback)
@@ -155,6 +157,31 @@ class StbRepository(context: Context) {
         } finally {
             startChannelMonitor()
         }
+    }
+
+    suspend fun moveChannel(sourceChannel: Channel, targetChannel: Channel): Boolean {
+        if (!client.isConnected) return false
+        val ok = client.moveChannel(sourceChannel.serviceId, targetChannel.serviceId, sourceChannel.isRadio)
+        if (ok) {
+            val currentList = _channels.value.toMutableList()
+            val srcIdx = currentList.indexOfFirst { it.serviceId == sourceChannel.serviceId }
+            val tgtIdx = currentList.indexOfFirst { it.serviceId == targetChannel.serviceId }
+            if (srcIdx != -1 && tgtIdx != -1) {
+                val item = currentList.removeAt(srcIdx)
+                currentList.add(tgtIdx, item)
+                var tvCounter = 1
+                var radioCounter = 1
+                for (ch in currentList) {
+                    if (ch.isRadio) {
+                        ch.realChannelNum = radioCounter++
+                    } else {
+                        ch.realChannelNum = tvCounter++
+                    }
+                }
+                _channels.value = currentList
+            }
+        }
+        return ok
     }
 
     suspend fun refreshTimers() {

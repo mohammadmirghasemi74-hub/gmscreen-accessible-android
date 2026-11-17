@@ -281,7 +281,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 4. Recordings Files (Phone & STB USB) Card -->
+        <!-- 4. Recordings Files on STB USB Flash Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -297,42 +297,6 @@
                 android:orientation="vertical"
                 android:padding="14dp">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="۴. فایل‌های ضبط شده (گوشی و فلش مموری رسیور)"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="10dp" />
-
-                <!-- Files on Phone -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="فایل‌های ضبط شده در پوشه GMScreen/recordings:"
-                    android:textColor="@color/accent_yellow"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
-
-                <LinearLayout
-                    android:id="@+id/containerRecordedFiles"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:id="@+id/txtNoRecordings"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="فایلی در حافظه گوشی ذخیره نشده است."
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp"
-                        android:padding="4dp" />
-                </LinearLayout>
-
                 <!-- Files on STB USB Flash -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -345,9 +309,9 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="فایل‌های موجود روی فلش رسیور (PVR):"
+                        android:text="۴. فایل‌های ضبط‌شده روی فلش مموری رسیور (PVR):"
                         android:textColor="@color/accent_green"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <com.google.android.material.button.MaterialButton

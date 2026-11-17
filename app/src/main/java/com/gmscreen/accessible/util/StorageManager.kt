@@ -39,6 +39,14 @@ object StorageManager {
     }
 
     fun getRecordingsDir(context: Context): File {
+        val appConfig = AppConfig(context)
+        val custom = appConfig.customRecordingsDir
+        if (custom.isNotBlank()) {
+            val customDir = File(custom)
+            if (customDir.exists() || customDir.mkdirs()) {
+                if (customDir.canWrite()) return customDir
+            }
+        }
         val root = getAppRootDir(context)
         val dir = File(root, DIR_RECORDINGS)
         if (!dir.exists()) dir.mkdirs()

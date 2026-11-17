@@ -292,7 +292,8 @@ class ChannelsFragment : Fragment() {
                     AccessibilityHelper.announce(txtChannelCount, sb.toString())
 
                     // Cooldown: prevent external channel monitor from cutting off the announcement
-                    suppressChannelAnnounceUntil = System.currentTimeMillis() + 6000L
+                    suppressChannelAnnounceUntil = System.currentTimeMillis() + 8000L
+                    lastObservedPlayingPid = playingCh?.serviceId
 
                     if (playingCh != null) {
                         focusAndScrollToChannel(playingCh, isInitial = true, announce = false)
@@ -608,7 +609,8 @@ class ChannelsFragment : Fragment() {
             "۸. مشخصات و اطلاعات فنی کانال",
             "۹. کپی آدرس استریم زنده (RTSP URL)",
             "۱۰. افزودن به زمان‌بندی ضبط روی فلش رسیور",
-            "۱۱. افزودن به زمان‌بندی ضبط روی حافظه گوشی"
+            "۱۱. افزودن به زمان‌بندی ضبط روی حافظه گوشی",
+            "۱۲. حرکت دادن کانال به شماره دلخواه (Move Channel)"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -649,10 +651,83 @@ class ChannelsFragment : Fragment() {
                         (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
                         Toast.makeText(requireContext(), "شبکه ${channel.serviceName} انتخاب شد؛ در سربرگ ضبط دکمه افزودن زمان‌بندی گوشی را بزنید", Toast.LENGTH_LONG).show()
                     }
+                    11 -> promptMoveChannel(channel)
                 }
             }
             .setNegativeButton("بستن", null)
             .show()
+    }
+
+    private fun promptMoveChannel(channel: Channel) {
+        val allChannels = repository.channels.value
+        val sameTypeChannels = allChannels.filter { it.isRadio == channel.isRadio }
+        val total = sameTypeChannels.size
+        if (total < 2) {
+            val msg = "شبکه‌های کافی برای جابه‌جایی وجود ندارد"
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            AccessibilityHelper.announce(txtChannelCount, msg)
+            return
+        }
+
+        val currentNum = channel.realChannelNum.takeIf { it > 0 } ?: (sameTypeChannels.indexOfFirst { it.serviceId == channel.serviceId } + 1)
+
+        val input = EditText(requireContext()).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            hint = "شماره بین ۱ تا $total"
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("جابه‌جایی کانال ${channel.serviceName}")
+            .setMessage("شماره موقعیت فعلی: $currentNum\nلطفاً شماره موقعیت مقصد مورد نظر را وارد کنید (۱ تا $total):")
+            .setView(input)
+            .setPositiveButton("انتقال") { _, _ ->
+                val targetNum = input.text.toString().trim().toIntOrNull()
+                if (targetNum == null || targetNum < 1 || targetNum > total) {
+                    val msg = "شماره نامعتبر است. باید عددی بین ۱ تا $total باشد."
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(txtChannelCount, msg)
+                    return@setPositiveButton
+                }
+
+                if (targetNum == currentNum) {
+                    val msg = "شماره مبدا و مقصد یکسان است"
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    AccessibilityHelper.announce(txtChannelCount, msg)
+                    return@setPositiveButton
+                }
+
+                val targetChannel = sameTypeChannels.getOrNull(targetNum - 1)
+                if (targetChannel == null) {
+                    val msg = "کانال مقصد پیدا نشد"
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    AccessibilityHelper.announce(txtChannelCount, msg)
+                    return@setPositiveButton
+                }
+
+                val progMsg = "در حال انتقال کانال ${channel.serviceName} به شماره $targetNum..."
+                AccessibilityHelper.announce(txtChannelCount, progMsg)
+                Toast.makeText(requireContext(), progMsg, Toast.LENGTH_SHORT).show()
+
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    val ok = repository.moveChannel(channel, targetChannel)
+                    withContext(Dispatchers.Main) {
+                        if (ok) {
+                            filterChannels()
+                            val successMsg = "کانال ${channel.serviceName} با موفقیت به شماره $targetNum منتقل شد"
+                            AccessibilityHelper.announce(recyclerViewChannels, successMsg)
+                            Toast.makeText(requireContext(), successMsg, Toast.LENGTH_LONG).show()
+                            focusAndScrollToChannel(channel, isInitial = false, announce = false)
+                        } else {
+                            val errMsg = "خطا در ارسال دستور جابه‌جایی کانال به رسیور"
+                            AccessibilityHelper.announce(txtChannelCount, errMsg)
+                            Toast.makeText(requireContext(), errMsg, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
     }
 
     private fun showChannelEpgDialog(channel: Channel) {
