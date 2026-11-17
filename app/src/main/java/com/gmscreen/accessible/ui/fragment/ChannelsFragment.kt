@@ -728,7 +728,6 @@ class ChannelsFragment : Fragment() {
             .setNegativeButton("انصراف", null)
             .show()
     }
-    }
 
     private fun showChannelEpgDialog(channel: Channel) {
         val progName = channel.serviceName
