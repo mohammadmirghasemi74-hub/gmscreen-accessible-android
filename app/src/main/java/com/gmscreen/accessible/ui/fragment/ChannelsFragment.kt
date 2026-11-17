@@ -636,12 +636,16 @@ class ChannelsFragment : Fragment() {
                         AccessibilityHelper.announce(txtChannelCount, msg)
                     }
                     9 -> {
-                        repository.switchChannel(channel)
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            repository.switchChannel(channel)
+                        }
                         (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
                         Toast.makeText(requireContext(), "شبکه ${channel.serviceName} انتخاب شد؛ در سربرگ ضبط دکمه افزودن زمان‌بندی را بزنید", Toast.LENGTH_LONG).show()
                     }
                     10 -> {
-                        repository.switchChannel(channel)
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            repository.switchChannel(channel)
+                        }
                         (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
                         Toast.makeText(requireContext(), "شبکه ${channel.serviceName} انتخاب شد؛ در سربرگ ضبط دکمه افزودن زمان‌بندی گوشی را بزنید", Toast.LENGTH_LONG).show()
                     }

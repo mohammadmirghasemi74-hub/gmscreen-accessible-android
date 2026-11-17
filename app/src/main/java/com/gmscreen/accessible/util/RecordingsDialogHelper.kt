@@ -6,7 +6,6 @@ import android.net.Uri
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.FileProvider
-import com.gmscreen.accessible.ui.VideoPlayerActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.File
 
@@ -152,17 +151,7 @@ object RecordingsDialogHelper {
             }
             context.startActivity(chooser)
         } catch (e: Exception) {
-            // Fallback: internal player
-            try {
-                val intent = Intent(context, VideoPlayerActivity::class.java).apply {
-                    putExtra(VideoPlayerActivity.EXTRA_CHANNEL_NAME, file.name)
-                    putExtra(VideoPlayerActivity.EXTRA_LIVE_URL, file.absolutePath)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                context.startActivity(intent)
-            } catch (ex2: Exception) {
-                Toast.makeText(context, "خطا در باز کردن پخش‌کننده: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(context, "خطا در باز کردن پخش‌کننده: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
