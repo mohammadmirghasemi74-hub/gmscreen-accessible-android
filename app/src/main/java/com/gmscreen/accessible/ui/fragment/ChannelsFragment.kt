@@ -270,6 +270,7 @@ class ChannelsFragment : Fragment() {
 
     private var hasAnnouncedChannelsIntro = false
     private var lastObservedPlayingPid: String? = null
+    private var suppressChannelAnnounceUntil = 0L
 
     private fun observeData() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -290,6 +291,9 @@ class ChannelsFragment : Fragment() {
                     }
                     AccessibilityHelper.announce(txtChannelCount, sb.toString())
 
+                    // Cooldown: prevent external channel monitor from cutting off the announcement
+                    suppressChannelAnnounceUntil = System.currentTimeMillis() + 6000L
+
                     if (playingCh != null) {
                         focusAndScrollToChannel(playingCh, isInitial = true, announce = false)
                     }
@@ -303,7 +307,7 @@ class ChannelsFragment : Fragment() {
                     if (currCh.serviceId != lastObservedPlayingPid) {
                         val wasFirstTime = (lastObservedPlayingPid == null)
                         lastObservedPlayingPid = currCh.serviceId
-                        if (!wasFirstTime && hasAnnouncedChannelsIntro) {
+                        if (!wasFirstTime && hasAnnouncedChannelsIntro && System.currentTimeMillis() > suppressChannelAnnounceUntil) {
                             focusAndScrollToChannel(currCh, isInitial = false, announce = true)
                         } else {
                             recyclerViewChannels.post {
@@ -337,15 +341,28 @@ class ChannelsFragment : Fragment() {
             val targetIdx = currentList.indexOfFirst { it.serviceId == channel.serviceId }
             if (targetIdx >= 0) {
                 recyclerViewChannels.scrollToPosition(targetIdx)
-                recyclerViewChannels.postDelayed({
-                    try {
-                        val vh = recyclerViewChannels.findViewHolderForAdapterPosition(targetIdx)
-                        vh?.itemView?.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
-                    } catch (_: Exception) {}
-                }, 200)
+                if (!isInitial) {
+                    recyclerViewChannels.postDelayed({
+                        try {
+                            val vh = recyclerViewChannels.findViewHolderForAdapterPosition(targetIdx)
+                            vh?.itemView?.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
+                        } catch (_: Exception) {}
+                    }, 200)
+                }
             }
             if (announce) {
                 AccessibilityHelper.announce(recyclerViewChannels, announceMsg)
+                if (appConfig.autoAnnounceEpg) {
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        delay(1600)
+                        val epgData = repository.getEpg(channel.serviceId)
+                        val (cur, nxt) = com.gmscreen.accessible.util.EpgHelper.extractCurrentAndNextEvent(epgData)
+                        val epgMsg = com.gmscreen.accessible.util.EpgHelper.buildEpgAnnouncement(cur, nxt, appConfig.epgAnnounceDetail)
+                        if (!epgMsg.isNullOrBlank()) {
+                            AccessibilityHelper.announce(recyclerViewChannels, epgMsg)
+                        }
+                    }
+                }
             }
         }
     }
@@ -583,13 +600,15 @@ class ChannelsFragment : Fragment() {
         val options = arrayOf(
             "۱. پخش تصویری زنده در گوشی",
             "۲. پخش صوتی زنده در گوشی (Audio Only)",
-            "۳. پخش در برنامه خارجی (مانند VLC یا MX Player)",
-            "۴. شروع ضبط زنده روی گوشی (MP4/MP3)",
-            "۵. $lockTitle",
-            "۶. مشخصات و اطلاعات فنی کانال",
-            "۷. کپی آدرس استریم زنده (RTSP URL)",
-            "۸. افزودن به زمان‌بندی ضبط روی فلش رسیور",
-            "۹. افزودن به زمان‌بندی ضبط روی حافظه گوشی"
+            "۳. جدول پخش برنامه‌های این شبکه (EPG)",
+            "۴. اعلام صوتی برنامه در حال پخش (EPG)",
+            "۵. پخش در برنامه خارجی (مانند VLC یا MX Player)",
+            "۶. شروع ضبط زنده روی گوشی (MP4/MP3)",
+            "۷. $lockTitle",
+            "۸. مشخصات و اطلاعات فنی کانال",
+            "۹. کپی آدرس استریم زنده (RTSP URL)",
+            "۱۰. افزودن به زمان‌بندی ضبط روی فلش رسیور",
+            "۱۱. افزودن به زمان‌بندی ضبط روی حافظه گوشی"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -598,15 +617,15 @@ class ChannelsFragment : Fragment() {
                 when (which) {
                     0 -> playVideoOnPhone(channel)
                     1 -> playAudioOnPhone(channel)
-                    2 -> openStreamInExternalPlayer(channel)
-                    3 -> {
-                        startPhoneRecordingFromChannel(channel)
-                    }
-                    4 -> {
+                    2 -> showChannelEpgDialog(channel)
+                    3 -> announceCurrentEpg(channel)
+                    4 -> openStreamInExternalPlayer(channel)
+                    5 -> startPhoneRecordingFromChannel(channel)
+                    6 -> {
                         Toast.makeText(requireContext(), "دستور قفل/بازگشایی با پین 0000 ارسال شد", Toast.LENGTH_SHORT).show()
                     }
-                    5 -> showChannelInfoDialog(channel)
-                    6 -> {
+                    7 -> showChannelInfoDialog(channel)
+                    8 -> {
                         val ip = repository.connectedIp.value
                         val url = channel.toSatIpUrl(ip)
                         val clip = ClipData.newPlainText("Stream URL", url)
@@ -616,18 +635,88 @@ class ChannelsFragment : Fragment() {
                         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                         AccessibilityHelper.announce(txtChannelCount, msg)
                     }
-                    7 -> {
+                    9 -> {
+                        repository.switchChannel(channel)
                         (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
-                        Toast.makeText(requireContext(), "در سربرگ ضبط، دکمه افزودن زمان‌بندی رسیور را بزنید", Toast.LENGTH_LONG).show()
+                        Toast.makeText(requireContext(), "شبکه ${channel.serviceName} انتخاب شد؛ در سربرگ ضبط دکمه افزودن زمان‌بندی را بزنید", Toast.LENGTH_LONG).show()
                     }
-                    8 -> {
+                    10 -> {
+                        repository.switchChannel(channel)
                         (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
-                        Toast.makeText(requireContext(), "در سربرگ ضبط، دکمه افزودن زمان‌بندی گوشی را بزنید", Toast.LENGTH_LONG).show()
+                        Toast.makeText(requireContext(), "شبکه ${channel.serviceName} انتخاب شد؛ در سربرگ ضبط دکمه افزودن زمان‌بندی گوشی را بزنید", Toast.LENGTH_LONG).show()
                     }
                 }
             }
             .setNegativeButton("بستن", null)
             .show()
+    }
+
+    private fun showChannelEpgDialog(channel: Channel) {
+        val progName = channel.serviceName
+        Toast.makeText(requireContext(), "در حال دریافت جدول برنامه‌های $progName...", Toast.LENGTH_SHORT).show()
+        AccessibilityHelper.announce(txtChannelCount, "در حال دریافت جدول برنامه‌های $progName از رسیور")
+
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val epgData = repository.getEpg(channel.serviceId)
+            val programs = com.gmscreen.accessible.util.EpgHelper.extractAllPrograms(epgData)
+            withContext(Dispatchers.Main) {
+                if (programs.isEmpty()) {
+                    val msg = "جدول برنامه‌ای برای $progName در رسیور یافت نشد"
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(txtChannelCount, msg)
+                } else {
+                    val items = programs.map { p ->
+                        val timeStr = if (p.startRaw.isNotBlank() && p.endRaw.isNotBlank()) {
+                            "${com.gmscreen.accessible.util.EpgHelper.formatFriendlyTime(p.startRaw)} تا ${com.gmscreen.accessible.util.EpgHelper.formatFriendlyTime(p.endRaw)}"
+                        } else if (p.startRaw.isNotBlank()) {
+                            com.gmscreen.accessible.util.EpgHelper.formatFriendlyTime(p.startRaw)
+                        } else {
+                            ""
+                        }
+                        val descStr = if (p.desc.isNotBlank()) " - ${p.desc}" else ""
+                        "${p.title} ($timeStr)$descStr"
+                    }.toTypedArray()
+
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("جدول برنامه‌های $progName (${programs.size} برنامه)")
+                        .setItems(items) { _, which ->
+                            val p = programs.getOrNull(which)
+                            if (p != null) {
+                                val sFmt = com.gmscreen.accessible.util.EpgHelper.formatFriendlyTime(p.startRaw)
+                                val eFmt = com.gmscreen.accessible.util.EpgHelper.formatFriendlyTime(p.endRaw)
+                                val dText = p.desc.ifBlank { "توضیحی ثبت نشده است" }
+                                MaterialAlertDialogBuilder(requireContext())
+                                    .setTitle(p.title)
+                                    .setMessage("زمان پخش: $sFmt تا $eFmt\n\nتوضیحات:\n$dText")
+                                    .setPositiveButton("بستن", null)
+                                    .show()
+                            }
+                        }
+                        .setPositiveButton("بستن", null)
+                        .show()
+                }
+            }
+        }
+    }
+
+    private fun announceCurrentEpg(channel: Channel) {
+        val progName = channel.serviceName
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val epgData = repository.getEpg(channel.serviceId)
+            val (cur, nxt) = com.gmscreen.accessible.util.EpgHelper.extractCurrentAndNextEvent(epgData)
+            val msg = com.gmscreen.accessible.util.EpgHelper.buildEpgAnnouncement(cur, nxt, appConfig.epgAnnounceDetail)
+            withContext(Dispatchers.Main) {
+                if (msg != null) {
+                    val fullMsg = "$progName: $msg"
+                    Toast.makeText(requireContext(), fullMsg, Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(txtChannelCount, fullMsg)
+                } else {
+                    val fallback = "اطلاعات برنامه در حال پخش برای $progName در جدول رسیور یافت نشد"
+                    Toast.makeText(requireContext(), fallback, Toast.LENGTH_SHORT).show()
+                    AccessibilityHelper.announce(txtChannelCount, fallback)
+                }
+            }
+        }
     }
 
     private fun showChannelInfoDialog(channel: Channel) {

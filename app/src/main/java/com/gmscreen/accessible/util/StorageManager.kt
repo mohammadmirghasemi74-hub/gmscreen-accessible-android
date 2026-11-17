@@ -59,15 +59,20 @@ object StorageManager {
         return dir
     }
 
+    fun getChannelRecordingsDir(context: Context, channelName: String): File {
+        val safeCh = channelName.replace(Regex("[\\\\/*?:\"<>|]"), "_").trim().ifEmpty { "Channel" }
+        val channelDir = File(getRecordingsDir(context), safeCh)
+        if (!channelDir.exists()) channelDir.mkdirs()
+        return channelDir
+    }
+
     fun generateRecordingFile(
         context: Context,
         channelName: String,
         isAudioOnly: Boolean,
-        customExtension: String? = null
+        customExtension: String? = null,
+        customName: String = ""
     ): File {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val cleanName = channelName.replace(Regex("[^a-zA-Z0-9_\u0600-\u06FF-]"), "_")
-        
         val appConfig = AppConfig(context)
         val ext = when {
             !customExtension.isNullOrBlank() -> if (customExtension.startsWith(".")) customExtension else ".$customExtension"
@@ -80,18 +85,31 @@ object StorageManager {
                 if (f.startsWith(".")) f else ".$f"
             }
         }
-        val fileName = "REC_${cleanName}_$timeStamp$ext"
 
-        val primaryDir = getRecordingsDir(context)
-        var targetFile = File(primaryDir, fileName)
+        val primaryChannelDir = getChannelRecordingsDir(context, channelName)
+        val existingFiles = primaryChannelDir.listFiles { f -> f.isFile } ?: emptyArray()
+        val recCounter = existingFiles.size + 1
+
+        val fileName = JalaliCalendar.formatRecordingFilename(
+            pattern = appConfig.recNamingPattern,
+            recCounter = recCounter,
+            channelName = channelName,
+            ext = ext,
+            customName = customName
+        )
+
+        var targetFile = File(primaryChannelDir, fileName)
 
         // Verify write access; if blocked by Scoped Storage, fallback safely to app storage
         try {
-            if (!primaryDir.exists()) primaryDir.mkdirs()
+            if (!primaryChannelDir.exists()) primaryChannelDir.mkdirs()
             val testFos = FileOutputStream(targetFile, true)
             testFos.close()
         } catch (_: Exception) {
-            val appStorageDir = File(context.getExternalFilesDir(null) ?: context.filesDir, DIR_RECORDINGS)
+            val appStorageDir = File(
+                File(context.getExternalFilesDir(null) ?: context.filesDir, DIR_RECORDINGS),
+                primaryChannelDir.name
+            )
             if (!appStorageDir.exists()) appStorageDir.mkdirs()
             targetFile = File(appStorageDir, fileName)
             try {
@@ -136,6 +154,22 @@ object StorageManager {
 
     private val RECORDED_EXTENSIONS = listOf(".ts", ".mp4", ".mkv", ".mp3", ".m4a", ".wav", ".aac", ".ogg")
 
+    private fun collectFilesRecursively(dir: File, result: MutableList<File>) {
+        val list = dir.listFiles() ?: return
+        for (item in list) {
+            if (item.isDirectory) {
+                collectFilesRecursively(item, result)
+            } else if (item.isFile) {
+                val nameLower = item.name.lowercase()
+                if (RECORDED_EXTENSIONS.any { nameLower.endsWith(it) }) {
+                    if (result.none { it.absolutePath == item.absolutePath }) {
+                        result.add(item)
+                    }
+                }
+            }
+        }
+    }
+
     fun listRecordedFiles(context: Context): List<File> {
         val files = mutableListOf<File>()
 
@@ -143,10 +177,7 @@ object StorageManager {
         try {
             val primaryDir = File(File(Environment.getExternalStorageDirectory(), ROOT_DIR_NAME), DIR_RECORDINGS)
             if (primaryDir.exists()) {
-                val rootFiles = primaryDir.listFiles { f ->
-                    f.isFile && RECORDED_EXTENSIONS.any { ext -> f.name.lowercase().endsWith(ext) }
-                }
-                if (rootFiles != null) files.addAll(rootFiles)
+                collectFilesRecursively(primaryDir, files)
             }
         } catch (_: Exception) {}
 
@@ -154,20 +185,40 @@ object StorageManager {
         try {
             val appDir = File(context.getExternalFilesDir(null) ?: context.filesDir, DIR_RECORDINGS)
             if (appDir.exists()) {
-                val appFiles = appDir.listFiles { f ->
-                    f.isFile && RECORDED_EXTENSIONS.any { ext -> f.name.lowercase().endsWith(ext) }
-                }
-                if (appFiles != null) {
-                    for (af in appFiles) {
-                        if (files.none { it.name == af.name }) {
-                            files.add(af)
-                        }
-                    }
-                }
+                collectFilesRecursively(appDir, files)
             }
         } catch (_: Exception) {}
 
         return files.sortedByDescending { it.lastModified() }
+    }
+
+    fun deleteAllRecordings(context: Context): Int {
+        val files = listRecordedFiles(context)
+        var count = 0
+        for (f in files) {
+            try {
+                if (f.delete()) count++
+            } catch (_: Exception) {}
+        }
+
+        // Clean up empty channel folders
+        val cleanupDirs = listOf(
+            File(File(Environment.getExternalStorageDirectory(), ROOT_DIR_NAME), DIR_RECORDINGS),
+            File(context.getExternalFilesDir(null) ?: context.filesDir, DIR_RECORDINGS)
+        )
+        for (baseDir in cleanupDirs) {
+            try {
+                val subDirs = baseDir.listFiles { d -> d.isDirectory } ?: emptyArray()
+                for (sd in subDirs) {
+                    val remaining = sd.listFiles()
+                    if (remaining.isNullOrEmpty()) {
+                        sd.delete()
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+
+        return count
     }
 
     fun listBackupFiles(context: Context): List<File> {

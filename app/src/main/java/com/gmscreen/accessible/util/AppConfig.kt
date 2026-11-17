@@ -21,6 +21,9 @@ class AppConfig(context: Context) {
         private const val KEY_AUDIO_REC_CHANNELS = "audio_rec_channels"
         private const val KEY_VIDEO_REC_FORMAT = "video_rec_format"
         private const val KEY_VIDEO_REC_QUALITY = "video_rec_quality"
+        private const val KEY_REC_NAMING_PATTERN = "rec_naming_pattern"
+        private const val KEY_AUTO_ANNOUNCE_EPG = "auto_announce_epg"
+        private const val KEY_EPG_ANNOUNCE_DETAIL = "epg_announce_detail"
         private const val KEY_SHOW_RECORDINGS_IN_CHANNELS = "show_recordings_in_channels"
         private const val KEY_PARENTAL_PIN = "parental_pin"
         private const val KEY_SLEEP_TIMER = "sleep_timer"
@@ -83,6 +86,18 @@ class AppConfig(context: Context) {
     var videoRecQuality: String
         get() = prefs.getString(KEY_VIDEO_REC_QUALITY, "copy") ?: "copy"
         set(value) = prefs.edit().putString(KEY_VIDEO_REC_QUALITY, value).apply()
+
+    var recNamingPattern: String
+        get() = prefs.getString(KEY_REC_NAMING_PATTERN, "jalali_numeric") ?: "jalali_numeric"
+        set(value) = prefs.edit().putString(KEY_REC_NAMING_PATTERN, value).apply()
+
+    var autoAnnounceEpg: Boolean
+        get() = prefs.getBoolean(KEY_AUTO_ANNOUNCE_EPG, false)
+        set(value) = prefs.edit().putBoolean(KEY_AUTO_ANNOUNCE_EPG, value).apply()
+
+    var epgAnnounceDetail: Int
+        get() = prefs.getInt(KEY_EPG_ANNOUNCE_DETAIL, 0)
+        set(value) = prefs.edit().putInt(KEY_EPG_ANNOUNCE_DETAIL, value).apply()
 
     var parentalPin: String
         get() = prefs.getString(KEY_PARENTAL_PIN, "0000") ?: "0000"

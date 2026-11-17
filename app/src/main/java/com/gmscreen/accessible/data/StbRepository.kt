@@ -196,6 +196,11 @@ class StbRepository(context: Context) {
         return ok
     }
 
+    suspend fun getEpg(programId: String): Map<String, Any>? {
+        if (!client.isConnected) return null
+        return client.getEpg(programId)
+    }
+
     suspend fun deleteStbTimer(timer: Map<String, Any>): Boolean {
         if (!client.isConnected) return false
         val ok = client.deleteStbTimer(timer)

@@ -251,42 +251,70 @@ class RecordFragment : Fragment() {
             return
         }
 
-        val channelNames = channels.map { it.serviceName }.toTypedArray()
-        var selectedChannelIdx = 0
-        if (preselectedChannel != null) {
-            val idx = channels.indexOfFirst { it.serviceId == preselectedChannel.serviceId }
-            if (idx >= 0) selectedChannelIdx = idx
-        }
+        var targetChannel = preselectedChannel ?: repository.currentChannel.value ?: channels.first()
 
         val cal = Calendar.getInstance()
-        var startH = cal.get(Calendar.HOUR_OF_DAY)
-        var startM = cal.get(Calendar.MINUTE) + 2
+        var startH = (cal.get(Calendar.HOUR_OF_DAY) + if (cal.get(Calendar.MINUTE) >= 55) 1 else 0) % 24
+        var startM = (cal.get(Calendar.MINUTE) + 5) % 60
         var endH = (startH + 1) % 24
         var endM = startM
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("انتخاب کانال برای زمان‌بندی رسیور")
-            .setSingleChoiceItems(channelNames, selectedChannelIdx) { dialog, which ->
-                selectedChannelIdx = which
-                dialog.dismiss()
+        fun openDialog() {
+            val items = arrayOf(
+                "۱. شبکه انتخابی: ${targetChannel.serviceName} (برای تغییر ضربه بزنید)",
+                "۲. ساعت شروع ضبط: %02d:%02d".format(startH, startM),
+                "۳. ساعت پایان ضبط: %02d:%02d".format(endH, endM)
+            )
 
-                // Pick Start Time
-                TimePickerDialog(requireContext(), { _, h, m ->
-                    startH = h
-                    startM = m
-                    // Pick End Time
-                    TimePickerDialog(requireContext(), { _, eh, em ->
-                        endH = eh
-                        endM = em
-                        confirmAndSendStbTimer(channels[selectedChannelIdx], startH, startM, endH, endM)
-                    }, (startH + 1) % 24, startM, true).apply {
-                        setTitle("ساعت پایان ضبط رسیور")
-                        show()
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("افزودن زمان‌بندی ضبط روی فلش رسیور")
+                .setItems(items) { _, which ->
+                    when (which) {
+                        0 -> showChannelPicker("انتخاب شبکه برای ضبط رسیور", targetChannel) { chosen ->
+                            targetChannel = chosen
+                            openDialog()
+                        }
+                        1 -> TimePickerDialog(requireContext(), { _, h, m ->
+                            startH = h
+                            startM = m
+                            endH = (startH + 1) % 24
+                            endM = startM
+                            openDialog()
+                        }, startH, startM, true).apply {
+                            setTitle("ساعت شروع ضبط رسیور")
+                            show()
+                        }
+                        2 -> TimePickerDialog(requireContext(), { _, h, m ->
+                            endH = h
+                            endM = m
+                            openDialog()
+                        }, endH, endM, true).apply {
+                            setTitle("ساعت پایان ضبط رسیور")
+                            show()
+                        }
                     }
-                }, startH, startM, true).apply {
-                    setTitle("ساعت شروع ضبط رسیور")
-                    show()
                 }
+                .setPositiveButton("ثبت زمان‌بندی در رسیور") { _, _ ->
+                    confirmAndSendStbTimer(targetChannel, startH, startM, endH, endM)
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        openDialog()
+    }
+
+    private fun showChannelPicker(title: String, currentChannel: Channel, onChannelSelected: (Channel) -> Unit) {
+        val channels = repository.channels.value
+        val items = channels.mapIndexed { i, ch -> "${i + 1}. ${ch.serviceName}" }.toTypedArray()
+        val curIdx = channels.indexOfFirst { it.serviceId == currentChannel.serviceId }.coerceAtLeast(0)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setSingleChoiceItems(items, curIdx) { dialog, which ->
+                val chosen = channels.getOrNull(which)
+                if (chosen != null) onChannelSelected(chosen)
+                dialog.dismiss()
             }
             .setNegativeButton("انصراف", null)
             .show()
@@ -376,68 +404,80 @@ class RecordFragment : Fragment() {
             return
         }
 
-        val channelNames = channels.map { it.serviceName }.toTypedArray()
-        var selectedChannelIdx = 0
-        if (preselectedChannel != null) {
-            val idx = channels.indexOfFirst { it.serviceId == preselectedChannel.serviceId }
-            if (idx >= 0) selectedChannelIdx = idx
-        }
+        var targetChannel = preselectedChannel ?: repository.currentChannel.value ?: channels.first()
 
         val cal = Calendar.getInstance()
-        var startH = cal.get(Calendar.HOUR_OF_DAY)
-        var startM = cal.get(Calendar.MINUTE) + 2
+        var startH = (cal.get(Calendar.HOUR_OF_DAY) + if (cal.get(Calendar.MINUTE) >= 55) 1 else 0) % 24
+        var startM = (cal.get(Calendar.MINUTE) + 5) % 60
+        var isAudioOnly = targetChannel.isRadio
+        var durationMinutes = 60
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("انتخاب کانال برای زمان‌بندی گوشی")
-            .setSingleChoiceItems(channelNames, selectedChannelIdx) { dialog, which ->
-                selectedChannelIdx = which
-                dialog.dismiss()
+        fun openDialog() {
+            val formatStr = if (isAudioOnly) "صوتی (${appConfig.audioRecFormat.uppercase()})" else "تصویری (${appConfig.videoRecFormat.uppercase()})"
+            val items = arrayOf(
+                "۱. شبکه انتخابی: ${targetChannel.serviceName} (برای تغییر ضربه بزنید)",
+                "۲. ساعت شروع ضبط: %02d:%02d".format(startH, startM),
+                "۳. مدت زمان ضبط: $durationMinutes دقیقه",
+                "۴. نوع فایل ضبط: $formatStr"
+            )
 
-                // Choose format (Video vs Audio)
-                val formats = arrayOf("ویدیو (تصویری MP4)", "صدا (فقط صوتی MP3)")
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("فرمت ضبط روی گوشی")
-                    .setItems(formats) { _, fIndex ->
-                        val isAudioOnly = (fIndex == 1)
-                        TimePickerDialog(requireContext(), { _, h, m ->
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("افزودن زمان‌بندی ضبط در گوشی")
+                .setItems(items) { _, which ->
+                    when (which) {
+                        0 -> showChannelPicker("انتخاب شبکه برای ضبط گوشی", targetChannel) { chosen ->
+                            targetChannel = chosen
+                            if (targetChannel.isRadio) isAudioOnly = true
+                            openDialog()
+                        }
+                        1 -> TimePickerDialog(requireContext(), { _, h, m ->
                             startH = h
                             startM = m
-
-                            val durations = arrayOf("۱۵ دقیقه", "۳۰ دقیقه", "۴۵ دقیقه", "۶۰ دقیقه", "۹۰ دقیقه", "۱۲۰ دقیقه")
-                            val durationValues = listOf(15, 30, 45, 60, 90, 120)
-                            MaterialAlertDialogBuilder(requireContext())
-                                .setTitle("مدت زمان ضبط گوشی")
-                                .setItems(durations) { _, dIndex ->
-                                    val dur = durationValues[dIndex]
-                                    val targetCh = channels[selectedChannelIdx]
-                                    val newTimer = PhoneScheduledTimer(
-                                        id = System.currentTimeMillis().toString(),
-                                        channelName = targetCh.serviceName,
-                                        channelId = targetCh.serviceId,
-                                        isAudioOnly = isAudioOnly,
-                                        startHour = startH,
-                                        startMinute = startM,
-                                        durationMinutes = dur
-                                    )
-                                    phoneTimers.add(newTimer)
-                                    savePhoneTimers()
-                                    renderPhoneTimers()
-
-                                    val msg = "زمان‌بندی ضبط ${targetCh.serviceName} در ساعت %02d:%02d به مدت $dur دقیقه در گوشی تنظیم شد".format(startH, startM)
-                                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                                    AccessibilityHelper.announce(containerPhoneTimers, msg)
-                                }
-                                .show()
-
+                            openDialog()
                         }, startH, startM, true).apply {
                             setTitle("ساعت شروع ضبط گوشی")
                             show()
                         }
+                        2 -> {
+                            val durations = arrayOf("۱۵ دقیقه", "۳۰ دقیقه", "۴۵ دقیقه", "۶۰ دقیقه", "۹۰ دقیقه", "۱۲۰ دقیقه")
+                            val values = listOf(15, 30, 45, 60, 90, 120)
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setTitle("مدت زمان ضبط گوشی")
+                                .setItems(durations) { _, dIdx ->
+                                    durationMinutes = values[dIdx]
+                                    openDialog()
+                                }
+                                .show()
+                        }
+                        3 -> {
+                            isAudioOnly = !isAudioOnly
+                            openDialog()
+                        }
                     }
-                    .show()
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
+                }
+                .setPositiveButton("ثبت زمان‌بندی در گوشی") { _, _ ->
+                    val newTimer = PhoneScheduledTimer(
+                        id = System.currentTimeMillis().toString(),
+                        channelName = targetChannel.serviceName,
+                        channelId = targetChannel.serviceId,
+                        isAudioOnly = isAudioOnly,
+                        startHour = startH,
+                        startMinute = startM,
+                        durationMinutes = durationMinutes
+                    )
+                    phoneTimers.add(newTimer)
+                    savePhoneTimers()
+                    renderPhoneTimers()
+
+                    val msg = "زمان‌بندی ضبط ${targetChannel.serviceName} در ساعت %02d:%02d به مدت $durationMinutes دقیقه ثبت شد".format(startH, startM)
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(containerPhoneTimers, msg)
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        openDialog()
     }
 
     private fun renderPhoneTimers() {
@@ -650,49 +690,31 @@ class RecordFragment : Fragment() {
     }
 
     private fun showFileOptions(file: File) {
-        val options = arrayOf("پخش فایل", "اشتراک‌گذاری فایل", "حذف فایل")
+        val options = arrayOf("۱. پخش فایل", "۲. اشتراک‌گذاری فایل", "۳. حذف فایل")
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(file.name)
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> openFile(file)
-                    1 -> shareFile(file)
+                    0 -> com.gmscreen.accessible.util.RecordingsDialogHelper.playLocalFile(requireContext(), file)
+                    1 -> com.gmscreen.accessible.util.RecordingsDialogHelper.shareLocalFile(requireContext(), file)
                     2 -> {
-                        file.delete()
-                        loadRecordedFiles()
-                        AccessibilityHelper.announce(txtInstantRecStatus, "فایل حذف شد")
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("حذف فایل ضبط‌شده")
+                            .setMessage("آیا از حذف فایل «${file.name}» مطمئن هستید؟")
+                            .setPositiveButton("بله، حذف شود") { _, _ ->
+                                val ok = file.delete()
+                                val msg = if (ok) "فایل ${file.name} با موفقیت حذف شد" else "خطا در حذف فایل"
+                                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                                AccessibilityHelper.announce(txtInstantRecStatus, msg)
+                                loadRecordedFiles()
+                            }
+                            .setNegativeButton("انصراف", null)
+                            .show()
                     }
                 }
             }
-            .setNegativeButton("بستن", null)
+            .setNegativeButton("انصراف", null)
             .show()
-    }
-
-    private fun openFile(file: File) {
-        try {
-            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, if (file.name.endsWith(".mp3")) "audio/*" else "video/*")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "پلیر مناسب در گوشی یافت نشد: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun shareFile(file: File) {
-        try {
-            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = if (file.name.endsWith(".mp3")) "audio/*" else "video/*"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            startActivity(Intent.createChooser(intent, "اشتراک‌گذاری فایل ضبط شده"))
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "خطا در اشتراک‌گذاری", Toast.LENGTH_SHORT).show()
-        }
     }
 
     override fun onDestroyView() {

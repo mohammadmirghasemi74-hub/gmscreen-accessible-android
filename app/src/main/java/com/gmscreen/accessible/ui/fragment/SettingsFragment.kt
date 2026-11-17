@@ -161,6 +161,7 @@ class SettingsFragment : Fragment() {
         val showBtnText = if (appConfig.showRecordingsInChannels) "فعال (پیش‌فرض)" else "غیرفعال"
         val vidFmtText = appConfig.videoRecFormat.uppercase()
         val vidQualText = getVideoQualityTitle(appConfig.videoRecQuality)
+        val patText = getNamingPatternTitle(appConfig.recNamingPattern)
         val audFmtText = appConfig.audioRecFormat.uppercase()
         val audBrText = appConfig.audioRecBitrate
         val audSrText = getSampleRateTitle(appConfig.audioRecSampleRate)
@@ -170,12 +171,13 @@ class SettingsFragment : Fragment() {
             "۱. نمایش دکمه فایل‌های ضبط‌شده در بخش کانال‌ها: $showBtnText",
             "۲. فرمت ضبط تصویری (ویدیو): $vidFmtText",
             "۳. کیفیت و نحوه ذخیره ویدیو: $vidQualText",
-            "۴. فرمت ضبط صوتی (صدا): $audFmtText",
-            "۵. بیت‌ریت صدای ضبط: $audBrText",
-            "۶. نرخ نمونه‌برداری صدا (Sample Rate): $audSrText",
-            "۷. کانال صدا: $audChText",
-            "۸. 📁 مشاهده و مدیریت فایل‌های ضبط‌شده در حافظه گوشی",
-            "۹. اطلاعات پوشه اصلی ذخیره‌سازی"
+            "۴. الگوی نام‌گذاری فایل‌های ضبط: $patText",
+            "۵. فرمت ضبط صوتی (صدا): $audFmtText",
+            "۶. بیت‌ریت صدای ضبط: $audBrText",
+            "۷. نرخ نمونه‌برداری صدا (Sample Rate): $audSrText",
+            "۸. کانال صدا: $audChText",
+            "۹. 📁 مشاهده و مدیریت فایل‌های ضبط‌شده در حافظه گوشی",
+            "۱۰. اطلاعات پوشه اصلی ذخیره‌سازی"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -185,12 +187,13 @@ class SettingsFragment : Fragment() {
                     0 -> toggleShowRecordingsInChannels()
                     1 -> showVideoFormatDialog()
                     2 -> showVideoQualityDialog()
-                    3 -> showAudioFormatDialog()
-                    4 -> showAudioBitrateDialog()
-                    5 -> showAudioSampleRateDialog()
-                    6 -> showAudioChannelsDialog()
-                    7 -> com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext())
-                    8 -> showStorageFolderInfoDialog()
+                    3 -> showNamingPatternDialog()
+                    4 -> showAudioFormatDialog()
+                    5 -> showAudioBitrateDialog()
+                    6 -> showAudioSampleRateDialog()
+                    7 -> showAudioChannelsDialog()
+                    8 -> com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext())
+                    9 -> showStorageFolderInfoDialog()
                 }
             }
             .setNegativeButton("بستن", null)
@@ -247,6 +250,32 @@ class SettingsFragment : Fragment() {
                 appConfig.videoRecQuality = chosen
                 val title = getVideoQualityTitle(chosen)
                 val msg = "کیفیت ذخیره ویدیو تنظیم شد: $title"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(containerSettingsList, msg)
+                dialog.dismiss()
+                openRecordingSettingsDialog()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun showNamingPatternDialog() {
+        val patterns = arrayOf(
+            "شمسی عددی استاندارد (مثال: 1405-08-27) [پیش‌فرض]",
+            "شمسی با نام ماه و سال (مثال: 27 آبان 1405)",
+            "شمسی با نام ماه بدون سال (مثال: 27 آبان)",
+            "تاریخ و زمان میلادی (مثال: 2026-11-17)"
+        )
+        val values = arrayOf("jalali_numeric", "jalali_month_year", "jalali_month", "gregorian")
+        val currentIdx = values.indexOf(appConfig.recNamingPattern).let { if (it >= 0) it else 0 }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("الگوی نام‌گذاری فایل‌های ضبط")
+            .setSingleChoiceItems(patterns, currentIdx) { dialog, which ->
+                val chosen = values[which]
+                appConfig.recNamingPattern = chosen
+                val title = getNamingPatternTitle(chosen)
+                val msg = "الگوی نام‌گذاری فایل‌ها تنظیم شد: $title"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                 AccessibilityHelper.announce(containerSettingsList, msg)
                 dialog.dismiss()
@@ -386,6 +415,16 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    private fun getNamingPatternTitle(pattern: String): String {
+        return when (pattern.lowercase()) {
+            "jalali_numeric" -> "شمسی عددی (1405-08-27) [پیش‌فرض]"
+            "jalali_month_year" -> "شمسی با ماه و سال (27 آبان 1405)"
+            "jalali_month" -> "شمسی با ماه (27 آبان)"
+            "gregorian" -> "میلادی (2026-11-17)"
+            else -> pattern
+        }
+    }
+
     private fun getSampleRateTitle(rate: String): String {
         return when (rate.lowercase()) {
             "auto" -> "خودکار (نرخ شبکه رسیور - پیش‌فرض)"
@@ -396,19 +435,78 @@ class SettingsFragment : Fragment() {
     }
 
     private fun openEpgSettingsDialog() {
+        val epgModeStr = if (appConfig.autoAnnounceEpg) "خودکار پس از تعویض کانال" else "خواندن دستی از منوی کانال (پیش‌فرض)"
+        val epgDetailStr = when (appConfig.epgAnnounceDetail) {
+            1 -> "عنوان برنامه به همراه ساعت شروع و پایان"
+            2 -> "عنوان و ساعت فعلی + عنوان برنامه بعدی"
+            else -> "فقط عنوان برنامه در حال پخش (پیش‌فرض)"
+        }
+
         val items = arrayOf(
-            "اعلام خودکار نام شبکه با تعویض کانال: ${if (appConfig.autoAnnounceChannel) "فعال" else "غیرفعال"}"
+            "۱. اعلام خودکار نام شبکه با تعویض کانال: ${if (appConfig.autoAnnounceChannel) "فعال" else "غیرفعال"}",
+            "۲. نحوه اعلام جدول برنامه EPG: $epgModeStr",
+            "۳. جزئیات اطلاعات اعلامی EPG: $epgDetailStr"
         )
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("تنظیمات اعلام صوتی و EPG")
+            .setTitle("تنظیمات جامع راهنمای برنامه‌ها (EPG)")
             .setItems(items) { _, which ->
-                if (which == 0) {
-                    appConfig.autoAnnounceChannel = !appConfig.autoAnnounceChannel
-                    val state = if (appConfig.autoAnnounceChannel) "فعال" else "غیرفعال"
-                    Toast.makeText(requireContext(), "اعلام خودکار شبکه: $state", Toast.LENGTH_SHORT).show()
+                when (which) {
+                    0 -> {
+                        appConfig.autoAnnounceChannel = !appConfig.autoAnnounceChannel
+                        val state = if (appConfig.autoAnnounceChannel) "فعال" else "غیرفعال"
+                        val msg = "اعلام خودکار شبکه: $state"
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                        AccessibilityHelper.announce(containerSettingsList, msg)
+                        openEpgSettingsDialog()
+                    }
+                    1 -> showEpgModeDialog()
+                    2 -> showEpgDetailDialog()
                 }
             }
             .setNegativeButton("بستن", null)
+            .show()
+    }
+
+    private fun showEpgModeDialog() {
+        val modes = arrayOf(
+            "خواندن دستی از طریق منوی کانال (پیش‌فرض)",
+            "خواندن خودکار پس از تعویض کانال (فقط در صورت وجود جدول برنامه)"
+        )
+        val currentIdx = if (appConfig.autoAnnounceEpg) 1 else 0
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("نحوه اعلام جدول برنامه EPG")
+            .setSingleChoiceItems(modes, currentIdx) { dialog, which ->
+                appConfig.autoAnnounceEpg = (which == 1)
+                val msg = if (which == 1) "اعلام خودکار EPG با تعویض کانال فعال شد" else "اعلام EPG بر روی حالت دستی تنظیم شد"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(containerSettingsList, msg)
+                dialog.dismiss()
+                openEpgSettingsDialog()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun showEpgDetailDialog() {
+        val details = arrayOf(
+            "فقط عنوان برنامه در حال پخش (پیش‌فرض)",
+            "عنوان برنامه به همراه ساعت شروع و پایان",
+            "عنوان و ساعت برنامه فعلی + عنوان برنامه بعدی"
+        )
+        val currentIdx = appConfig.epgAnnounceDetail.coerceIn(0, 2)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("جزئیات اطلاعات اعلامی EPG")
+            .setSingleChoiceItems(details, currentIdx) { dialog, which ->
+                appConfig.epgAnnounceDetail = which
+                val msg = "جزئیات EPG تنظیم شد: ${details[which]}"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(containerSettingsList, msg)
+                dialog.dismiss()
+                openEpgSettingsDialog()
+            }
+            .setNegativeButton("انصراف", null)
             .show()
     }
 

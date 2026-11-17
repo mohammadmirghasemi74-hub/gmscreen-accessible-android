@@ -560,6 +560,24 @@ class StbClient {
         sendCmd(1043, expectReply = false, timeoutMs = 2000) != null
     }
 
+    suspend fun getEpg(programId: String): Map<String, Any>? = withContext(Dispatchers.IO) {
+        try {
+            val payload = mapOf("array" to listOf(mapOf("ProgramId" to programId)))
+            val res = sendCmd(5, payload, expectReply = true, timeoutMs = 4000)
+            if (res is List<*> && res.isNotEmpty() && res[0] is Map<*, *>) {
+                @Suppress("UNCHECKED_CAST")
+                res[0] as Map<String, Any>
+            } else if (res is Map<*, *>) {
+                @Suppress("UNCHECKED_CAST")
+                res as Map<String, Any>
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     suspend fun sendOsdMessage(msg: String): Boolean = withContext(Dispatchers.IO) {
         val payload = mapOf("array" to listOf(mapOf("Message" to msg, "Time" to "5")))
         sendCmd(1042, payload, timeoutMs = 3000) != null
