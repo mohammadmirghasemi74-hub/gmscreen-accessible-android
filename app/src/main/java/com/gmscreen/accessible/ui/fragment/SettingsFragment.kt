@@ -524,9 +524,6 @@ class SettingsFragment : Fragment() {
             .setNegativeButton("انصراف", null)
             .show()
     }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
 
     private fun showStorageFolderInfoDialog() {
         val rootPath = StorageManager.getAppRootDir(requireContext()).absolutePath
