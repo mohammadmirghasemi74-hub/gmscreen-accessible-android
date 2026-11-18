@@ -126,6 +126,47 @@
             app:cornerRadius="8dp" />
     </LinearLayout>
 
+    <!-- Jump to First / Last Channel Buttons Row (Visibility controlled by Settings) -->
+    <LinearLayout
+        android:id="@+id/layoutJumpButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
+        android:visibility="gone">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnJumpToFirstChannel"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:text="▲ پرش به اولین کانال"
+            android:contentDescription="پرش به ابتدای لیست کانال‌ها (کانال اول)"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            app:backgroundTint="@color/card_bg"
+            app:strokeColor="@color/divider"
+            app:strokeWidth="1dp"
+            app:cornerRadius="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnJumpToLastChannel"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="▼ پرش به آخرین کانال"
+            android:contentDescription="پرش به انتهای لیست کانال‌ها (کانال آخر)"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            app:backgroundTint="@color/card_bg"
+            app:strokeColor="@color/divider"
+            app:strokeWidth="1dp"
+            app:cornerRadius="8dp" />
+    </LinearLayout>
+
     <!-- Channels Container with Refresh FAB -->
     <FrameLayout
         android:layout_width="match_parent"

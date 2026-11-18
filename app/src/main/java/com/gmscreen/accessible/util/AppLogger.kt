@@ -1,0 +1,91 @@
+package com.gmscreen.accessible.util
+
+import android.content.Context
+import android.util.Log
+import java.io.File
+import java.io.FileWriter
+import java.io.PrintWriter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.LinkedList
+import java.util.Locale
+
+object AppLogger {
+
+    private const val TAG = "GMScreenApp"
+    private const val MAX_MEMORY_LINES = 600
+    private val memoryLogs = LinkedList<String>()
+    private val lock = Any()
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+
+    fun i(tag: String, message: String) = log("INFO", tag, message, null)
+    fun d(tag: String, message: String) = log("DEBUG", tag, message, null)
+    fun w(tag: String, message: String, throwable: Throwable? = null) = log("WARN", tag, message, throwable)
+    fun e(tag: String, message: String, throwable: Throwable? = null) = log("ERROR", tag, message, throwable)
+
+    private fun log(level: String, tag: String, message: String, throwable: Throwable?) {
+        val timeStr = synchronized(dateFormat) { dateFormat.format(Date()) }
+        val errStr = throwable?.let { "\n" + Log.getStackTraceString(it) } ?: ""
+        val entry = "[$timeStr] [$level] [$tag] $message$errStr"
+
+        when (level) {
+            "ERROR" -> Log.e(tag, message, throwable)
+            "WARN" -> Log.w(tag, message, throwable)
+            "DEBUG" -> Log.d(tag, message, throwable)
+            else -> Log.i(tag, message, throwable)
+        }
+
+        synchronized(lock) {
+            memoryLogs.add(entry)
+            while (memoryLogs.size > MAX_MEMORY_LINES) {
+                memoryLogs.removeFirst()
+            }
+        }
+
+        // Asynchronously write to log file
+        try {
+            val app = com.gmscreen.accessible.GMScreenApplication.instance
+            val logFile = getLogFile(app)
+            val parent = logFile.parentFile
+            if (parent != null && !parent.exists()) {
+                parent.mkdirs()
+            }
+            FileWriter(logFile, true).use { fw ->
+                fw.appendLine(entry)
+            }
+        } catch (_: Exception) {}
+    }
+
+    fun getLogFile(context: Context): File {
+        return try {
+            val root = StorageManager.getAppRootDir(context)
+            val logsDir = File(root, "logs")
+            if (!logsDir.exists()) logsDir.mkdirs()
+            File(logsDir, "gmscreen.log")
+        } catch (_: Exception) {
+            File(context.filesDir, "gmscreen.log")
+        }
+    }
+
+    fun getRecentLogs(): String {
+        synchronized(lock) {
+            return if (memoryLogs.isEmpty()) {
+                "هنوز لاگی ثبت نشده است."
+            } else {
+                memoryLogs.joinToString("\n")
+            }
+        }
+    }
+
+    fun clearLogs(context: Context): Boolean {
+        synchronized(lock) {
+            memoryLogs.clear()
+        }
+        return try {
+            val f = getLogFile(context)
+            if (f.exists()) f.delete() else true
+        } catch (_: Exception) {
+            false
+        }
+    }
+}

@@ -21,6 +21,7 @@
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:requestLegacyExternalStorage="true"
+        android:extractNativeLibs="true"
         android:theme="@style/Theme.GMScreenAccessible">
         <activity
             android:name=".ui.MainActivity"

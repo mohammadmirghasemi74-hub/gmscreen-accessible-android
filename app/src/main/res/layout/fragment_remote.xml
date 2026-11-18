@@ -98,10 +98,11 @@
                 app:cornerRadius="8dp" />
         </LinearLayout>
 
-        <!-- 3. Numeric Keypad (Exact Real Remote Layout) -->
+        <!-- 3. Numeric Keypad (Exact Real Remote Layout: 1 2 3 / 4 5 6 / 7 8 9 / Recall 0 Info) -->
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layoutDirection="ltr"
             android:columnCount="3"
             android:rowCount="4"
             android:layout_marginBottom="14dp">

@@ -85,6 +85,10 @@ class StbRepository(context: Context) {
             while (isActive && client.isConnected) {
                 delay(800)
                 if (!client.isConnected) break
+                // Avoid socket conflicts if user sent a command recently (matching Windows architecture)
+                if (System.currentTimeMillis() - client.lastUserCmdTime < 1500L) {
+                    continue
+                }
                 try {
                     val pid = client.getPlayingChannel()
                     if (!pid.isNullOrBlank() && pid != _currentChannel.value?.serviceId) {
@@ -198,17 +202,17 @@ class StbRepository(context: Context) {
 
     suspend fun switchChannel(channel: Channel): Boolean {
         if (!client.isConnected) return false
-        val targetMode = if (channel.isRadio) 1 else 0
-        if (currentStbMode != targetMode) {
-            client.sendRcuKey(RcuKey.TV_RADIO)
-            delay(350)
-            currentStbMode = targetMode
-        }
         val success = client.switchChannel(channel.serviceId, channel.isRadio)
         if (success) {
+            currentStbMode = if (channel.isRadio) 1 else 0
             _currentChannel.value = channel
         }
         return success
+    }
+
+    suspend fun saveStbSettings(settings: Map<String, Any>): Boolean {
+        if (!client.isConnected) return false
+        return client.saveStbSettings(settings)
     }
 
     suspend fun sendRcuKey(keyCode: Int): Boolean {

@@ -28,8 +28,8 @@ class MainActivity : AppCompatActivity() {
         "ریموت کنترل رسیور",
         "ضبط و PVR",
         "دستورات صوتی هوشمند",
-        "بکاپ و پشتیبان‌گیری",
-        "تنظیمات و راهنما"
+        "تنظیمات و راهنما",
+        "بکاپ و پشتیبان‌گیری"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,8 +50,8 @@ class MainActivity : AppCompatActivity() {
             RemoteFragment(),
             RecordFragment(),
             VoiceFragment(),
-            BackupFragment(),
-            SettingsFragment()
+            SettingsFragment(),
+            BackupFragment()
         )
 
         val pagerAdapter = object : FragmentStateAdapter(this) {

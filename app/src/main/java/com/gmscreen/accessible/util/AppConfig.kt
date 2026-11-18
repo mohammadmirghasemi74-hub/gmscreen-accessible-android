@@ -30,6 +30,13 @@ class AppConfig(context: Context) {
         private const val KEY_POWER_MODE = "power_mode"
         private const val KEY_VIDEO_LANDSCAPE = "video_landscape_orientation"
         private const val KEY_CUSTOM_REC_DIR = "custom_rec_dir"
+        private const val KEY_SHOW_JUMP_FIRST = "show_jump_to_first_channel"
+        private const val KEY_SHOW_JUMP_LAST = "show_jump_to_last_channel"
+        private const val KEY_SCREEN_LOCK = "screen_lock"
+        private const val KEY_SETTINGS_LOCK = "settings_lock"
+        private const val KEY_EDIT_CHANNEL_LOCK = "edit_channel_lock"
+        private const val KEY_INSTALLATION_LOCK = "installation_lock"
+        private const val KEY_AGE_RATING = "age_rating"
     }
 
     var lastConnectedIp: String
@@ -119,4 +126,32 @@ class AppConfig(context: Context) {
     var customRecordingsDir: String
         get() = prefs.getString(KEY_CUSTOM_REC_DIR, "") ?: ""
         set(value) = prefs.edit().putString(KEY_CUSTOM_REC_DIR, value).apply()
+
+    var showJumpToFirstChannel: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_JUMP_FIRST, false)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_JUMP_FIRST, value).apply()
+
+    var showJumpToLastChannel: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_JUMP_LAST, false)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_JUMP_LAST, value).apply()
+
+    var screenLock: Boolean
+        get() = prefs.getBoolean(KEY_SCREEN_LOCK, false)
+        set(value) = prefs.edit().putBoolean(KEY_SCREEN_LOCK, value).apply()
+
+    var settingsLock: Boolean
+        get() = prefs.getBoolean(KEY_SETTINGS_LOCK, false)
+        set(value) = prefs.edit().putBoolean(KEY_SETTINGS_LOCK, value).apply()
+
+    var editChannelLock: Boolean
+        get() = prefs.getBoolean(KEY_EDIT_CHANNEL_LOCK, false)
+        set(value) = prefs.edit().putBoolean(KEY_EDIT_CHANNEL_LOCK, value).apply()
+
+    var installationLock: Boolean
+        get() = prefs.getBoolean(KEY_INSTALLATION_LOCK, false)
+        set(value) = prefs.edit().putBoolean(KEY_INSTALLATION_LOCK, value).apply()
+
+    var ageRating: Int
+        get() = prefs.getInt(KEY_AGE_RATING, 0)
+        set(value) = prefs.edit().putInt(KEY_AGE_RATING, value).apply()
 }

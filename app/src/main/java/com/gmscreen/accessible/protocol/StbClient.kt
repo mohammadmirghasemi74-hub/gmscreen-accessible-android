@@ -3,6 +3,7 @@ package com.gmscreen.accessible.protocol
 import com.gmscreen.accessible.data.model.Channel
 import com.gmscreen.accessible.data.model.Satellite
 import com.gmscreen.accessible.data.model.StbState
+import com.gmscreen.accessible.util.AppLogger
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
@@ -38,6 +39,8 @@ class StbClient {
 
     var formattedModel: String = ""
         private set
+
+    var lastUserCmdTime: Long = 0
 
     val transponders = mutableMapOf<Int, Map<String, Any>>()
     private var keepaliveJob: Job? = null
@@ -504,6 +507,7 @@ class StbClient {
     }
 
     suspend fun switchChannel(serviceId: String, isRadio: Boolean): Boolean = withContext(Dispatchers.IO) {
+        lastUserCmdTime = System.currentTimeMillis()
         val radioStr = if (isRadio) "1" else "0"
         val payload = mapOf(
             "TotalNum" to "1",
@@ -516,11 +520,18 @@ class StbClient {
                 )
             )
         )
-        val res = sendCmd(1000, payload, expectReply = true, timeoutMs = 5000)
-        res != null
+        var res = sendCmd(1000, payload, expectReply = true, timeoutMs = 5000)
+        if (res == null) {
+            kotlinx.coroutines.delay(200)
+            res = sendCmd(1000, payload, expectReply = true, timeoutMs = 5000)
+        }
+        val ok = res != null
+        AppLogger.i("StbClient", "switchChannel: serviceId=$serviceId, isRadio=$isRadio, result=$ok")
+        ok
     }
 
     suspend fun moveChannel(programId: String, targetProgramId: String, isRadio: Boolean): Boolean = withContext(Dispatchers.IO) {
+        lastUserCmdTime = System.currentTimeMillis()
         val radioStr = if (isRadio) "1" else "0"
         val payload = mapOf(
             "TotalNum" to "1",
@@ -533,10 +544,37 @@ class StbClient {
             )
         )
         val res = sendCmd(1005, payload, expectReply = true, timeoutMs = 6000)
-        res != null
+        val ok = res != null
+        AppLogger.i("StbClient", "moveChannel: $programId -> $targetProgramId, result=$ok")
+        ok
+    }
+
+    suspend fun saveStbSettings(settings: Map<String, Any>): Boolean = withContext(Dispatchers.IO) {
+        lastUserCmdTime = System.currentTimeMillis()
+        val payload = mapOf(
+            "array" to listOf(
+                mapOf(
+                    "SleepSwitch" to (settings["SleepSwitch"]?.toString() ?: "0"),
+                    "SleepTime" to (settings["SleepTime"]?.toString() ?: "0"),
+                    "PowerMode" to (settings["PowerMode"]?.toString() ?: "1"),
+                    "ScreenLock" to (settings["ScreenLock"]?.toString() ?: "0"),
+                    "PasswordLock" to (settings["PasswordLock"]?.toString() ?: "0"),
+                    "InstallationLock" to (settings["InstallationLock"]?.toString() ?: "0"),
+                    "EditChannelLock" to (settings["EditChannelLock"]?.toString() ?: "0"),
+                    "SettingsLock" to (settings["SettingsLock"]?.toString() ?: "0"),
+                    "AgeRating" to (settings["AgeRating"]?.toString() ?: "0"),
+                    "SortType" to (settings["SortType"]?.toString() ?: "0")
+                )
+            )
+        )
+        val res = sendCmd(13, payload, expectReply = true, timeoutMs = 5000)
+        val ok = res != null
+        AppLogger.i("StbClient", "saveStbSettings: result=$ok, payload=$payload")
+        ok
     }
 
     suspend fun sendRcuKey(keyCode: Int): Boolean = withContext(Dispatchers.IO) {
+        lastUserCmdTime = System.currentTimeMillis()
         if (keyCode == 1041 || keyCode == RcuKey.POWER_TOGGLE) {
             val res = sendCmd(1041, expectReply = true, timeoutMs = 2000)
             return@withContext res != null

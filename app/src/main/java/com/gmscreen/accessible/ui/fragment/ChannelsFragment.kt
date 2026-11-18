@@ -52,6 +52,9 @@ class ChannelsFragment : Fragment() {
     private lateinit var recyclerViewChannels: RecyclerView
     private lateinit var fabRefreshChannels: ExtendedFloatingActionButton
     private lateinit var fabRecordings: ExtendedFloatingActionButton
+    private lateinit var layoutJumpButtons: LinearLayout
+    private lateinit var btnJumpToFirstChannel: MaterialButton
+    private lateinit var btnJumpToLastChannel: MaterialButton
 
     private var audioExoPlayer: androidx.media3.exoplayer.ExoPlayer? = null
     private var isAudioStreaming = false
@@ -84,6 +87,9 @@ class ChannelsFragment : Fragment() {
         recyclerViewChannels = view.findViewById(R.id.recyclerViewChannels)
         fabRefreshChannels = view.findViewById(R.id.fabRefreshChannels)
         fabRecordings = view.findViewById(R.id.fabRecordings)
+        layoutJumpButtons = view.findViewById(R.id.layoutJumpButtons)
+        btnJumpToFirstChannel = view.findViewById(R.id.btnJumpToFirstChannel)
+        btnJumpToLastChannel = view.findViewById(R.id.btnJumpToLastChannel)
 
         recyclerViewChannels.layoutManager = LinearLayoutManager(requireContext())
         recyclerViewChannels.setHasFixedSize(true)
@@ -91,6 +97,7 @@ class ChannelsFragment : Fragment() {
 
         setupAudioPlayerBar()
         setupControls()
+        updateJumpButtonsUI()
         observeData()
 
         return view
@@ -135,7 +142,45 @@ class ChannelsFragment : Fragment() {
         btnClearSearch.setOnClickListener {
             edtSearch.text.clear()
             btnClearSearch.visibility = View.GONE
-            AccessibilityHelper.announce(edtSearch, "جستجو پاک شد")
+            edtSearch.clearFocus()
+            val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+            imm?.hideSoftInputFromWindow(edtSearch.windowToken, 0)
+            recyclerViewChannels.requestFocus()
+            AccessibilityHelper.announce(recyclerViewChannels, "جستجو پاک شد. تمام کانال‌ها نمایش داده شدند")
+        }
+
+        btnJumpToFirstChannel.setOnClickListener {
+            val adapter = channelsAdapter ?: return@setOnClickListener
+            if (adapter.itemCount > 0) {
+                val lm = recyclerViewChannels.layoutManager as? LinearLayoutManager
+                lm?.scrollToPositionWithOffset(0, 0)
+                recyclerViewChannels.postDelayed({
+                    val vh = recyclerViewChannels.findViewHolderForAdapterPosition(0)
+                    vh?.itemView?.requestFocus()
+                    vh?.itemView?.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
+                    val firstCh = adapter.getChannels().firstOrNull()
+                    val name = firstCh?.serviceName ?: "کانال اول"
+                    AccessibilityHelper.announce(recyclerViewChannels, "پرش به ابتدای لیست: کانال ۱، $name")
+                }, 150)
+            }
+        }
+
+        btnJumpToLastChannel.setOnClickListener {
+            val adapter = channelsAdapter ?: return@setOnClickListener
+            val count = adapter.itemCount
+            if (count > 0) {
+                val lastIdx = count - 1
+                val lm = recyclerViewChannels.layoutManager as? LinearLayoutManager
+                lm?.scrollToPositionWithOffset(lastIdx, 0)
+                recyclerViewChannels.postDelayed({
+                    val vh = recyclerViewChannels.findViewHolderForAdapterPosition(lastIdx)
+                    vh?.itemView?.requestFocus()
+                    vh?.itemView?.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
+                    val lastCh = adapter.getChannels().lastOrNull()
+                    val name = lastCh?.serviceName ?: "کانال آخر"
+                    AccessibilityHelper.announce(recyclerViewChannels, "پرش به انتهای لیست: کانال $count، $name")
+                }, 150)
+            }
         }
 
         fabRefreshChannels.setOnClickListener {
@@ -341,15 +386,18 @@ class ChannelsFragment : Fragment() {
             val currentList = channelsAdapter?.getChannels() ?: emptyList()
             val targetIdx = currentList.indexOfFirst { it.serviceId == channel.serviceId }
             if (targetIdx >= 0) {
-                recyclerViewChannels.scrollToPosition(targetIdx)
-                if (!isInitial) {
-                    recyclerViewChannels.postDelayed({
-                        try {
-                            val vh = recyclerViewChannels.findViewHolderForAdapterPosition(targetIdx)
-                            vh?.itemView?.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
-                        } catch (_: Exception) {}
-                    }, 200)
-                }
+                val lm = recyclerViewChannels.layoutManager as? LinearLayoutManager
+                val h = recyclerViewChannels.height
+                val offset = if (h > 0) (h / 2) - 100 else 150
+                lm?.scrollToPositionWithOffset(targetIdx, offset)
+
+                recyclerViewChannels.postDelayed({
+                    try {
+                        val vh = recyclerViewChannels.findViewHolderForAdapterPosition(targetIdx)
+                        vh?.itemView?.requestFocus()
+                        vh?.itemView?.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
+                    } catch (_: Exception) {}
+                }, 250)
             }
             if (announce) {
                 AccessibilityHelper.announce(recyclerViewChannels, announceMsg)
@@ -592,6 +640,16 @@ class ChannelsFragment : Fragment() {
         if (::fabRecordings.isInitialized) {
             fabRecordings.visibility = if (appConfig.showRecordingsInChannels) View.VISIBLE else View.GONE
         }
+        updateJumpButtonsUI()
+    }
+
+    private fun updateJumpButtonsUI() {
+        if (!::layoutJumpButtons.isInitialized) return
+        val showFirst = appConfig.showJumpToFirstChannel
+        val showLast = appConfig.showJumpToLastChannel
+        btnJumpToFirstChannel.visibility = if (showFirst) View.VISIBLE else View.GONE
+        btnJumpToLastChannel.visibility = if (showLast) View.VISIBLE else View.GONE
+        layoutJumpButtons.visibility = if (showFirst || showLast) View.VISIBLE else View.GONE
     }
 
     private fun showChannelContextMenu(channel: Channel) {
