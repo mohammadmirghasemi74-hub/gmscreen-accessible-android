@@ -94,7 +94,7 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
                     == PackageManager.PERMISSION_GRANTED
                 ) {
                     voiceController?.setWakeWordMode(true)
-                    val msg = "حالت بیدارباش فعال شد. هر زمان بگویید «جی ام اسکرین»، برنامه فرمان شما را می‌شنود."
+                    val msg = "حالت بیدارباش فعال شد. هر زمان بگویید «های رسیور»، برنامه فرمان شما را می‌شنود."
                     txtVoiceStatus.text = msg
                     AccessibilityHelper.announce(txtVoiceStatus, msg)
                 } else {

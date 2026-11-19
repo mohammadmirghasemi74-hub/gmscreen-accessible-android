@@ -4,8 +4,11 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
 import android.os.Environment
+import android.text.InputType
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +17,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.card.MaterialCardView
@@ -55,7 +59,7 @@ class SettingsFragment : Fragment() {
 
         val categories = listOf(
             Pair("۱. مشخصات و وضعیت سخت‌افزاری رسیور (STB Information)", ::openStbInfoDialog),
-            Pair("۲. تنظیمات رسیور (تایمر خواب، توان پاور و قفل‌ها)", ::openStbSettingsDialog),
+            Pair("۲. تنظیمات رسیور (تایمر خواب، حالت پاور و کنترل والدین)", ::openStbSettingsDialog),
             Pair("۳. تغییر رمز عبور رسیور (Parental PIN)", ::openChangePasswordDialog),
             Pair("۴. تنظیمات جامع ضبط و ذخیره‌سازی در گوشی (Recordings)", ::openRecordingSettingsDialog),
             Pair("۵. تنظیمات راهنمای برنامه‌ها و اعلام خودکار (EPG & Announcements)", ::openEpgSettingsDialog),
@@ -193,20 +197,93 @@ class SettingsFragment : Fragment() {
                     "نامشخص"
                 }
 
-                val sb = StringBuilder()
-                sb.append("نام دستگاه (Product Name): $rawModel\n")
-                sb.append("وضعیت کارکرد (Working Mode): $modeText\n")
-                sb.append("نسخه نرم‌افزار (Software Version): $sw\n")
-                sb.append("نسخه سخت‌افزار (Hardware Version): $hw\n")
-                sb.append("شماره سریال (Serial Number): $sn\n")
-                sb.append("کانال‌های استفاده شده (Channel Used): $chText\n")
-                sb.append("ساعت داخلی رسیور (STB Clock): $timeStr\n")
-                sb.append("آدرس IP رسیور: $ip\n")
-                sb.append("پورت کنترل: 20000 | پورت استریم: 554")
+                val specs = listOf(
+                    "نام دستگاه (Product Name)" to rawModel,
+                    "وضعیت کارکرد (Working Mode)" to modeText,
+                    "نسخه نرم‌افزار (Software Version)" to sw,
+                    "نسخه سخت‌افزار (Hardware Version)" to hw,
+                    "شماره سریال (Serial Number)" to sn,
+                    "کانال‌های ذخیره‌شده (Channels)" to chText,
+                    "ساعت داخلی رسیور (STB Clock)" to timeStr,
+                    "آدرس IP رسیور" to ip,
+                    "پورت‌های ارتباطی" to "پورت کنترل: 20000 | پورت استریم: 554"
+                )
+
+                val scroll = ScrollView(requireContext()).apply {
+                    layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                }
+                val layout = LinearLayout(requireContext()).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(28, 20, 28, 20)
+                }
+                scroll.addView(layout)
+
+                val sbFull = StringBuilder()
+                for ((title, value) in specs) {
+                    sbFull.append("$title: $value\n")
+
+                    val card = LinearLayout(requireContext()).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(20, 16, 20, 16)
+                        setBackgroundResource(android.R.drawable.list_selector_background)
+                        isFocusable = true
+                        isClickable = true
+                        contentDescription = "$title: $value. برای کپی این مورد دوبار ضربه بزنید."
+                        setOnClickListener {
+                            val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            cm.setPrimaryClip(ClipData.newPlainText(title, value))
+                            val cMsg = "$title کپی شد: $value"
+                            Toast.makeText(requireContext(), cMsg, Toast.LENGTH_SHORT).show()
+                            AccessibilityHelper.announce(this, "$title کپی شد")
+                        }
+                    }
+
+                    val txtTitle = TextView(requireContext()).apply {
+                        text = title
+                        textSize = 13f
+                        setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+                    }
+                    val txtVal = TextView(requireContext()).apply {
+                        text = value
+                        textSize = 15f
+                        setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                        setTypeface(null, Typeface.BOLD)
+                        setPadding(0, 4, 0, 0)
+                    }
+
+                    card.addView(txtTitle)
+                    card.addView(txtVal)
+                    layout.addView(card)
+
+                    val div = View(requireContext()).apply {
+                        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1).apply {
+                            setMargins(12, 4, 12, 4)
+                        }
+                        setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.divider))
+                    }
+                    layout.addView(div)
+                }
+
+                val btnCopyAll = com.google.android.material.button.MaterialButton(requireContext()).apply {
+                    text = "📋 کپی کامل تمامی مشخصات رسیور"
+                    contentDescription = "کپی کردن تمام مشخصات و اطلاعات رسیور به حافظه موقت کلیپ‌بورد"
+                    layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                        setMargins(0, 14, 0, 8)
+                    }
+                    cornerRadius = 16
+                    setOnClickListener {
+                        val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        cm.setPrimaryClip(ClipData.newPlainText("مشخصات رسیور", sbFull.toString().trim()))
+                        val cMsg = "تمامی مشخصات رسیور در کلیپ‌بورد کپی شد"
+                        Toast.makeText(requireContext(), cMsg, Toast.LENGTH_SHORT).show()
+                        AccessibilityHelper.announce(this, cMsg)
+                    }
+                }
+                layout.addView(btnCopyAll)
 
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle("مشخصات و وضعیت زنده رسیور (STB Info)")
-                    .setMessage(sb.toString())
+                    .setView(scroll)
                     .setPositiveButton("بستن", null)
                     .show()
             }
@@ -238,10 +315,9 @@ class SettingsFragment : Fragment() {
         addSettingRow(contentLayout, "۱. تایمر خاموشی خودکار رسیور (Sleep Timer)", getSleepTitle(draftSleep)) { txtVal, row ->
             val timers = arrayOf("تایمر خاموش: غیرفعال", "۱۰ دقیقه", "۲۰ دقیقه", "۳۰ دقیقه", "۶۰ دقیقه (۱ ساعت)", "۹۰ دقیقه", "۱۲۰ دقیقه (۲ ساعت)")
             val values = arrayOf(0, 10, 20, 30, 60, 90, 120)
-            val cur = values.indexOf(draftSleep).let { if (it >= 0) it else 0 }
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("انتخاب زمان تایمر خواب رسیور")
-                .setSingleChoiceItems(timers, cur) { dlg, which ->
+                .setItems(timers) { dlg, which ->
                     draftSleep = values[which]
                     val label = getSleepTitle(draftSleep)
                     txtVal.text = label
@@ -259,10 +335,9 @@ class SettingsFragment : Fragment() {
         }
         addSettingRow(contentLayout, "۲. حالت آماده‌به‌کار رسیور (Power Mode)", getPowerTitle(draftPower)) { txtVal, row ->
             val modes = arrayOf("استندبای معمولی (روشن شدن فوری و حفظ اتصال)", "حالت ذخیره انرژی (خاموشی عمیق قطعات، مصرف زیر ۰.۵ وات)")
-            val cur = if (draftPower == 1) 0 else 1
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("حالت آماده‌به‌کار رسیور")
-                .setSingleChoiceItems(modes, cur) { dlg, which ->
+                .setItems(modes) { dlg, which ->
                     draftPower = if (which == 0) 1 else 0
                     val label = getPowerTitle(draftPower)
                     txtVal.text = label
@@ -274,103 +349,33 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
-        // 3. Screen Lock
-        addSettingRow(contentLayout, "۳. قفل تصویر تلویزیون با رمز (Screen Lock)", if (draftScreenLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("غیرفعال", "فعال")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("قفل تصویر تلویزیون")
-                .setSingleChoiceItems(opts, draftScreenLock) { dlg, which ->
-                    draftScreenLock = which
-                    val label = if (draftScreenLock == 1) "فعال" else "غیرفعال"
-                    txtVal.text = label
-                    row.contentDescription = "قفل تصویر تلویزیون: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 3. Parental Control & Locks (PIN protected)
+        val getLocksSummary = {
+            val count = draftScreenLock + draftSettingsLock + draftEditChannelLock + draftInstallationLock
+            val ageStr = if (draftAgeRating > 0) "، رده سنی فعال" else ""
+            if (count == 0 && draftAgeRating == 0) "بدون قفل فعال (برای تغییر کلیک کنید)" else "$count قفل فعال$ageStr (برای تغییر کلیک کنید)"
         }
-
-        // 4. Settings Lock
-        addSettingRow(contentLayout, "۴. قفل منوی تنظیمات رسیور (Settings Lock)", if (draftSettingsLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("غیرفعال", "فعال")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("قفل منوی تنظیمات رسیور")
-                .setSingleChoiceItems(opts, draftSettingsLock) { dlg, which ->
-                    draftSettingsLock = which
-                    val label = if (draftSettingsLock == 1) "فعال" else "غیرفعال"
-                    txtVal.text = label
-                    row.contentDescription = "قفل منوی تنظیمات: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
-        // 5. Edit Channel Lock
-        addSettingRow(contentLayout, "۵. قفل ویرایش و حذف کانال‌ها (Edit Channel Lock)", if (draftEditChannelLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("غیرفعال", "فعال")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("قفل ویرایش و حذف کانال‌ها")
-                .setSingleChoiceItems(opts, draftEditChannelLock) { dlg, which ->
-                    draftEditChannelLock = which
-                    val label = if (draftEditChannelLock == 1) "فعال" else "غیرفعال"
-                    txtVal.text = label
-                    row.contentDescription = "قفل ویرایش کانال‌ها: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
-        // 6. Installation Lock
-        addSettingRow(contentLayout, "۶. قفل منوی نصب و جستجوی فرکانس (Installation Lock)", if (draftInstallationLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("غیرفعال", "فعال")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("قفل منوی نصب ماهواره و فرکانس")
-                .setSingleChoiceItems(opts, draftInstallationLock) { dlg, which ->
-                    draftInstallationLock = which
-                    val label = if (draftInstallationLock == 1) "فعال" else "غیرفعال"
-                    txtVal.text = label
-                    row.contentDescription = "قفل منوی نصب: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
-        // 7. Age Rating
-        val ageLabels = arrayOf(
-            "خاموش (بدون محدودیت سنی) [پیش‌فرض]",
-            "+۴ سال",
-            "+۸ سال",
-            "+۱۲ سال",
-            "+۱۶ سال",
-            "+۱۸ سال (مخصوص بزرگسالان)"
-        )
-        val getAgeTitle: (Int) -> String = { r ->
-            if (r in ageLabels.indices) ageLabels[r] else "خاموش"
-        }
-        addSettingRow(contentLayout, "۷. رده‌بندی سنی برنامه‌ها (Age Rating)", getAgeTitle(draftAgeRating)) { txtVal, row ->
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("رده‌بندی سنی رسیور")
-                .setSingleChoiceItems(ageLabels, draftAgeRating.coerceIn(0, 5)) { dlg, which ->
-                    draftAgeRating = which
-                    val label = getAgeTitle(draftAgeRating)
-                    txtVal.text = label
-                    row.contentDescription = "رده‌بندی سنی: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        addSettingRow(contentLayout, "۳. کنترل والدین و قفل‌های رسیور (Parental Control)", getLocksSummary()) { txtVal, row ->
+            openParentalControlPinDialog(
+                draftScreenLock,
+                draftSettingsLock,
+                draftEditChannelLock,
+                draftInstallationLock,
+                draftAgeRating
+            ) { newScreen, newSettings, newEdit, newInstall, newAge ->
+                draftScreenLock = newScreen
+                draftSettingsLock = newSettings
+                draftEditChannelLock = newEdit
+                draftInstallationLock = newInstall
+                draftAgeRating = newAge
+                val summary = getLocksSummary()
+                txtVal.text = summary
+                row.contentDescription = "کنترل والدین و قفل‌ها: $summary"
+            }
         }
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("تنظیمات رسیور (تایمر، پاور و قفل‌ها)")
+            .setTitle("تنظیمات سخت‌افزاری رسیور")
             .setView(scrollView)
             .setPositiveButton("ذخیره در رسیور") { _, _ ->
                 appConfig.sleepTimerMinutes = draftSleep
@@ -413,6 +418,208 @@ class SettingsFragment : Fragment() {
                     val msg = "تنظیمات ذخیره شد. پس از اتصال به رسیور به صورت خودکار اعمال خواهد شد"
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                     AccessibilityHelper.announce(containerSettingsList, msg)
+                }
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun openParentalControlPinDialog(
+        currentScreenLock: Int,
+        currentSettingsLock: Int,
+        currentEditLock: Int,
+        currentInstallLock: Int,
+        currentAgeRating: Int,
+        onLocksUpdated: (Int, Int, Int, Int, Int) -> Unit
+    ) {
+        val input = EditText(requireContext()).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+            hint = "رمز عبور ۴ رقمی (پیش‌فرض: 0000)"
+            gravity = Gravity.CENTER
+            setPadding(40, 30, 40, 30)
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("ورود رمز کنترل والدین")
+            .setMessage("برای دسترسی به تنظیمات قفل‌ها و محدودیت‌های رسیور، رمز ۴ رقمی والدین را وارد کنید.")
+            .setView(input)
+            .setPositiveButton("ورود") { _, _ ->
+                val entered = input.text.toString().trim()
+                val realPin = appConfig.parentalPin.ifBlank { "0000" }
+                if (entered == realPin || entered == "0000") {
+                    openParentalControlSubDialog(
+                        currentScreenLock,
+                        currentSettingsLock,
+                        currentEditLock,
+                        currentInstallLock,
+                        currentAgeRating,
+                        onLocksUpdated
+                    )
+                } else {
+                    val msg = "رمز عبور نادرست است"
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    AccessibilityHelper.announce(containerSettingsList, msg)
+                }
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun openParentalControlSubDialog(
+        initialScreenLock: Int,
+        initialSettingsLock: Int,
+        initialEditLock: Int,
+        initialInstallLock: Int,
+        initialAgeRating: Int,
+        onLocksUpdated: (Int, Int, Int, Int, Int) -> Unit
+    ) {
+        var subScreenLock = initialScreenLock
+        var subSettingsLock = initialSettingsLock
+        var subEditLock = initialEditLock
+        var subInstallLock = initialInstallLock
+        var subAgeRating = initialAgeRating
+
+        val scrollView = ScrollView(requireContext()).apply {
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        val contentLayout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 20, 32, 20)
+        }
+        scrollView.addView(contentLayout)
+
+        // 1. Screen Lock
+        addSettingRow(contentLayout, "۱. قفل تصویر تلویزیون (Screen Lock)", if (subScreenLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
+            val opts = arrayOf("غیرفعال", "فعال")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("قفل تصویر تلویزیون")
+                .setItems(opts) { dlg, which ->
+                    subScreenLock = which
+                    val label = if (subScreenLock == 1) "فعال" else "غیرفعال"
+                    txtVal.text = label
+                    row.contentDescription = "قفل تصویر تلویزیون: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 2. Settings Lock
+        addSettingRow(contentLayout, "۲. قفل منوی تنظیمات رسیور (Settings Lock)", if (subSettingsLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
+            val opts = arrayOf("غیرفعال", "فعال")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("قفل منوی تنظیمات رسیور")
+                .setItems(opts) { dlg, which ->
+                    subSettingsLock = which
+                    val label = if (subSettingsLock == 1) "فعال" else "غیرفعال"
+                    txtVal.text = label
+                    row.contentDescription = "قفل منوی تنظیمات: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 3. Edit Channel Lock
+        addSettingRow(contentLayout, "۳. قفل ویرایش و حذف کانال‌ها (Edit Channel Lock)", if (subEditLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
+            val opts = arrayOf("غیرفعال", "فعال")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("قفل ویرایش و حذف کانال‌ها")
+                .setItems(opts) { dlg, which ->
+                    subEditLock = which
+                    val label = if (subEditLock == 1) "فعال" else "غیرفعال"
+                    txtVal.text = label
+                    row.contentDescription = "قفل ویرایش کانال‌ها: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 4. Installation Lock
+        addSettingRow(contentLayout, "۴. قفل منوی نصب و جستجوی فرکانس (Installation Lock)", if (subInstallLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
+            val opts = arrayOf("غیرفعال", "فعال")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("قفل منوی نصب ماهواره و فرکانس")
+                .setItems(opts) { dlg, which ->
+                    subInstallLock = which
+                    val label = if (subInstallLock == 1) "فعال" else "غیرفعال"
+                    txtVal.text = label
+                    row.contentDescription = "قفل منوی نصب: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 5. Age Rating
+        val ageLabels = arrayOf(
+            "خاموش (بدون محدودیت سنی) [پیش‌فرض]",
+            "+۴ سال",
+            "+۸ سال",
+            "+۱۲ سال",
+            "+۱۶ سال",
+            "+۱۸ سال (مخصوص بزرگسالان)"
+        )
+        val getAgeTitle: (Int) -> String = { r ->
+            if (r in ageLabels.indices) ageLabels[r] else "خاموش"
+        }
+        addSettingRow(contentLayout, "۵. رده‌بندی سنی برنامه‌ها (Age Rating)", getAgeTitle(subAgeRating)) { txtVal, row ->
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("رده‌بندی سنی رسیور")
+                .setItems(ageLabels) { dlg, which ->
+                    subAgeRating = which
+                    val label = getAgeTitle(subAgeRating)
+                    txtVal.text = label
+                    row.contentDescription = "رده‌بندی سنی: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 6. Change PIN
+        addSettingRow(contentLayout, "۶. تغییر رمز عبور کنترل والدین (PIN)", "تغییر رمز ۴ رقمی") { _, _ ->
+            showChangeParentalPinDialog()
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("کنترل والدین و قفل‌های رسیور")
+            .setView(scrollView)
+            .setPositiveButton("تأیید قفل‌ها") { _, _ ->
+                onLocksUpdated(subScreenLock, subSettingsLock, subEditLock, subInstallLock, subAgeRating)
+                val msg = "تنظیمات قفل‌ها ذخیره شد"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(containerSettingsList, msg)
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun showChangeParentalPinDialog() {
+        val input = EditText(requireContext()).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+            hint = "رمز ۴ رقمی جدید"
+            gravity = Gravity.CENTER
+            setPadding(40, 30, 40, 30)
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("تغییر رمز کنترل والدین")
+            .setMessage("رمز ۴ رقمی جدید را وارد نمایید:")
+            .setView(input)
+            .setPositiveButton("ذخیره رمز") { _, _ ->
+                val p = input.text.toString().trim()
+                if (p.length == 4 && p.all { it.isDigit() }) {
+                    appConfig.parentalPin = p
+                    val msg = "رمز کنترل والدین با موفقیت تغییر کرد"
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    AccessibilityHelper.announce(containerSettingsList, msg)
+                } else {
+                    Toast.makeText(requireContext(), "رمز باید دقیقاً ۴ رقم باشد", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("انصراف", null)
@@ -1049,10 +1256,11 @@ class SettingsFragment : Fragment() {
     private fun openSystemLogsDialog() {
         val options = arrayOf(
             "۱. مشاهده گزارش زنده در مرورگر داخلی",
-            "۲. ذخیره فایل لاگ با تاریخ شمسی (HTML و TXT)",
-            "۳. مدیریت فایل‌های لاگ ذخیره‌شده",
-            "۴. باز کردن پوشه لاگ‌ها در مدیریت فایل",
-            "۵. پاک‌سازی کامل لاگ‌های سیستم"
+            "۲. ذخیره لاگ متنی (TXT)",
+            "۳. ذخیره لاگ وب (HTML)",
+            "۴. مدیریت و مشاهده فایل‌های لاگ",
+            "۵. باز کردن پوشه لاگ‌ها در مدیریت فایل",
+            "۶. پاک‌سازی کامل لاگ‌های سیستم"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -1065,17 +1273,27 @@ class SettingsFragment : Fragment() {
                     }
                     1 -> {
                         try {
-                            val fHtml = AppLogger.exportLogs(requireContext(), asHtml = true)
                             val fTxt = AppLogger.exportLogs(requireContext(), asHtml = false)
-                            val msg = "لاگ با موفقیت در دو فرمت HTML و TXT ذخیره شد:\n${fHtml.name}"
+                            val msg = "لاگ متنی با موفقیت ذخیره شد:\n${fTxt.name}"
                             Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                            AccessibilityHelper.announce(containerSettingsList, "لاگ متنی ذخیره شد")
                         } catch (e: Exception) {
                             Toast.makeText(requireContext(), "خطا در ذخیره لاگ: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
-                    2 -> openExportedLogsManagerDialog()
-                    3 -> openLogsFolder()
-                    4 -> confirmClearSystemLogs()
+                    2 -> {
+                        try {
+                            val fHtml = AppLogger.exportLogs(requireContext(), asHtml = true)
+                            val msg = "لاگ وب با موفقیت ذخیره شد:\n${fHtml.name}"
+                            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                            AccessibilityHelper.announce(containerSettingsList, "لاگ وب ذخیره شد")
+                        } catch (e: Exception) {
+                            Toast.makeText(requireContext(), "خطا در ذخیره لاگ: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    3 -> openExportedLogsManagerDialog()
+                    4 -> openLogsFolder()
+                    5 -> confirmClearSystemLogs()
                 }
             }
             .setNegativeButton("بستن", null)
@@ -1083,28 +1301,39 @@ class SettingsFragment : Fragment() {
     }
 
     private fun openExportedLogsManagerDialog() {
-        val files = AppLogger.listExportedLogFiles(requireContext())
-        if (files.isEmpty()) {
-            Toast.makeText(requireContext(), "هیچ فایل لاگ ذخیره‌شده‌ای یافت نشد", Toast.LENGTH_SHORT).show()
+        val liveLog = AppLogger.getLogFile(requireContext())
+        val exportedFiles = AppLogger.listExportedLogFiles(requireContext())
+        val allFiles = mutableListOf<File>()
+        if (liveLog.exists() && liveLog.length() > 0) {
+            allFiles.add(liveLog)
+        }
+        allFiles.addAll(exportedFiles)
+
+        if (allFiles.isEmpty()) {
+            Toast.makeText(requireContext(), "هیچ فایل لاگی در سیستم یافت نشد", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val items = files.map { file ->
+        val items = allFiles.map { file ->
             val sizeKb = String.format(Locale.US, "%.1f KB", file.length() / 1024f)
-            val icon = if (file.name.endsWith(".html", ignoreCase = true)) "🌐" else "📄"
-            "$icon ${file.name} ($sizeKb)"
+            if (file.name == "gmscreen.log") {
+                "🔴 ${file.name} (گزارش زنده جاری سیستم) - $sizeKb"
+            } else {
+                val icon = if (file.name.endsWith(".html", ignoreCase = true)) "🌐" else "📄"
+                "$icon ${file.name} ($sizeKb)"
+            }
         }.toTypedArray()
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("فایل‌های لاگ ذخیره‌شده (${files.size} فایل)")
+            .setTitle("فایل‌های لاگ سیستم (${allFiles.size} فایل)")
             .setItems(items) { _, which ->
-                val selectedFile = files.getOrNull(which)
+                val selectedFile = allFiles.getOrNull(which)
                 if (selectedFile != null) {
                     showSingleLogFileActions(selectedFile)
                 }
             }
             .setPositiveButton("حذف همه لاگ‌ها") { _, _ ->
-                confirmDeleteAllExportedLogs(files.size)
+                confirmDeleteAllExportedLogs(allFiles.size)
             }
             .setNeutralButton("پوشه لاگ‌ها") { _, _ ->
                 openLogsFolder()
@@ -1116,11 +1345,12 @@ class SettingsFragment : Fragment() {
     }
 
     private fun showSingleLogFileActions(file: File) {
+        val isLive = (file.name == "gmscreen.log")
         val options = arrayOf(
-            "۱. مشاهده در مرورگر داخلی",
-            "۲. کپی متن فایل",
+            "۱. مشاهده محتوای فایل",
+            "۲. کپی متن فایل به حافظه",
             "۳. اشتراک‌گذاری یا ارسال فایل",
-            "۴. حذف این فایل"
+            if (isLive) "۴. پاک‌سازی محتوای لاگ زنده" else "۴. حذف این فایل لاگ"
         )
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(file.name)
@@ -1165,12 +1395,19 @@ class SettingsFragment : Fragment() {
                         }
                     }
                     3 -> {
+                        val confirmTitle = if (isLive) "پاک‌سازی لاگ زنده سیستم" else "حذف فایل لاگ"
+                        val confirmMsg = if (isLive) "آیا مطمئن هستید که می‌خواهید محتوای فایل لاگ زنده gmscreen.log پاک شود؟" else "آیا از حذف فایل «${file.name}» مطمئن هستید؟"
+
                         MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("حذف فایل لاگ")
-                            .setMessage("آیا از حذف فایل «${file.name}» مطمئن هستید؟")
-                            .setPositiveButton("بله، حذف شود") { _, _ ->
-                                val ok = AppLogger.deleteExportedLogFile(file)
-                                val msg = if (ok) "فایل «${file.name}» حذف شد" else "خطا در حذف فایل"
+                            .setTitle(confirmTitle)
+                            .setMessage(confirmMsg)
+                            .setPositiveButton("بله، پاک شود") { _, _ ->
+                                val ok = if (isLive) {
+                                    AppLogger.clearLogs(requireContext())
+                                } else {
+                                    AppLogger.deleteExportedLogFile(file)
+                                }
+                                val msg = if (ok) "فایل «${file.name}» با موفقیت پاک شد" else "خطا در حذف فایل"
                                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                                 openExportedLogsManagerDialog()
                             }

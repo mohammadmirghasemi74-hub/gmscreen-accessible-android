@@ -98,7 +98,11 @@ class StbRepository(context: Context) {
                             _currentChannel.value = ch
                         }
                     }
-                } catch (_: Exception) {}
+                } catch (e: Exception) {
+                    if (e is java.net.SocketTimeoutException || e is java.io.IOException) {
+                        delay(2500)
+                    }
+                }
             }
         }
     }

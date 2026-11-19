@@ -403,6 +403,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center"
+                    android:layoutDirection="ltr"
                     android:layout_marginVertical="6dp">
 
                     <com.google.android.material.button.MaterialButton
@@ -454,68 +455,89 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 6. Direct Volume & Channel Rockers -->
+        <!-- 6. Direct Volume & Channel Rockers (Vertical Columns like a Real Remote) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:layoutDirection="ltr"
             android:layout_marginBottom="12dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnVolUp"
+            <!-- Left Column: Volume (Up over Down) -->
+            <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="50dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:text="صدا +"
-                android:contentDescription="@string/rcu_vol_up"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                android:orientation="vertical"
+                android:layout_marginEnd="6dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnVolDown"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_weight="1"
-                android:layout_marginHorizontal="4dp"
-                android:text="صدا -"
-                android:contentDescription="@string/rcu_vol_down"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnVolUp"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="صدا +"
+                    android:contentDescription="@string/rcu_vol_up"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp"
+                    app:backgroundTint="@color/card_bg"
+                    app:strokeColor="@color/divider"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="8dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnChNext"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_weight="1"
-                android:layout_marginHorizontal="4dp"
-                android:text="کانال +"
-                android:contentDescription="@string/rcu_ch_next"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnVolDown"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="صدا -"
+                    android:contentDescription="@string/rcu_vol_down"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/card_bg"
+                    app:strokeColor="@color/divider"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnChPrev"
+            <!-- Right Column: Channel (Next over Prev) -->
+            <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="50dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:text="کانال -"
-                android:contentDescription="@string/rcu_ch_prev"
-                android:textColor="@color/white"
-                app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
-                app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                android:orientation="vertical"
+                android:layout_marginStart="6dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChNext"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="کانال +"
+                    android:contentDescription="@string/rcu_ch_next"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp"
+                    app:backgroundTint="@color/card_bg"
+                    app:strokeColor="@color/divider"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChPrev"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="کانال -"
+                    android:contentDescription="@string/rcu_ch_prev"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/card_bg"
+                    app:strokeColor="@color/divider"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- 7. Four Color Keys (Red, Green, Yellow, Blue) -->

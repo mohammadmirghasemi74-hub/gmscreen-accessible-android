@@ -6,9 +6,11 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -84,7 +86,10 @@ class RecordFragment : Fragment() {
         val startHour: Int,
         val startMinute: Int,
         val durationMinutes: Int,
-        var isTriggered: Boolean = false
+        var isTriggered: Boolean = false,
+        val endHour: Int = (startHour + durationMinutes / 60) % 24,
+        val endMinute: Int = (startMinute + durationMinutes % 60) % 60,
+        val repeatMode: Int = 0
     )
     private val phoneTimers = mutableListOf<PhoneScheduledTimer>()
 
@@ -243,6 +248,55 @@ class RecordFragment : Fragment() {
         }
     }
 
+    private fun showAccessibleHourPicker(title: String, onHourSelected: (Int) -> Unit) {
+        val hours = Array(24) { h ->
+            val period = if (h < 12) "صبح" else if (h == 12) "ظهر" else if (h < 17) "بعدازظهر" else if (h < 20) "عصر" else "شب"
+            val h12 = if (h == 0) 12 else if (h > 12) h - 12 else h
+            String.format(Locale.US, "ساعت %02d (%d %s)", h, h12, period)
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setItems(hours) { _, which ->
+                onHourSelected(which)
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun showAccessibleMinutePicker(title: String, onMinuteSelected: (Int) -> Unit) {
+        val minutes = Array(12) { i ->
+            val m = i * 5
+            String.format(Locale.US, "%02d دقیقه", m)
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setItems(minutes) { _, which ->
+                onMinuteSelected(which * 5)
+            }
+            .setNeutralButton("تنظیم دقیق عددی (۰ تا ۵۹)") { _, _ ->
+                showCustomMinuteInputDialog(onMinuteSelected)
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun showCustomMinuteInputDialog(onMinuteSelected: (Int) -> Unit) {
+        val input = EditText(requireContext()).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER
+            hint = "دقیقه بین ۰ تا ۵۹"
+            setPadding(40, 30, 40, 30)
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("ورود دقیقه دلخواه (۰ تا ۵۹)")
+            .setView(input)
+            .setPositiveButton("تأیید") { _, _ ->
+                val v = input.text.toString().trim().toIntOrNull()?.coerceIn(0, 59) ?: 0
+                onMinuteSelected(v)
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
     private fun showAddStbTimerDialog(preselectedChannel: Channel? = null) {
         val channels = repository.channels.value
         if (channels.isEmpty()) {
@@ -254,15 +308,27 @@ class RecordFragment : Fragment() {
 
         val cal = Calendar.getInstance()
         var startH = (cal.get(Calendar.HOUR_OF_DAY) + if (cal.get(Calendar.MINUTE) >= 55) 1 else 0) % 24
-        var startM = (cal.get(Calendar.MINUTE) + 5) % 60
+        var startM = ((cal.get(Calendar.MINUTE) / 5) * 5 + 5) % 60
         var endH = (startH + 1) % 24
         var endM = startM
+        var repeatMode = 0 // 0: یکبار, 1: روزانه, 2: هفتگی
+        var autoWake = true
+        var autoPowerOff = false
+        var autoDelete = true
+
+        val repeatTitles = arrayOf("یک‌بار (پیش‌فرض)", "روزانه (هر روز)", "هفتگی (همین روز هر هفته)")
 
         fun openDialog() {
             val items = arrayOf(
-                "۱. شبکه انتخابی: ${targetChannel.serviceName} (برای تغییر ضربه بزنید)",
-                "۲. ساعت شروع ضبط: %02d:%02d".format(startH, startM),
-                "۳. ساعت پایان ضبط: %02d:%02d".format(endH, endM)
+                "۱. شبکه انتخابی: ${targetChannel.serviceName} (برای تغییر کلیک کنید)",
+                "۲. ساعت شروع ضبط: %02d (کلیک برای انتخاب ساعت)".format(startH),
+                "۳. دقیقه شروع ضبط: %02d (کلیک برای انتخاب دقیقه)".format(startM),
+                "۴. ساعت پایان ضبط: %02d (کلیک برای انتخاب ساعت)".format(endH),
+                "۵. دقیقه پایان ضبط: %02d (کلیک برای انتخاب دقیقه)".format(endM),
+                "۶. تکرار زمان‌بندی: ${repeatTitles[repeatMode]}",
+                "۷. روشن شدن خودکار رسیور از حالت آماده‌به‌کار: ${if (autoWake) "فعال" else "غیرفعال"}",
+                "۸. خاموش شدن خودکار رسیور پس از اتمام ضبط: ${if (autoPowerOff) "فعال" else "غیرفعال"}",
+                "۹. حذف خودکار زمان‌بندی از رسیور پس از اتمام: ${if (autoDelete) "فعال" else "غیرفعال"}"
             )
 
             MaterialAlertDialogBuilder(requireContext())
@@ -273,28 +339,50 @@ class RecordFragment : Fragment() {
                             targetChannel = chosen
                             openDialog()
                         }
-                        1 -> TimePickerDialog(requireContext(), { _, h, m ->
+                        1 -> showAccessibleHourPicker("ساعت شروع ضبط رسیور") { h ->
                             startH = h
-                            startM = m
                             endH = (startH + 1) % 24
+                            openDialog()
+                        }
+                        2 -> showAccessibleMinutePicker("دقیقه شروع ضبط رسیور") { m ->
+                            startM = m
                             endM = startM
                             openDialog()
-                        }, startH, startM, true).apply {
-                            setTitle("ساعت شروع ضبط رسیور")
-                            show()
                         }
-                        2 -> TimePickerDialog(requireContext(), { _, h, m ->
+                        3 -> showAccessibleHourPicker("ساعت پایان ضبط رسیور") { h ->
                             endH = h
+                            openDialog()
+                        }
+                        4 -> showAccessibleMinutePicker("دقیقه پایان ضبط رسیور") { m ->
                             endM = m
                             openDialog()
-                        }, endH, endM, true).apply {
-                            setTitle("ساعت پایان ضبط رسیور")
-                            show()
+                        }
+                        5 -> {
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setTitle("انتخاب نحوه تکرار زمان‌بندی")
+                                .setItems(repeatTitles) { _, rIdx ->
+                                    repeatMode = rIdx
+                                    openDialog()
+                                }
+                                .setNegativeButton("انصراف") { _, _ -> openDialog() }
+                                .show()
+                        }
+                        6 -> {
+                            autoWake = !autoWake
+                            openDialog()
+                        }
+                        7 -> {
+                            autoPowerOff = !autoPowerOff
+                            openDialog()
+                        }
+                        8 -> {
+                            autoDelete = !autoDelete
+                            openDialog()
                         }
                     }
                 }
                 .setPositiveButton("ثبت زمان‌بندی در رسیور") { _, _ ->
-                    confirmAndSendStbTimer(targetChannel, startH, startM, endH, endM)
+                    confirmAndSendStbTimer(targetChannel, startH, startM, endH, endM, repeatMode, autoWake, autoPowerOff, autoDelete)
                 }
                 .setNegativeButton("انصراف", null)
                 .show()
@@ -306,11 +394,10 @@ class RecordFragment : Fragment() {
     private fun showChannelPicker(title: String, currentChannel: Channel, onChannelSelected: (Channel) -> Unit) {
         val channels = repository.channels.value
         val items = channels.mapIndexed { i, ch -> "${i + 1}. ${ch.serviceName}" }.toTypedArray()
-        val curIdx = channels.indexOfFirst { it.serviceId == currentChannel.serviceId }.coerceAtLeast(0)
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(title)
-            .setSingleChoiceItems(items, curIdx) { dialog, which ->
+            .setItems(items) { dialog, which ->
                 val chosen = channels.getOrNull(which)
                 if (chosen != null) onChannelSelected(chosen)
                 dialog.dismiss()
@@ -319,7 +406,17 @@ class RecordFragment : Fragment() {
             .show()
     }
 
-    private fun confirmAndSendStbTimer(channel: Channel, sh: Int, sm: Int, eh: Int, em: Int) {
+    private fun confirmAndSendStbTimer(
+        channel: Channel,
+        sh: Int,
+        sm: Int,
+        eh: Int,
+        em: Int,
+        repeatMode: Int,
+        autoWake: Boolean,
+        autoPowerOff: Boolean,
+        autoDelete: Boolean
+    ) {
         val cal = Calendar.getInstance()
         val mon = cal.get(Calendar.MONTH) + 1
         val day = cal.get(Calendar.DAY_OF_MONTH)
@@ -333,9 +430,12 @@ class RecordFragment : Fragment() {
             "TimerStartMin" to sm.toString(),
             "TimerEndHour" to eh.toString(),
             "TimerEndMin" to em.toString(),
-            "TimerRepeat" to "0",
+            "TimerRepeat" to repeatMode.toString(),
             "TimerStatus" to "1",
-            "TimerEventID" to "0"
+            "TimerEventID" to "0",
+            "auto_wake" to if (autoWake) "1" else "0",
+            "auto_poweroff" to if (autoPowerOff) "1" else "0",
+            "auto_delete" to if (autoDelete) "1" else "0"
         )
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
@@ -344,6 +444,7 @@ class RecordFragment : Fragment() {
                 if (ok) {
                     val msg = "زمان‌بندی ضبط ${channel.serviceName} از %02d:%02d تا %02d:%02d روی رسیور ثبت شد".format(sh, sm, eh, em)
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(containerStbTimers, msg)
                 } else {
                     Toast.makeText(requireContext(), "خطا در ثبت تایمر روی رسیور", Toast.LENGTH_SHORT).show()
                 }
@@ -406,17 +507,27 @@ class RecordFragment : Fragment() {
 
         val cal = Calendar.getInstance()
         var startH = (cal.get(Calendar.HOUR_OF_DAY) + if (cal.get(Calendar.MINUTE) >= 55) 1 else 0) % 24
-        var startM = (cal.get(Calendar.MINUTE) + 5) % 60
+        var startM = ((cal.get(Calendar.MINUTE) / 5) * 5 + 5) % 60
+        var endH = (startH + 1) % 24
+        var endM = startM
         var isAudioOnly = targetChannel.isRadio
-        var durationMinutes = 60
+        var repeatMode = 0 // 0: یکبار, 1: روزانه, 2: هفتگی
+
+        val repeatTitles = arrayOf("یک‌بار (پیش‌فرض)", "روزانه (هر روز)", "هفتگی (همین روز هر هفته)")
 
         fun openDialog() {
+            var diffMins = (endH * 60 + endM) - (startH * 60 + startM)
+            if (diffMins <= 0) diffMins += 24 * 60
+
             val formatStr = if (isAudioOnly) "صوتی (${appConfig.audioRecFormat.uppercase()})" else "تصویری (${appConfig.videoRecFormat.uppercase()})"
             val items = arrayOf(
-                "۱. شبکه انتخابی: ${targetChannel.serviceName} (برای تغییر ضربه بزنید)",
-                "۲. ساعت شروع ضبط: %02d:%02d".format(startH, startM),
-                "۳. مدت زمان ضبط: $durationMinutes دقیقه",
-                "۴. نوع فایل ضبط: $formatStr"
+                "۱. شبکه: ${targetChannel.serviceName} (برای تغییر کلیک کنید)",
+                "۲. ساعت شروع ضبط گوشی: %02d (کلیک برای انتخاب ساعت)".format(startH),
+                "۳. دقیقه شروع ضبط گوشی: %02d (کلیک برای انتخاب دقیقه)".format(startM),
+                "۴. ساعت پایان ضبط گوشی: %02d (کلیک برای انتخاب ساعت)".format(endH),
+                "۵. دقیقه پایان ضبط گوشی: %02d (کلیک برای انتخاب دقیقه)".format(endM),
+                "۶. نوع و فرمت فایل ضبط: $formatStr (مدت: $diffMins دقیقه)",
+                "۷. تکرار زمان‌بندی: ${repeatTitles[repeatMode]}"
             )
 
             MaterialAlertDialogBuilder(requireContext())
@@ -428,32 +539,44 @@ class RecordFragment : Fragment() {
                             if (targetChannel.isRadio) isAudioOnly = true
                             openDialog()
                         }
-                        1 -> TimePickerDialog(requireContext(), { _, h, m ->
+                        1 -> showAccessibleHourPicker("ساعت شروع ضبط گوشی") { h ->
                             startH = h
-                            startM = m
+                            endH = (startH + 1) % 24
                             openDialog()
-                        }, startH, startM, true).apply {
-                            setTitle("ساعت شروع ضبط گوشی")
-                            show()
                         }
-                        2 -> {
-                            val durations = arrayOf("۱۵ دقیقه", "۳۰ دقیقه", "۴۵ دقیقه", "۶۰ دقیقه", "۹۰ دقیقه", "۱۲۰ دقیقه")
-                            val values = listOf(15, 30, 45, 60, 90, 120)
-                            MaterialAlertDialogBuilder(requireContext())
-                                .setTitle("مدت زمان ضبط گوشی")
-                                .setItems(durations) { _, dIdx ->
-                                    durationMinutes = values[dIdx]
-                                    openDialog()
-                                }
-                                .show()
+                        2 -> showAccessibleMinutePicker("دقیقه شروع ضبط گوشی") { m ->
+                            startM = m
+                            endM = startM
+                            openDialog()
                         }
-                        3 -> {
+                        3 -> showAccessibleHourPicker("ساعت پایان ضبط گوشی") { h ->
+                            endH = h
+                            openDialog()
+                        }
+                        4 -> showAccessibleMinutePicker("دقیقه پایان ضبط گوشی") { m ->
+                            endM = m
+                            openDialog()
+                        }
+                        5 -> {
                             isAudioOnly = !isAudioOnly
                             openDialog()
+                        }
+                        6 -> {
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setTitle("انتخاب نحوه تکرار زمان‌بندی گوشی")
+                                .setItems(repeatTitles) { _, rIdx ->
+                                    repeatMode = rIdx
+                                    openDialog()
+                                }
+                                .setNegativeButton("انصراف") { _, _ -> openDialog() }
+                                .show()
                         }
                     }
                 }
                 .setPositiveButton("ثبت زمان‌بندی در گوشی") { _, _ ->
+                    var dur = (endH * 60 + endM) - (startH * 60 + startM)
+                    if (dur <= 0) dur += 24 * 60
+
                     val newTimer = PhoneScheduledTimer(
                         id = System.currentTimeMillis().toString(),
                         channelName = targetChannel.serviceName,
@@ -461,14 +584,18 @@ class RecordFragment : Fragment() {
                         isAudioOnly = isAudioOnly,
                         startHour = startH,
                         startMinute = startM,
-                        durationMinutes = durationMinutes
+                        durationMinutes = dur,
+                        endHour = endH,
+                        endMinute = endM,
+                        repeatMode = repeatMode
                     )
                     phoneTimers.add(newTimer)
                     savePhoneTimers()
                     renderPhoneTimers()
 
-                    val msg = "زمان‌بندی ضبط ${targetChannel.serviceName} در ساعت %02d:%02d به مدت $durationMinutes دقیقه ثبت شد".format(startH, startM)
+                    val msg = "زمان‌بندی ضبط ${targetChannel.serviceName} در گوشی از %02d:%02d تا %02d:%02d ثبت شد".format(startH, startM, endH, endM)
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(containerPhoneTimers, msg)
                 }
                 .setNegativeButton("انصراف", null)
                 .show()
@@ -484,8 +611,8 @@ class RecordFragment : Fragment() {
         } else {
             txtNoPhoneTimers.visibility = View.GONE
             for (t in phoneTimers) {
-                val formatStr = if (t.isAudioOnly) "صوتی MP3" else "تصویری MP4"
-                val textStr = "زمان‌بندی: ${t.channelName} ($formatStr) در %02d:%02d (مدت: ${t.durationMinutes} دقیقه)".format(t.startHour, t.startMinute)
+                val formatStr = if (t.isAudioOnly) "صوتی" else "تصویری"
+                val textStr = "زمان‌بندی: ${t.channelName} ($formatStr) از %02d:%02d تا %02d:%02d (مدت: ${t.durationMinutes} دقیقه)".format(t.startHour, t.startMinute, t.endHour, t.endMinute)
 
                 val btn = MaterialButton(requireContext()).apply {
                     text = textStr

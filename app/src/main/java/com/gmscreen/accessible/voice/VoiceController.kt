@@ -30,7 +30,10 @@ class VoiceController(
 
     companion object {
         private const val TAG = "VoiceController"
-        val WAKE_WORDS = listOf("جی ام اسکرین", "جی ام", "رسیور", "دستگاه", "screen", "stb")
+        val WAKE_WORDS = listOf(
+            "های رسیور", "های‌رسیور", "هی رسیور", "هی‌رسیور", "hi receiver",
+            "رسیور", "جی ام اسکرین", "دستگاه", "screen", "stb"
+        )
     }
 
     fun setWakeWordMode(enabled: Boolean) {

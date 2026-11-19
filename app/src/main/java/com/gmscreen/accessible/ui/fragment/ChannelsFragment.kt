@@ -810,8 +810,45 @@ class ChannelsFragment : Fragment() {
                         "${p.title} ($timeStr)$descStr"
                     }.toTypedArray()
 
+                    val headerView = LinearLayout(requireContext()).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(32, 24, 32, 12)
+                    }
+
+                    val txtHeaderTitle = TextView(requireContext()).apply {
+                        text = "جدول برنامه‌های $progName (${programs.size} برنامه)"
+                        setTextColor(resources.getColor(R.color.text_primary, null))
+                        textSize = 17f
+                        paint.isFakeBoldText = true
+                        setPadding(0, 0, 0, 12)
+                    }
+
+                    val btnCopyAll = com.google.android.material.button.MaterialButton(requireContext()).apply {
+                        text = "📋 کپی کامل جدول برنامه‌ها"
+                        contentDescription = "کپی کردن کل جدول پخش برنامه‌های $progName در حافظه کلیپ‌بورد"
+                        setBackgroundColor(resources.getColor(R.color.primary, null))
+                        setTextColor(resources.getColor(R.color.white, null))
+                        setOnClickListener {
+                            val sb = java.lang.StringBuilder()
+                            sb.append("=== جدول پخش برنامه‌های $progName ===\n\n")
+                            for (p in programs) {
+                                val sFmt = com.gmscreen.accessible.util.EpgHelper.formatFriendlyTime(p.startRaw)
+                                val eFmt = com.gmscreen.accessible.util.EpgHelper.formatFriendlyTime(p.endRaw)
+                                val dText = p.desc.ifBlank { "" }
+                                sb.append("• ${p.title} ($sFmt تا $eFmt)\n")
+                                if (dText.isNotBlank()) sb.append("  توضیحات: $dText\n")
+                            }
+                            val clipboard = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                            val clip = android.content.ClipData.newPlainText("EPG $progName", sb.toString())
+                            clipboard.setPrimaryClip(clip)
+                            Toast.makeText(requireContext(), "جدول کامل برنامه‌های $progName در کلیپ‌بورد کپی شد", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    headerView.addView(txtHeaderTitle)
+                    headerView.addView(btnCopyAll)
+
                     MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("جدول برنامه‌های $progName (${programs.size} برنامه)")
+                        .setCustomTitle(headerView)
                         .setItems(items) { _, which ->
                             val p = programs.getOrNull(which)
                             if (p != null) {
@@ -821,7 +858,12 @@ class ChannelsFragment : Fragment() {
                                 MaterialAlertDialogBuilder(requireContext())
                                     .setTitle(p.title)
                                     .setMessage("زمان پخش: $sFmt تا $eFmt\n\nتوضیحات:\n$dText")
-                                    .setPositiveButton("بستن", null)
+                                    .setPositiveButton("بازگشت به جدول") { _, _ ->
+                                        showChannelEpgDialog(channel)
+                                    }
+                                    .setOnCancelListener {
+                                        showChannelEpgDialog(channel)
+                                    }
                                     .show()
                             }
                         }

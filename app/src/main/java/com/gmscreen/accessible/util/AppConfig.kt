@@ -60,7 +60,7 @@ class AppConfig(context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_VOICE_ALWAYS_LISTENING, value).apply()
 
     var voiceWakeWord: String
-        get() = prefs.getString(KEY_VOICE_WAKE_WORD, "جی ام اسکرین") ?: "جی ام اسکرین"
+        get() = prefs.getString(KEY_VOICE_WAKE_WORD, "های رسیور") ?: "های رسیور"
         set(value) = prefs.edit().putString(KEY_VOICE_WAKE_WORD, value).apply()
 
     var autoAnnounceChannel: Boolean

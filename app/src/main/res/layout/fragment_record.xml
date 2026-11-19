@@ -160,15 +160,7 @@
                     android:textColor="@color/accent_green"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="تنظیم تایمر سخت‌افزاری رسیور تا در زمان مشخص به طور خودکار روشن شده و روی فلش USB ضبط کند."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="10dp" />
+                    android:layout_marginBottom="8dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAddStbTimer"
@@ -232,15 +224,7 @@
                     android:textColor="@color/primary"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="تنظیم زمان‌بندی هوشمند در گوشی تا در ساعت تعیین شده استریم زنده را به صورت ویدیویی یا صوتی در حافظه ذخیره کند."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="10dp" />
+                    android:layout_marginBottom="8dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAddPhoneTimer"

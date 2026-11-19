@@ -113,8 +113,7 @@ object RecordingsDialogHelper {
 
         MaterialAlertDialogBuilder(context)
             .setTitle("پوشه «$folderTitle» (${files.size} فایل)")
-            .setSingleChoiceItems(items, initialIndex) { dlg, which ->
-                dlg.dismiss()
+            .setItems(items) { dlg, which ->
                 val file = files.getOrNull(which)
                 if (file != null) {
                     showFileActionsDialog(context, file, folder, announceView) {
