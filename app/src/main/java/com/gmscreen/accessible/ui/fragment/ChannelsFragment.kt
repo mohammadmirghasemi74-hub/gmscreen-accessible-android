@@ -327,21 +327,20 @@ class ChannelsFragment : Fragment() {
                     val tvCount = allCh.size - radioCount
                     val playingCh = repository.currentChannel.value
 
-                    val sb = java.lang.StringBuilder()
-                    sb.append("تعداد کل ${allCh.size} کانال با موفقیت دریافت شد: شامل $tvCount شبکه تلویزیونی و $radioCount شبکه رادیویی.")
-                    if (playingCh != null) {
-                        val typePrefix = if (playingCh.isRadio) "رادیو" else "شبکه"
-                        val chNum = if (playingCh.realChannelNum > 0) "شماره ${playingCh.realChannelNum}" else ""
-                        sb.append(" در حال پخش در تلویزیون: $typePrefix ${playingCh.serviceName} $chNum.")
-                    }
-                    AccessibilityHelper.announce(txtChannelCount, sb.toString())
+                    val introMsg = "تعداد کل ${allCh.size} کانال با موفقیت دریافت شد: شامل $tvCount شبکه تلویزیونی و $radioCount شبکه رادیویی."
+                    AccessibilityHelper.announce(txtChannelCount, introMsg)
 
                     // Cooldown: prevent external channel monitor from cutting off the announcement
                     suppressChannelAnnounceUntil = System.currentTimeMillis() + 8000L
                     lastObservedPlayingPid = playingCh?.serviceId
 
                     if (playingCh != null) {
-                        focusAndScrollToChannel(playingCh, isInitial = true, announce = false)
+                        // Delay initial jump and focus by 4.5 seconds so TalkBack finishes reading the full intro first
+                        recyclerViewChannels.postDelayed({
+                            if (isAdded) {
+                                focusAndScrollToChannel(playingCh, isInitial = true, announce = true)
+                            }
+                        }, 4500L)
                     }
                 }
             }
@@ -392,6 +391,7 @@ class ChannelsFragment : Fragment() {
                 lm?.scrollToPositionWithOffset(targetIdx, offset)
 
                 recyclerViewChannels.postDelayed({
+                    if (!isAdded) return@postDelayed
                     try {
                         val vh = recyclerViewChannels.findViewHolderForAdapterPosition(targetIdx)
                         vh?.itemView?.requestFocus()

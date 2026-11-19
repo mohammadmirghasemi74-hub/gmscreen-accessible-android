@@ -1064,36 +1064,107 @@ class SettingsFragment : Fragment() {
         val logFilePath = logFile.absolutePath
 
         val txtHeader = TextView(requireContext()).apply {
-            text = "مسیر فایل لاگ در حافظه گوشی:\n$logFilePath\n\nآخرین رویدادها، خطاهای شبکه و فرامین ثبت‌شده در سیستم:"
+            text = "مسیر فایل لاگ اصلی در گوشی:\n$logFilePath\n\nشما می‌توانید متن زیر را بخوانید، کپی کنید، خروجی متنی TXT بگیرید یا کل لاگ‌ها را پاک کنید:"
             setTextColor(resources.getColor(R.color.text_secondary, null))
             textSize = 13f
             setPadding(0, 0, 0, 16)
         }
         layout.addView(txtHeader)
 
+        // Button row: Export TXT and Clear Logs
+        val btnRow = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                setMargins(0, 0, 0, 16)
+            }
+        }
+
+        val btnExportTxt = com.google.android.material.button.MaterialButton(requireContext()).apply {
+            text = "💾 خروجی TXT"
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginEnd = 8
+            }
+            contentDescription = "ذخیره لاگ‌ها به عنوان فایل متنی TXT در حافظه گوشی"
+        }
+
+        val btnClearLogs = com.google.android.material.button.MaterialButton(requireContext()).apply {
+            text = "🗑️ پاک‌سازی لاگ‌ها"
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginStart = 8
+            }
+            contentDescription = "پاک‌سازی و حذف کامل فایل و لاگ‌های ثبت‌شده"
+        }
+
+        btnRow.addView(btnExportTxt)
+        btnRow.addView(btnClearLogs)
+        layout.addView(btnRow)
+
         val txtLogs = TextView(requireContext()).apply {
-            text = AppLogger.getRecentLogs()
+            text = AppLogger.getRecentLogs(requireContext())
             setTextColor(resources.getColor(R.color.text_primary, null))
             textSize = 12f
             setTextIsSelectable(true)
             isFocusable = true
-            contentDescription = "محتوای گزارشات سیستم. برای کپی یا اشتراک از دکمه‌های پایین استفاده کنید."
+            contentDescription = "محتوای کامل گزارشات و خطاهای سیستم"
         }
         layout.addView(txtLogs)
 
-        MaterialAlertDialogBuilder(requireContext())
+        var dialogRef: androidx.appcompat.app.AlertDialog? = null
+
+        btnExportTxt.setOnClickListener {
+            try {
+                val exported = AppLogger.exportLogsToTxt(requireContext())
+                val msg = "فایل لاگ با موفقیت در مسیر زیر ذخیره شد:\n${exported.absolutePath}"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                AccessibilityHelper.announce(txtHeader, msg)
+
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    requireContext(),
+                    "${requireContext().packageName}.fileprovider",
+                    exported
+                )
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    putExtra(Intent.EXTRA_SUBJECT, "GMScreen System Logs")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(shareIntent, "ارسال یا مشاهده فایل لاگ"))
+            } catch (ex: Exception) {
+                val err = "خطا در استخراج فایل لاگ: ${ex.message}"
+                Toast.makeText(requireContext(), err, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        btnClearLogs.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("پاک‌سازی گزارشات سیستم")
+                .setMessage("آیا مطمئن هستید که می‌خواهید تمام گزارشات و لاگ‌های ذخیره‌شده را به طور کامل پاک کنید؟")
+                .setPositiveButton("بله، پاک شود") { _, _ ->
+                    AppLogger.clearLogs(requireContext())
+                    txtLogs.text = AppLogger.getRecentLogs(requireContext())
+                    val msg = "تمام لاگ‌های سیستم با موفقیت پاک شدند"
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    AccessibilityHelper.announce(txtHeader, msg)
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        dialogRef = MaterialAlertDialogBuilder(requireContext())
             .setTitle("مشاهده لاگ‌های سیستم و خطایابی")
             .setView(scrollView)
             .setPositiveButton("📋 کپی لاگ‌ها") { _, _ ->
                 val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("GMScreen Logs", AppLogger.getRecentLogs())
+                val logs = AppLogger.getRecentLogs(requireContext())
+                val clip = ClipData.newPlainText("GMScreen Logs", logs)
                 clipboard.setPrimaryClip(clip)
                 val msg = "متن کامل لاگ‌های سیستم در حافظه کلیپ‌بورد کپی شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                 AccessibilityHelper.announce(containerSettingsList, msg)
             }
             .setNeutralButton("📤 اشتراک‌گذاری") { _, _ ->
-                val logs = AppLogger.getRecentLogs()
+                val logs = AppLogger.getRecentLogs(requireContext())
                 val sendIntent = Intent().apply {
                     action = Intent.ACTION_SEND
                     putExtra(Intent.EXTRA_TEXT, logs)
@@ -1103,7 +1174,9 @@ class SettingsFragment : Fragment() {
                 startActivity(shareIntent)
             }
             .setNegativeButton("بستن", null)
-            .show()
+            .create()
+
+        dialogRef.show()
     }
 
     private fun openHelpBrowser() {

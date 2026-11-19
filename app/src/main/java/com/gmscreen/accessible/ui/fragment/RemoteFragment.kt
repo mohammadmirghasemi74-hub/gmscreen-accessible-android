@@ -76,13 +76,22 @@ class RemoteFragment : Fragment() {
         for ((viewId, info) in keyMap) {
             val (keyCode, desc) = info
             rootView.findViewById<MaterialButton?>(viewId)?.setOnClickListener { btn ->
-                if (appConfig.hapticFeedbackEnabled) {
-                    AccessibilityHelper.vibrateClick(requireContext())
+                try {
+                    com.gmscreen.accessible.util.AppLogger.i("Remote", "Key pressed: $desc (code=$keyCode)")
+                    if (appConfig.hapticFeedbackEnabled) {
+                        AccessibilityHelper.vibrateClick(requireContext())
+                    }
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        try {
+                            repository.sendRcuKey(keyCode)
+                        } catch (e: Exception) {
+                            com.gmscreen.accessible.util.AppLogger.e("Remote", "Error sending key $keyCode: ${e.message}", e)
+                        }
+                    }
+                    AccessibilityHelper.announce(btn, desc)
+                } catch (e: Exception) {
+                    com.gmscreen.accessible.util.AppLogger.e("Remote", "Error on button click $desc: ${e.message}", e)
                 }
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    repository.sendRcuKey(keyCode)
-                }
-                AccessibilityHelper.announce(btn, desc)
             }
         }
     }

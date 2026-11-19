@@ -106,14 +106,17 @@ class StbClient {
                         formattedModel = "رسیور مدیااستار ($ip)"
                     }
                     isConnected = true
+                    AppLogger.i("StbClient", "Connected successfully to $ip (model=$formattedModel)")
                     return true
                 }
             }
 
             disconnectLocked()
+            AppLogger.w("StbClient", "Login handshake failed with $ip: invalid magic response")
             return false
         } catch (e: Exception) {
             disconnectLocked()
+            AppLogger.e("StbClient", "Connect error to $ip: ${e.message}", e)
             return false
         }
     }
@@ -577,7 +580,9 @@ class StbClient {
         lastUserCmdTime = System.currentTimeMillis()
         if (keyCode == 1041 || keyCode == RcuKey.POWER_TOGGLE) {
             val res = sendCmd(1041, expectReply = true, timeoutMs = 2000)
-            return@withContext res != null
+            val ok = res != null
+            AppLogger.i("StbClient", "sendRcuKey POWER_TOGGLE (1041): result=$ok")
+            return@withContext ok
         }
         val payload = mapOf(
             "array" to listOf(
@@ -585,7 +590,9 @@ class StbClient {
             )
         )
         val res = sendCmd(1040, payload, expectReply = true, timeoutMs = 2000)
-        res != null
+        val ok = res != null
+        AppLogger.i("StbClient", "sendRcuKey: keyCode=$keyCode, result=$ok")
+        ok
     }
 
     suspend fun fetchTimers(): List<Map<String, Any>> = withContext(Dispatchers.IO) {

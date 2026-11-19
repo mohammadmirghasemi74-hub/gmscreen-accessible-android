@@ -94,6 +94,7 @@ class StbRepository(context: Context) {
                     if (!pid.isNullOrBlank() && pid != _currentChannel.value?.serviceId) {
                         val ch = _channels.value.find { it.serviceId == pid || it.serviceId.endsWith(pid) }
                         if (ch != null) {
+                            com.gmscreen.accessible.util.AppLogger.i("StbRepository", "Channel monitor: playing channel changed to ${ch.serviceName} (${ch.serviceId})")
                             _currentChannel.value = ch
                         }
                     }

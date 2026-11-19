@@ -20,14 +20,6 @@ class ChannelsAdapter(
 
     private var currentPlayingServiceId: String? = null
 
-    init {
-        setHasStableIds(true)
-    }
-
-    override fun getItemId(position: Int): Long {
-        return channels[position].serviceId.hashCode().toLong()
-    }
-
     fun getChannels(): List<Channel> = channels
 
     fun updateChannels(newChannels: List<Channel>) {

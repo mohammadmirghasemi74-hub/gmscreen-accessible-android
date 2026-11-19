@@ -1,10 +1,10 @@
 package com.gmscreen.accessible.util
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import java.io.File
 import java.io.FileWriter
-import java.io.PrintWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.LinkedList
@@ -13,7 +13,7 @@ import java.util.Locale
 object AppLogger {
 
     private const val TAG = "GMScreenApp"
-    private const val MAX_MEMORY_LINES = 600
+    private const val MAX_MEMORY_LINES = 1000
     private val memoryLogs = LinkedList<String>()
     private val lock = Any()
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
@@ -40,20 +40,19 @@ object AppLogger {
             while (memoryLogs.size > MAX_MEMORY_LINES) {
                 memoryLogs.removeFirst()
             }
-        }
 
-        // Asynchronously write to log file
-        try {
-            val app = com.gmscreen.accessible.GMScreenApplication.instance
-            val logFile = getLogFile(app)
-            val parent = logFile.parentFile
-            if (parent != null && !parent.exists()) {
-                parent.mkdirs()
-            }
-            FileWriter(logFile, true).use { fw ->
-                fw.appendLine(entry)
-            }
-        } catch (_: Exception) {}
+            try {
+                val app = com.gmscreen.accessible.GMScreenApplication.instance
+                val logFile = getLogFile(app)
+                val parent = logFile.parentFile
+                if (parent != null && !parent.exists()) {
+                    parent.mkdirs()
+                }
+                FileWriter(logFile, true).use { fw ->
+                    fw.appendLine(entry)
+                }
+            } catch (_: Exception) {}
+        }
     }
 
     fun getLogFile(context: Context): File {
@@ -67,25 +66,61 @@ object AppLogger {
         }
     }
 
-    fun getRecentLogs(): String {
+    fun getRecentLogs(context: Context? = null): String {
         synchronized(lock) {
+            if (memoryLogs.isEmpty()) {
+                val ctx = context ?: try { com.gmscreen.accessible.GMScreenApplication.instance } catch (_: Exception) { null }
+                if (ctx != null) {
+                    try {
+                        val file = getLogFile(ctx)
+                        if (file.exists() && file.length() > 0) {
+                            val lines = file.readLines(Charsets.UTF_8).takeLast(MAX_MEMORY_LINES)
+                            memoryLogs.clear()
+                            memoryLogs.addAll(lines)
+                        }
+                    } catch (_: Exception) {}
+                }
+            }
+
+            val deviceHeader = """
+                === سیستم خطایابی و ثبت رویدادهای GM Screen Accessible ===
+                نسخه برنامه: v2.3.20
+                دستگاه: ${Build.MANUFACTURER} ${Build.MODEL}
+                نسخه اندروید: ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})
+                تعداد سطرهای ثبت‌شده: ${memoryLogs.size}
+                ==========================================================
+            """.trimIndent()
+
             return if (memoryLogs.isEmpty()) {
-                "هنوز لاگی ثبت نشده است."
+                "$deviceHeader\n\nهنوز خطایی یا رویداد غیرمنتظره‌ای در سیستم ثبت نشده است."
             } else {
-                memoryLogs.joinToString("\n")
+                "$deviceHeader\n\n" + memoryLogs.joinToString("\n")
             }
         }
+    }
+
+    fun exportLogsToTxt(context: Context): File {
+        val root = StorageManager.getAppRootDir(context)
+        val logsDir = File(root, "logs")
+        if (!logsDir.exists()) logsDir.mkdirs()
+        val exportFile = File(logsDir, "gmscreen_export.txt")
+        val content = getRecentLogs(context)
+        exportFile.writeText(content, Charsets.UTF_8)
+        return exportFile
     }
 
     fun clearLogs(context: Context): Boolean {
         synchronized(lock) {
             memoryLogs.clear()
-        }
-        return try {
-            val f = getLogFile(context)
-            if (f.exists()) f.delete() else true
-        } catch (_: Exception) {
-            false
+            return try {
+                val f = getLogFile(context)
+                if (f.exists()) {
+                    f.writeText("", Charsets.UTF_8)
+                }
+                true
+            } catch (_: Exception) {
+                false
+            }
         }
     }
 }
