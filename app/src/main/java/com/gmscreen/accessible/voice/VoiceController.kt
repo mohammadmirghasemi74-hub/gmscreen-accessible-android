@@ -2,6 +2,7 @@ package com.gmscreen.accessible.voice
 
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -36,11 +37,26 @@ class VoiceController(
         )
     }
 
+    private fun muteSystemSounds(mute: Boolean) {
+        try {
+            val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+            if (mute) {
+                am.adjustStreamVolume(AudioManager.STREAM_SYSTEM, AudioManager.ADJUST_MUTE, 0)
+                am.adjustStreamVolume(AudioManager.STREAM_NOTIFICATION, AudioManager.ADJUST_MUTE, 0)
+            } else {
+                am.adjustStreamVolume(AudioManager.STREAM_SYSTEM, AudioManager.ADJUST_UNMUTE, 0)
+                am.adjustStreamVolume(AudioManager.STREAM_NOTIFICATION, AudioManager.ADJUST_UNMUTE, 0)
+            }
+        } catch (_: Exception) {}
+    }
+
     fun setWakeWordMode(enabled: Boolean) {
         isWakeWordActive = enabled
         if (enabled) {
+            muteSystemSounds(true)
             startListening()
         } else {
+            muteSystemSounds(false)
             stopListening()
         }
     }
@@ -91,17 +107,22 @@ class VoiceController(
 
     fun stopListening() {
         isWakeWordActive = false
+        muteSystemSounds(false)
         stopRecognizerOnly()
     }
 
     fun isCurrentlyListening(): Boolean = isListening
 
     override fun onReadyForSpeech(params: Bundle?) {
-        listener.onReady()
+        if (!isWakeWordActive) {
+            listener.onReady()
+        }
     }
 
     override fun onBeginningOfSpeech() {
-        listener.onListening()
+        if (!isWakeWordActive) {
+            listener.onListening()
+        }
     }
 
     override fun onRmsChanged(rmsdB: Float) {}
@@ -131,6 +152,7 @@ class VoiceController(
             // Auto restart listening after brief delay in wake word mode
             mainHandler.postDelayed({
                 if (isWakeWordActive) {
+                    muteSystemSounds(true)
                     startListening()
                 }
             }, 800)
@@ -156,11 +178,13 @@ class VoiceController(
                     }
                 }
                 if (wakeDetected) {
+                    muteSystemSounds(false)
                     listener.onWakeWordTriggered(commandRemainder)
                 }
                 // Continue wake word loop
                 mainHandler.postDelayed({
                     if (isWakeWordActive) {
+                        muteSystemSounds(true)
                         startListening()
                     }
                 }, 1000)

@@ -67,7 +67,12 @@ class ConnectionFragment : Fragment() {
         btnAutoDiscover.contentDescription = "جستجوی مجدد رسیورهای موجود در شبکه وای‌فای"
 
         if (!repository.isConnected.value) {
-            startDiscovery()
+            val lastIp = appConfig.lastConnectedIp
+            if (lastIp.isNotBlank()) {
+                connectToStb(lastIp, fallbackToDiscovery = true)
+            } else {
+                startDiscovery()
+            }
         }
 
         return view
@@ -193,8 +198,12 @@ class ConnectionFragment : Fragment() {
         }
     }
 
-    private fun connectToStb(ip: String) {
-        val connectingMsg = "در حال برقراری اتصال به رسیور با آدرس $ip..."
+    private fun connectToStb(ip: String, fallbackToDiscovery: Boolean = false) {
+        val connectingMsg = if (fallbackToDiscovery) {
+            "در حال اتصال خودکار به رسیور ($ip)..."
+        } else {
+            "در حال برقراری اتصال به رسیور با آدرس $ip..."
+        }
         txtStatus.text = connectingMsg
         AccessibilityHelper.announce(txtStatus, connectingMsg)
 
@@ -202,11 +211,18 @@ class ConnectionFragment : Fragment() {
             val result = repository.connect(ip)
             withContext(Dispatchers.Main) {
                 if (result.isFailure) {
-                    val err = "خطا در برقراری ارتباط با رسیور ($ip). لطفاً روشن بودن رسیور و اتصال به وای‌فای یکسان را بررسی کنید."
-                    txtStatus.text = err
-                    txtStatus.setTextColor(resources.getColor(R.color.accent_red, null))
-                    AccessibilityHelper.announce(txtStatus, err)
-                    Toast.makeText(requireContext(), err, Toast.LENGTH_LONG).show()
+                    if (fallbackToDiscovery) {
+                        val retryMsg = "ارتباط با آدرس قبلی ($ip) برقرار نشد. در حال جست‌وجوی خودکار رسیور در شبکه..."
+                        txtStatus.text = retryMsg
+                        AccessibilityHelper.announce(txtStatus, retryMsg)
+                        startDiscovery()
+                    } else {
+                        val err = "خطا در برقراری ارتباط با رسیور ($ip). لطفاً روشن بودن رسیور و اتصال به وای‌فای یکسان را بررسی کنید."
+                        txtStatus.text = err
+                        txtStatus.setTextColor(resources.getColor(R.color.accent_red, null))
+                        AccessibilityHelper.announce(txtStatus, err)
+                        Toast.makeText(requireContext(), err, Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }

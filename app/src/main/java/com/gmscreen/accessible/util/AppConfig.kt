@@ -37,6 +37,7 @@ class AppConfig(context: Context) {
         private const val KEY_EDIT_CHANNEL_LOCK = "edit_channel_lock"
         private const val KEY_INSTALLATION_LOCK = "installation_lock"
         private const val KEY_AGE_RATING = "age_rating"
+        private const val KEY_SEPARATE_AUDIO_BLUETOOTH = "separate_audio_bluetooth"
     }
 
     var lastConnectedIp: String
@@ -154,4 +155,8 @@ class AppConfig(context: Context) {
     var ageRating: Int
         get() = prefs.getInt(KEY_AGE_RATING, 0)
         set(value) = prefs.edit().putInt(KEY_AGE_RATING, value).apply()
+
+    var separateAudioToBluetooth: Boolean
+        get() = prefs.getBoolean(KEY_SEPARATE_AUDIO_BLUETOOTH, false)
+        set(value) = prefs.edit().putBoolean(KEY_SEPARATE_AUDIO_BLUETOOTH, value).apply()
 }

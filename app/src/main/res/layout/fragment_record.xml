@@ -173,6 +173,19 @@
                     app:backgroundTint="@color/accent_green"
                     app:cornerRadius="8dp" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnStopStbScheduledRec"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:text="■ توقف ضبط در حال اجرای رسیور"
+                    android:contentDescription="توقف فوری ضبط در حال اجرای رسیور بر روی حافظه فلش"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    android:layout_marginBottom="8dp"
+                    app:backgroundTint="@color/accent_red"
+                    app:cornerRadius="8dp" />
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -235,6 +248,19 @@
                     android:textSize="14sp"
                     android:layout_marginBottom="8dp"
                     app:backgroundTint="@color/primary"
+                    app:cornerRadius="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnStopPhoneScheduledRec"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:text="■ توقف ضبط در حال اجرای گوشی"
+                    android:contentDescription="توقف فوری ضبط در حال اجرای زمان‌بندی گوشی"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    android:layout_marginBottom="8dp"
+                    app:backgroundTint="@color/accent_red"
                     app:cornerRadius="8dp" />
 
                 <TextView

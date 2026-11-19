@@ -96,9 +96,9 @@ object StorageManager {
 
         val primaryChannelDir = getChannelRecordingsDir(context, channelName)
         val existingFiles = primaryChannelDir.listFiles { f -> f.isFile } ?: emptyArray()
-        val recCounter = existingFiles.size + 1
+        var recCounter = existingFiles.size + 1
 
-        val fileName = JalaliCalendar.formatRecordingFilename(
+        var fileName = JalaliCalendar.formatRecordingFilename(
             pattern = appConfig.recNamingPattern,
             recCounter = recCounter,
             channelName = channelName,
@@ -107,6 +107,17 @@ object StorageManager {
         )
 
         var targetFile = File(primaryChannelDir, fileName)
+        while (targetFile.exists()) {
+            recCounter++
+            fileName = JalaliCalendar.formatRecordingFilename(
+                pattern = appConfig.recNamingPattern,
+                recCounter = recCounter,
+                channelName = channelName,
+                ext = ext,
+                customName = customName
+            )
+            targetFile = File(primaryChannelDir, fileName)
+        }
 
         // Verify write access; if blocked by Scoped Storage, fallback safely to app storage
         try {

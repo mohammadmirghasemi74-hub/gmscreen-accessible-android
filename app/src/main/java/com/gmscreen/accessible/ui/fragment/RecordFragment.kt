@@ -48,10 +48,12 @@ class RecordFragment : Fragment() {
     private var isStbRecording = false
 
     private lateinit var btnAddStbTimer: MaterialButton
+    private lateinit var btnStopStbScheduledRec: MaterialButton
     private lateinit var containerStbTimers: LinearLayout
     private lateinit var txtNoStbTimers: TextView
 
     private lateinit var btnAddPhoneTimer: MaterialButton
+    private lateinit var btnStopPhoneScheduledRec: MaterialButton
     private lateinit var containerPhoneTimers: LinearLayout
     private lateinit var txtNoPhoneTimers: TextView
 
@@ -89,7 +91,10 @@ class RecordFragment : Fragment() {
         var isTriggered: Boolean = false,
         val endHour: Int = (startHour + durationMinutes / 60) % 24,
         val endMinute: Int = (startMinute + durationMinutes % 60) % 60,
-        val repeatMode: Int = 0
+        val repeatMode: Int = 0,
+        val autoWake: Boolean = false,
+        val autoPowerOff: Boolean = false,
+        val autoDelete: Boolean = false
     )
     private val phoneTimers = mutableListOf<PhoneScheduledTimer>()
 
@@ -112,10 +117,12 @@ class RecordFragment : Fragment() {
         txtStbRecordStatus = view.findViewById(R.id.txtStbRecordStatus)
 
         btnAddStbTimer = view.findViewById(R.id.btnAddStbTimer)
+        btnStopStbScheduledRec = view.findViewById(R.id.btnStopStbScheduledRec)
         containerStbTimers = view.findViewById(R.id.containerStbTimers)
         txtNoStbTimers = view.findViewById(R.id.txtNoStbTimers)
 
         btnAddPhoneTimer = view.findViewById(R.id.btnAddPhoneTimer)
+        btnStopPhoneScheduledRec = view.findViewById(R.id.btnStopPhoneScheduledRec)
         containerPhoneTimers = view.findViewById(R.id.containerPhoneTimers)
         txtNoPhoneTimers = view.findViewById(R.id.txtNoPhoneTimers)
 
@@ -209,6 +216,24 @@ class RecordFragment : Fragment() {
             showAddPhoneTimerDialog()
         }
 
+        btnStopStbScheduledRec.setOnClickListener {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                repository.sendRcuKey(RcuKey.STOP)
+                withContext(Dispatchers.Main) {
+                    isStbRecording = false
+                    updateStbRecordButtonUi()
+                    val msg = "دستور توقف ضبط به رسیور ارسال شد"
+                    AccessibilityHelper.announce(btnStopStbScheduledRec, msg)
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        btnStopPhoneScheduledRec.setOnClickListener {
+            stopPhoneRecording()
+            AccessibilityHelper.announce(btnStopPhoneScheduledRec, "ضبط زمان‌بندی گوشی متوقف شد")
+        }
+
         btnRefreshStbPvrFiles.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 repository.refreshPvrFiles()
@@ -225,12 +250,14 @@ class RecordFragment : Fragment() {
             btnStbToggleRecord.setBackgroundColor(resources.getColor(R.color.accent_red, null))
             txtStbRecordStatus.text = "وضعیت: رسیور در حال حاضر مشغول ضبط روی فلش مموری است"
             txtStbRecordStatus.setTextColor(resources.getColor(R.color.accent_red, null))
+            btnStopStbScheduledRec.visibility = View.VISIBLE
         } else {
             btnStbToggleRecord.text = "شروع ضبط روی فلش رسیور"
             btnStbToggleRecord.contentDescription = "شروع ضبط کانال جاری بر روی حافظه فلش متصل به رسیور"
             btnStbToggleRecord.setBackgroundColor(resources.getColor(R.color.accent_green, null))
             txtStbRecordStatus.text = "وضعیت ضبط رسیور: غیرفعال"
             txtStbRecordStatus.setTextColor(resources.getColor(R.color.text_secondary, null))
+            btnStopStbScheduledRec.visibility = View.GONE
         }
     }
 
@@ -312,9 +339,9 @@ class RecordFragment : Fragment() {
         var endH = (startH + 1) % 24
         var endM = startM
         var repeatMode = 0 // 0: یکبار, 1: روزانه, 2: هفتگی
-        var autoWake = true
+        var autoWake = false
         var autoPowerOff = false
-        var autoDelete = true
+        var autoDelete = false
 
         val repeatTitles = arrayOf("یک‌بار (پیش‌فرض)", "روزانه (هر روز)", "هفتگی (همین روز هر هفته)")
 
@@ -512,6 +539,9 @@ class RecordFragment : Fragment() {
         var endM = startM
         var isAudioOnly = targetChannel.isRadio
         var repeatMode = 0 // 0: یکبار, 1: روزانه, 2: هفتگی
+        var autoWake = false
+        var autoPowerOff = false
+        var autoDelete = false
 
         val repeatTitles = arrayOf("یک‌بار (پیش‌فرض)", "روزانه (هر روز)", "هفتگی (همین روز هر هفته)")
 
@@ -527,7 +557,10 @@ class RecordFragment : Fragment() {
                 "۴. ساعت پایان ضبط گوشی: %02d (کلیک برای انتخاب ساعت)".format(endH),
                 "۵. دقیقه پایان ضبط گوشی: %02d (کلیک برای انتخاب دقیقه)".format(endM),
                 "۶. نوع و فرمت فایل ضبط: $formatStr (مدت: $diffMins دقیقه)",
-                "۷. تکرار زمان‌بندی: ${repeatTitles[repeatMode]}"
+                "۷. تکرار زمان‌بندی: ${repeatTitles[repeatMode]}",
+                "۸. روشن شدن خودکار رسیور از حالت آماده‌به‌کار: ${if (autoWake) "فعال" else "غیرفعال"}",
+                "۹. خاموش شدن خودکار رسیور پس از اتمام ضبط: ${if (autoPowerOff) "فعال" else "غیرفعال"}",
+                "۱۰. حذف خودکار زمان‌بندی از لیست پس از اتمام: ${if (autoDelete) "فعال" else "غیرفعال"}"
             )
 
             MaterialAlertDialogBuilder(requireContext())
@@ -571,6 +604,18 @@ class RecordFragment : Fragment() {
                                 .setNegativeButton("انصراف") { _, _ -> openDialog() }
                                 .show()
                         }
+                        7 -> {
+                            autoWake = !autoWake
+                            openDialog()
+                        }
+                        8 -> {
+                            autoPowerOff = !autoPowerOff
+                            openDialog()
+                        }
+                        9 -> {
+                            autoDelete = !autoDelete
+                            openDialog()
+                        }
                     }
                 }
                 .setPositiveButton("ثبت زمان‌بندی در گوشی") { _, _ ->
@@ -587,7 +632,10 @@ class RecordFragment : Fragment() {
                         durationMinutes = dur,
                         endHour = endH,
                         endMinute = endM,
-                        repeatMode = repeatMode
+                        repeatMode = repeatMode,
+                        autoWake = autoWake,
+                        autoPowerOff = autoPowerOff,
+                        autoDelete = autoDelete
                     )
                     phoneTimers.add(newTimer)
                     savePhoneTimers()
@@ -668,6 +716,14 @@ class RecordFragment : Fragment() {
                 for (t in phoneTimers.toList()) {
                     if (!t.isTriggered && t.startHour == curH && t.startMinute == curM) {
                         t.isTriggered = true
+
+                        // Auto wake STB if requested
+                        if (t.autoWake && repository.isConnected.value) {
+                            try {
+                                repository.client.sendCmd(1009, expectReply = false)
+                            } catch (_: Exception) {}
+                        }
+
                         val ch = repository.channels.value.find { it.serviceId == t.channelId }
                         if (ch != null) {
                             repository.switchChannel(ch)
@@ -678,9 +734,20 @@ class RecordFragment : Fragment() {
                         // Auto stop after duration
                         Handler(Looper.getMainLooper()).postDelayed({
                             stopPhoneRecording()
-                            phoneTimers.remove(t)
-                            savePhoneTimers()
-                            renderPhoneTimers()
+
+                            // Auto power off STB if requested
+                            if (t.autoPowerOff && repository.isConnected.value) {
+                                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                                    repository.sendRcuKey(RcuKey.POWER)
+                                }
+                            }
+
+                            // Auto delete timer if requested
+                            if (t.autoDelete) {
+                                phoneTimers.remove(t)
+                                savePhoneTimers()
+                                renderPhoneTimers()
+                            }
                         }, t.durationMinutes * 60 * 1000L)
                     }
                 }
@@ -757,6 +824,8 @@ class RecordFragment : Fragment() {
                         btnStartPhoneVideoRec.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
                     }
 
+                    btnStopPhoneRec.visibility = View.VISIBLE
+                    btnStopPhoneScheduledRec.visibility = View.VISIBLE
                     timerHandler.post(timerRunnable)
 
                     val typeStr = if (isAudioOnly) "صوتی" else "تصویری"
@@ -776,6 +845,9 @@ class RecordFragment : Fragment() {
         if (!isRecordingOnPhone) return
         isRecordingOnPhone = false
         timerHandler.removeCallbacks(timerRunnable)
+
+        btnStopPhoneRec.visibility = View.GONE
+        btnStopPhoneScheduledRec.visibility = View.GONE
 
         btnStartPhoneVideoRec.isEnabled = true
         btnStartPhoneAudioRec.isEnabled = true

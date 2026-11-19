@@ -1136,6 +1136,7 @@ class SettingsFragment : Fragment() {
         var draftLandscape = appConfig.videoLandscapeOrientation
         var draftJumpFirst = appConfig.showJumpToFirstChannel
         var draftJumpLast = appConfig.showJumpToLastChannel
+        var draftSeparateAudio = appConfig.separateAudioToBluetooth
 
         val scrollView = ScrollView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -1149,16 +1150,14 @@ class SettingsFragment : Fragment() {
         // 1. Haptic feedback
         addSettingRow(contentLayout, "۱. ویبره و بازخورد لمسی (Haptic Feedback)", if (draftHaptic) "فعال (پیش‌فرض)" else "غیرفعال") { txtVal, row ->
             val opts = arrayOf("فعال (لرزش هنگام لمس کلیدها)", "غیرفعال")
-            val cur = if (draftHaptic) 0 else 1
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("ویبره و بازخورد لمسی")
-                .setSingleChoiceItems(opts, cur) { dlg, which ->
+                .setItems(opts) { dlg, which ->
                     draftHaptic = (which == 0)
                     val label = if (draftHaptic) "فعال (پیش‌فرض)" else "غیرفعال"
                     txtVal.text = label
                     row.contentDescription = "ویبره لمسی: $label"
                     AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
                 }
                 .setNegativeButton("انصراف", null)
                 .show()
@@ -1167,16 +1166,14 @@ class SettingsFragment : Fragment() {
         // 2. Keep global channel number
         addSettingRow(contentLayout, "۲. حفظ شماره سراسری کانال‌ها در فیلترها", if (draftKeepGlobal) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
             val opts = arrayOf("غیرفعال (شماره‌گذاری از ۱ در هر لیست فیلتر)", "فعال (حفظ شماره اصلی شبکه در کل رسیور)")
-            val cur = if (draftKeepGlobal) 1 else 0
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("نحوه نمایش شماره کانال‌ها در فیلتر")
-                .setSingleChoiceItems(opts, cur) { dlg, which ->
+                .setItems(opts) { dlg, which ->
                     draftKeepGlobal = (which == 1)
                     val label = if (draftKeepGlobal) "فعال" else "غیرفعال (پیش‌فرض)"
                     txtVal.text = label
                     row.contentDescription = "شماره سراسری کانال‌ها: $label"
                     AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
                 }
                 .setNegativeButton("انصراف", null)
                 .show()
@@ -1185,16 +1182,14 @@ class SettingsFragment : Fragment() {
         // 3. Video orientation
         addSettingRow(contentLayout, "۳. جهت صفحه در پخش زنده ویدیویی", if (draftLandscape) "افقی (Landscape - مناسب افراد بینا)" else "عمودی (Portrait - پیش‌فرض)") { txtVal, row ->
             val opts = arrayOf("عمودی (Portrait - پیش‌فرض نابینایان)", "افقی (Landscape - تمام صفحه افقی)")
-            val cur = if (draftLandscape) 1 else 0
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("جهت تصویر در پخش زنده")
-                .setSingleChoiceItems(opts, cur) { dlg, which ->
+                .setItems(opts) { dlg, which ->
                     draftLandscape = (which == 1)
                     val label = if (draftLandscape) "افقی (Landscape)" else "عمودی (Portrait)"
                     txtVal.text = label
                     row.contentDescription = "جهت تصویر: $label"
                     AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
                 }
                 .setNegativeButton("انصراف", null)
                 .show()
@@ -1203,16 +1198,14 @@ class SettingsFragment : Fragment() {
         // 4. Jump to first channel button
         addSettingRow(contentLayout, "۴. نمایش دکمه رفتن به اولین کانال (کانال ۱)", if (draftJumpFirst) "فعال (نمایش دکمه در بالای لیست)" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
             val opts = arrayOf("غیرفعال (مخفی)", "فعال (نمایش دکمه پرش به کانال ۱)")
-            val cur = if (draftJumpFirst) 1 else 0
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("نمایش دکمه رفتن به اولین کانال")
-                .setSingleChoiceItems(opts, cur) { dlg, which ->
+                .setItems(opts) { dlg, which ->
                     draftJumpFirst = (which == 1)
                     val label = if (draftJumpFirst) "فعال" else "غیرفعال (پیش‌فرض)"
                     txtVal.text = label
                     row.contentDescription = "دکمه پرش به اولین کانال: $label"
                     AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
                 }
                 .setNegativeButton("انصراف", null)
                 .show()
@@ -1221,23 +1214,67 @@ class SettingsFragment : Fragment() {
         // 5. Jump to last channel button
         addSettingRow(contentLayout, "۵. نمایش دکمه رفتن به آخرین کانال", if (draftJumpLast) "فعال (نمایش دکمه در بالای لیست)" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
             val opts = arrayOf("غیرفعال (مخفی)", "فعال (نمایش دکمه پرش به آخرین کانال)")
-            val cur = if (draftJumpLast) 1 else 0
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("نمایش دکمه رفتن به آخرین کانال")
-                .setSingleChoiceItems(opts, cur) { dlg, which ->
+                .setItems(opts) { dlg, which ->
                     draftJumpLast = (which == 1)
                     val label = if (draftJumpLast) "فعال" else "غیرفعال (پیش‌فرض)"
                     txtVal.text = label
                     row.contentDescription = "دکمه پرش به آخرین کانال: $label"
                     AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 6. Separate audio output to Bluetooth
+        val getAudioRouteTitle: (Boolean) -> String = { enabled ->
+            if (enabled) "هدایت به هندزفری بلوتوث (جداسازی از اسپیکر گوشی و تاک‌بک)" else "پیش‌فرض سیستم (پخش معمول گوشی)"
+        }
+        addSettingRow(contentLayout, "۶. تفکیک خروجی صدای شبکه و تاک‌بک", getAudioRouteTitle(draftSeparateAudio)) { txtVal, row ->
+            val opts = arrayOf(
+                "پیش‌فرض سیستم (پخش عادی بدون تفکیک)",
+                "هدایت مستقیم صدای برنامه به هندزفری بلوتوث",
+                "⚙️ باز کردن تنظیمات صدای جداگانه سامسونگ (Separate App Sound)"
+            )
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("تنظیم خروجی صدای برنامه و تاک‌بک")
+                .setItems(opts) { dlg, which ->
+                    when (which) {
+                        0 -> {
+                            draftSeparateAudio = false
+                            val label = getAudioRouteTitle(draftSeparateAudio)
+                            txtVal.text = label
+                            row.contentDescription = "تفکیک خروجی صدا: $label"
+                            AccessibilityHelper.announce(row, label)
+                        }
+                        1 -> {
+                            draftSeparateAudio = true
+                            val label = getAudioRouteTitle(draftSeparateAudio)
+                            txtVal.text = label
+                            row.contentDescription = "تفکیک خروجی صدا: $label"
+                            AccessibilityHelper.announce(row, label)
+                        }
+                        2 -> {
+                            try {
+                                val intent = Intent("com.samsung.android.setting.SEPARATE_APP_SOUND")
+                                startActivity(intent)
+                            } catch (_: Exception) {
+                                try {
+                                    startActivity(Intent(android.provider.Settings.ACTION_SOUND_SETTINGS))
+                                } catch (_: Exception) {
+                                    Toast.makeText(requireContext(), "تنظیمات صوتی در این دستگاه باز نشد", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    }
                 }
                 .setNegativeButton("انصراف", null)
                 .show()
         }
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("تنظیمات دسترس‌پذیری و پیمایش")
+            .setTitle("تنظیمات دسترس‌پذیری و خروجی صدا")
             .setView(scrollView)
             .setPositiveButton("ذخیره تنظیمات") { _, _ ->
                 appConfig.hapticFeedbackEnabled = draftHaptic
@@ -1245,6 +1282,7 @@ class SettingsFragment : Fragment() {
                 appConfig.videoLandscapeOrientation = draftLandscape
                 appConfig.showJumpToFirstChannel = draftJumpFirst
                 appConfig.showJumpToLastChannel = draftJumpLast
+                appConfig.separateAudioToBluetooth = draftSeparateAudio
 
                 val msg = "تنظیمات دسترس‌پذیری ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()

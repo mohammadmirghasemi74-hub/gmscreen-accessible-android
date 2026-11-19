@@ -130,11 +130,15 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
     }
 
     override fun onReady() {
-        txtVoiceStatus.text = "میکروفون فعال شد، اکنون صحبت کنید…"
+        if (voiceController?.isWakeWordEnabled() != true) {
+            txtVoiceStatus.text = "میکروفون فعال شد، اکنون صحبت کنید…"
+        }
     }
 
     override fun onListening() {
-        txtVoiceStatus.text = "در حال دریافت صدا…"
+        if (voiceController?.isWakeWordEnabled() != true) {
+            txtVoiceStatus.text = "در حال دریافت صدا…"
+        }
     }
 
     override fun onResults(candidates: List<String>) {

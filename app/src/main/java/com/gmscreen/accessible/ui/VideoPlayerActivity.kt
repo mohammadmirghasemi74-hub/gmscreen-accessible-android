@@ -1,7 +1,11 @@
 package com.gmscreen.accessible.ui
 
+import android.content.Context
 import android.content.pm.ActivityInfo
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.ImageButton
@@ -114,6 +118,18 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
             withContext(Dispatchers.Main) {
                 if (!isFinishing && httpUrl != null) {
                     val mediaItem = MediaItem.fromUri(Uri.parse(httpUrl))
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && appConfig.separateAudioToBluetooth) {
+                        try {
+                            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+                            val devices = audioManager?.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                            val btDevice = devices?.firstOrNull {
+                                it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP || it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+                            }
+                            if (btDevice != null) {
+                                exoPlayer?.setPreferredAudioDevice(btDevice)
+                            }
+                        } catch (_: Exception) {}
+                    }
                     exoPlayer?.apply {
                         setMediaItem(mediaItem)
                         prepare()
