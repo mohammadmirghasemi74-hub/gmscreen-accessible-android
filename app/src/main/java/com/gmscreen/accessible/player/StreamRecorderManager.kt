@@ -79,8 +79,16 @@ object StreamRecorderManager {
         channel: Channel
     ): String? = withContext(Dispatchers.IO) {
         try {
-            if (isStreaming && currentChannel?.serviceId == channel.serviceId && localHttpPort > 0) {
-                return@withContext "http://127.0.0.1:$localHttpPort/live.ts"
+            if (isStreaming && currentChannel?.serviceId == channel.serviceId) {
+                if (serverSocket == null || serverSocket!!.isClosed) {
+                    val server = ServerSocket(0)
+                    serverSocket = server
+                    localHttpPort = server.localPort
+                    startHttpServerLoop(server)
+                }
+                val httpUrl = "http://127.0.0.1:$localHttpPort/live.ts"
+                notifyStreamingStarted(httpUrl)
+                return@withContext httpUrl
             }
 
             stopStream(keepRecording = false)
@@ -303,8 +311,31 @@ object StreamRecorderManager {
         return@withContext file
     }
 
+    fun stopPlayback() {
+        for (client in httpClients) {
+            try { client.close() } catch (_: Exception) {}
+        }
+        httpClients.clear()
+        try { serverSocket?.close() } catch (_: Exception) {}
+        serverSocket = null
+        httpAcceptJob?.cancel()
+        httpAcceptJob = null
+
+        if (!isRecording) {
+            stopStream(keepRecording = false)
+        } else {
+            Log.d(TAG, "stopPlayback: Playback stopped, background recording still active")
+            notifyStreamingStopped()
+        }
+    }
+
     fun stopStream(keepRecording: Boolean = false) {
-        if (!keepRecording && isRecording) {
+        if (keepRecording && isRecording) {
+            stopPlayback()
+            return
+        }
+
+        if (isRecording) {
             managerScope.launch { stopRecording() }
         }
 

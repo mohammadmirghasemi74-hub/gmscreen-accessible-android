@@ -115,6 +115,23 @@ class ConnectionFragment : Fragment() {
 
     private fun observeConnectionState() {
         viewLifecycleOwner.lifecycleScope.launch {
+            repository.isReconnecting.collect { reconn ->
+                if (reconn) {
+                    txtStatus.text = "در حال تلاش هوشمند برای اتصال مجدد به رسیور..."
+                    txtStatus.setTextColor(resources.getColor(R.color.accent_yellow, null))
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repository.reconnectEvent.collect { event ->
+                if (event is com.gmscreen.accessible.data.StbRepository.ReconnectEvent.Failed) {
+                    startDiscovery()
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
             repository.isConnected.collect { connected ->
                 if (connected) {
                     val model = repository.deviceModel.value

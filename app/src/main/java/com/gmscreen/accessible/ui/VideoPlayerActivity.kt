@@ -9,9 +9,11 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.ImageButton
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -21,6 +23,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import com.google.android.material.button.MaterialButton
 import com.gmscreen.accessible.GMScreenApplication
 import com.gmscreen.accessible.R
 import com.gmscreen.accessible.player.StreamRecorderManager
@@ -34,6 +37,7 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
     private lateinit var playerView: PlayerView
     private lateinit var btnExitPlayer: ImageButton
+    private lateinit var btnToggleRecordInPlayer: MaterialButton
 
     private var exoPlayer: ExoPlayer? = null
     private var channelName: String = "شبکه"
@@ -57,6 +61,7 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
         playerView = findViewById(R.id.playerViewFullscreen)
         btnExitPlayer = findViewById(R.id.btnExitPlayer)
+        btnToggleRecordInPlayer = findViewById(R.id.btnToggleRecordInPlayer)
 
         channelName = intent.getStringExtra("EXTRA_CHANNEL_NAME") ?: "شبکه"
         serviceId = intent.getStringExtra("EXTRA_SERVICE_ID") ?: ""
@@ -67,6 +72,8 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
             finish()
         }
 
+        setupRecordButton()
+
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 finish()
@@ -75,6 +82,65 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
         initExoPlayer()
         startPlayback()
+    }
+
+    private fun setupRecordButton() {
+        val isCurrentlyRec = StreamRecorderManager.isRecording && StreamRecorderManager.currentChannel?.serviceId == serviceId
+        updateRecordButtonUi(isCurrentlyRec)
+
+        btnToggleRecordInPlayer.setOnClickListener {
+            val channel = repository.channels.value.find { it.serviceId == serviceId }
+            val ip = repository.connectedIp.value
+            if (channel == null || ip.isBlank()) {
+                Toast.makeText(this, "مشخصات شبکه جهت ضبط یافت نشد", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (StreamRecorderManager.isRecording) {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val file = StreamRecorderManager.stopRecording()
+                    withContext(Dispatchers.Main) {
+                        updateRecordButtonUi(false)
+                        val msg = "ضبط ویدیو متوقف و با موفقیت ذخیره شد: ${file?.name ?: ""}"
+                        AccessibilityHelper.announce(btnToggleRecordInPlayer, msg)
+                        Toast.makeText(this@VideoPlayerActivity, msg, Toast.LENGTH_LONG).show()
+                    }
+                }
+            } else {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val file = StreamRecorderManager.startRecording(
+                        this@VideoPlayerActivity,
+                        repository.client,
+                        ip,
+                        channel,
+                        isAudioOnly = false
+                    )
+                    withContext(Dispatchers.Main) {
+                        if (file != null) {
+                            updateRecordButtonUi(true)
+                            val msg = "ضبط همزمان ویدیویی شبکه ${channel.serviceName} روی گوشی آغاز شد"
+                            AccessibilityHelper.announce(btnToggleRecordInPlayer, msg)
+                            Toast.makeText(this@VideoPlayerActivity, msg, Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@VideoPlayerActivity, "خطا در شروع ضبط همزمان", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun updateRecordButtonUi(isRecording: Boolean) {
+        if (isRecording) {
+            btnToggleRecordInPlayer.text = "■ توقف ضبط روی گوشی"
+            btnToggleRecordInPlayer.contentDescription = "در حال ضبط ویدیویی روی گوشی. کلیک برای توقف و ذخیره"
+            btnToggleRecordInPlayer.setBackgroundColor(ContextCompat.getColor(this, R.color.primary))
+        } else {
+            val vidFmt = appConfig.videoRecFormat.uppercase()
+            btnToggleRecordInPlayer.text = "● ضبط روی گوشی ($vidFmt)"
+            btnToggleRecordInPlayer.contentDescription = "شروع ضبط ویدیویی با فرمت $vidFmt بر روی حافظه گوشی"
+            btnToggleRecordInPlayer.setBackgroundColor(ContextCompat.getColor(this, R.color.card_bg))
+        }
     }
 
     private fun initExoPlayer() {
@@ -102,11 +168,13 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
         }
 
         lifecycleScope.launch(Dispatchers.IO) {
-            StreamRecorderManager.stopStream(keepRecording = false)
-            kotlinx.coroutines.delay(250)
-
-            repository.switchChannel(channel)
-            kotlinx.coroutines.delay(300)
+            val isAlreadyStreamingSameChannel = StreamRecorderManager.isStreaming && StreamRecorderManager.currentChannel?.serviceId == channel.serviceId
+            if (!isAlreadyStreamingSameChannel) {
+                StreamRecorderManager.stopStream(keepRecording = false)
+                kotlinx.coroutines.delay(250)
+                repository.switchChannel(channel)
+                kotlinx.coroutines.delay(300)
+            }
 
             val httpUrl = StreamRecorderManager.startStream(
                 this@VideoPlayerActivity,
@@ -166,6 +234,6 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
         exoPlayer?.release()
         exoPlayer = null
         playerView.player = null
-        StreamRecorderManager.stopStream(keepRecording = false)
+        StreamRecorderManager.stopPlayback()
     }
 }

@@ -44,6 +44,7 @@ class ChannelsFragment : Fragment() {
     private lateinit var layoutAudioPlayingBar: LinearLayout
     private lateinit var txtAudioPlayingChannel: TextView
     private lateinit var btnStopAudioPlayback: MaterialButton
+    private lateinit var btnToggleRecordAudioInBar: MaterialButton
     private lateinit var btnTvRadioToggle: MaterialButton
     private lateinit var btnSatelliteFilter: MaterialButton
     private lateinit var edtSearch: EditText
@@ -79,6 +80,7 @@ class ChannelsFragment : Fragment() {
         layoutAudioPlayingBar = view.findViewById(R.id.layoutAudioPlayingBar)
         txtAudioPlayingChannel = view.findViewById(R.id.txtAudioPlayingChannel)
         btnStopAudioPlayback = view.findViewById(R.id.btnStopAudioPlayback)
+        btnToggleRecordAudioInBar = view.findViewById(R.id.btnToggleRecordAudioInBar)
         btnTvRadioToggle = view.findViewById(R.id.btnTvRadioToggle)
         btnSatelliteFilter = view.findViewById(R.id.btnSatelliteFilter)
         edtSearch = view.findViewById(R.id.edtSearch)
@@ -104,11 +106,68 @@ class ChannelsFragment : Fragment() {
     }
 
     private fun setupAudioPlayerBar() {
+        updateAudioBarRecordBtn(com.gmscreen.accessible.player.StreamRecorderManager.isRecording)
+
+        btnToggleRecordAudioInBar.setOnClickListener {
+            val ch = currentAudioChannel ?: repository.currentChannel.value
+            val ip = repository.connectedIp.value
+            if (ch == null || ip.isBlank()) {
+                Toast.makeText(requireContext(), "مشخصات کانال یافت نشد", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (com.gmscreen.accessible.player.StreamRecorderManager.isRecording) {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    val file = com.gmscreen.accessible.player.StreamRecorderManager.stopRecording()
+                    withContext(Dispatchers.Main) {
+                        updateAudioBarRecordBtn(false)
+                        val msg = "ضبط صوتی متوقف و ذخیره شد: ${file?.name ?: ""}"
+                        AccessibilityHelper.announce(btnToggleRecordAudioInBar, msg)
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    }
+                }
+            } else {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    val file = com.gmscreen.accessible.player.StreamRecorderManager.startRecording(
+                        requireContext(),
+                        repository.client,
+                        ip,
+                        ch,
+                        isAudioOnly = true
+                    )
+                    withContext(Dispatchers.Main) {
+                        if (file != null) {
+                            updateAudioBarRecordBtn(true)
+                            val msg = "ضبط صوتی شبکه ${ch.serviceName} روی گوشی آغاز شد"
+                            AccessibilityHelper.announce(btnToggleRecordAudioInBar, msg)
+                            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(requireContext(), "خطا در شروع ضبط صوتی", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+        }
+
         btnStopAudioPlayback.setOnClickListener {
             stopAudioPlayback()
             val msg = "پخش صوتی شبکه متوقف شد"
             AccessibilityHelper.announce(txtChannelCount, msg)
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun updateAudioBarRecordBtn(isRecording: Boolean) {
+        if (!::btnToggleRecordAudioInBar.isInitialized) return
+        if (isRecording) {
+            btnToggleRecordAudioInBar.text = "■ توقف ضبط"
+            btnToggleRecordAudioInBar.contentDescription = "در حال ضبط صوتی در گوشی. برای توقف و ذخیره ضربه بزنید"
+            btnToggleRecordAudioInBar.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.primary))
+        } else {
+            val audFmt = appConfig.audioRecFormat.uppercase()
+            btnToggleRecordAudioInBar.text = "● ضبط ($audFmt)"
+            btnToggleRecordAudioInBar.contentDescription = "شروع ضبط صوتی با فرمت $audFmt روی حافظه گوشی"
+            btnToggleRecordAudioInBar.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.card_bg))
         }
     }
 
@@ -524,19 +583,27 @@ class ChannelsFragment : Fragment() {
             return
         }
 
-        stopAudioPlayback()
+        val isAlreadyStreamingSameChannel = com.gmscreen.accessible.player.StreamRecorderManager.isStreaming &&
+                com.gmscreen.accessible.player.StreamRecorderManager.currentChannel?.serviceId == channel.serviceId
+
+        if (!isAlreadyStreamingSameChannel) {
+            stopAudioPlayback()
+        }
 
         currentAudioChannel = channel
         layoutAudioPlayingBar.visibility = View.VISIBLE
         txtAudioPlayingChannel.text = "در حال اتصال به پخش صوتی ${channel.serviceName}..."
         AccessibilityHelper.announce(layoutAudioPlayingBar, "در حال اتصال به پخش صوتی ${channel.serviceName}...")
+        updateAudioBarRecordBtn(com.gmscreen.accessible.player.StreamRecorderManager.isRecording)
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            com.gmscreen.accessible.player.StreamRecorderManager.stopStream(keepRecording = false)
-            delay(250)
+            if (!isAlreadyStreamingSameChannel) {
+                com.gmscreen.accessible.player.StreamRecorderManager.stopStream(keepRecording = false)
+                delay(250)
 
-            repository.switchChannel(channel)
-            delay(300)
+                repository.switchChannel(channel)
+                delay(300)
+            }
 
             val httpUrl = com.gmscreen.accessible.player.StreamRecorderManager.startStream(
                 requireContext(),
@@ -555,6 +622,7 @@ class ChannelsFragment : Fragment() {
                         play()
                     }
                     isAudioStreaming = true
+                    updateAudioBarRecordBtn(com.gmscreen.accessible.player.StreamRecorderManager.isRecording)
                     txtAudioPlayingChannel.text = "در حال پخش صوتی: ${channel.serviceName}"
                     val msg = "پخش صوتی شبکه ${channel.serviceName} با کیفیت عالی آغاز شد. دکمه توقف پخش در پایین صفحه فعال است."
                     AccessibilityHelper.announce(layoutAudioPlayingBar, msg)
@@ -591,7 +659,7 @@ class ChannelsFragment : Fragment() {
         isAudioStreaming = false
         currentAudioChannel = null
         layoutAudioPlayingBar.visibility = View.GONE
-        com.gmscreen.accessible.player.StreamRecorderManager.stopStream(keepRecording = false)
+        com.gmscreen.accessible.player.StreamRecorderManager.stopPlayback()
     }
 
     private fun openStreamInExternalPlayer(channel: Channel) {

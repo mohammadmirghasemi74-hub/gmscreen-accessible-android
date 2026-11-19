@@ -898,6 +898,25 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
+        // 10. Reset recording counter
+        val counterText = if (appConfig.recordingCounter == 0) "۰ (ضبط بعدی: ۰۱)" else "${appConfig.recordingCounter} (ضبط بعدی: %02d)".format(appConfig.recordingCounter + 1)
+        addSettingRow(contentLayout, "۱۰. صفر کردن شمارنده شماره‌گذاری فایل‌ها (شروع مجدد از ۰۱)", counterText) { txtVal, row ->
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("صفر کردن شمارنده شماره فایل‌ها")
+                .setMessage("آیا می‌خواهید شمارنده شماره‌گذاری فایل‌های ضبط صفر شود؟ با این کار نام اولین فایل ضبط بعدی از شماره ۰۱ شروع خواهد شد.")
+                .setPositiveButton("بله، صفر کن") { _, _ ->
+                    appConfig.resetRecordingCounter()
+                    val label = "۰ (ضبط بعدی: ۰۱)"
+                    txtVal.text = label
+                    row.contentDescription = "شمارنده فایل‌های ضبط: $label"
+                    val msg = "شمارنده فایل‌های ضبط با موفقیت صفر شد. ضبط بعدی با شماره ۰۱ ذخیره می‌شود."
+                    AccessibilityHelper.announce(row, msg)
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("تنظیمات جامع ضبط و ذخیره‌سازی")
             .setView(scrollView)

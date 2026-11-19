@@ -28,4 +28,18 @@
         android:contentDescription="بازگشت و خروج از پخش زنده"
         app:tint="@color/white" />
 
+    <!-- Instant Record Toggle Button inside Video Player -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnToggleRecordInPlayer"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:text="شروع ضبط روی گوشی"
+        android:contentDescription="شروع ضبط زنده این شبکه روی گوشی"
+        app:cornerRadius="24dp"
+        android:backgroundTint="#CCB71C1C"
+        android:textColor="@color/white"
+        android:textSize="13sp" />
+
 </FrameLayout>

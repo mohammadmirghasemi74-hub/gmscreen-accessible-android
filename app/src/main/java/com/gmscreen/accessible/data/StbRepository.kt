@@ -9,9 +9,13 @@ import com.gmscreen.accessible.protocol.RcuKey
 import com.gmscreen.accessible.protocol.StbClient
 import com.gmscreen.accessible.protocol.StbDiscovery
 import com.gmscreen.accessible.util.AppConfig
+import com.gmscreen.accessible.util.AppLogger
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class StbRepository(context: Context) {
@@ -24,6 +28,21 @@ class StbRepository(context: Context) {
 
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
+
+    private val _isReconnecting = MutableStateFlow(false)
+    val isReconnecting: StateFlow<Boolean> = _isReconnecting.asStateFlow()
+
+    sealed class ReconnectEvent {
+        object Attempting : ReconnectEvent()
+        data class Reconnected(val ip: String) : ReconnectEvent()
+        object Failed : ReconnectEvent()
+    }
+
+    private val _reconnectEvent = MutableSharedFlow<ReconnectEvent>(extraBufferCapacity = 16)
+    val reconnectEvent: SharedFlow<ReconnectEvent> = _reconnectEvent.asSharedFlow()
+
+    private var isUserInitiatedDisconnect = false
+    private var reconnectJob: Job? = null
 
     private val _connectedIp = MutableStateFlow("")
     val connectedIp: StateFlow<String> = _connectedIp.asStateFlow()
@@ -57,6 +76,10 @@ class StbRepository(context: Context) {
     }
 
     suspend fun connect(ip: String): Result<Boolean> {
+        isUserInitiatedDisconnect = false
+        reconnectJob?.cancel()
+        reconnectJob = null
+        _isReconnecting.value = false
         return try {
             val success = client.connect(ip)
             if (success) {
@@ -82,6 +105,7 @@ class StbRepository(context: Context) {
     private fun startChannelMonitor() {
         monitorJob?.cancel()
         monitorJob = repoScope.launch {
+            var consecutiveErrors = 0
             while (isActive && client.isConnected) {
                 delay(800)
                 if (!client.isConnected) break
@@ -91,23 +115,104 @@ class StbRepository(context: Context) {
                 }
                 try {
                     val pid = client.getPlayingChannel()
-                    if (!pid.isNullOrBlank() && pid != _currentChannel.value?.serviceId) {
-                        val ch = _channels.value.find { it.serviceId == pid || it.serviceId.endsWith(pid) }
-                        if (ch != null) {
-                            com.gmscreen.accessible.util.AppLogger.i("StbRepository", "Channel monitor: playing channel changed to ${ch.serviceName} (${ch.serviceId})")
-                            _currentChannel.value = ch
+                    if (pid != null) {
+                        consecutiveErrors = 0
+                        if (pid.isNotBlank() && pid != _currentChannel.value?.serviceId) {
+                            val ch = _channels.value.find { it.serviceId == pid || it.serviceId.endsWith(pid) }
+                            if (ch != null) {
+                                AppLogger.i("StbRepository", "Channel monitor: playing channel changed to ${ch.serviceName} (${ch.serviceId})")
+                                _currentChannel.value = ch
+                            }
                         }
+                    } else {
+                        consecutiveErrors++
                     }
                 } catch (e: Exception) {
+                    consecutiveErrors++
                     if (e is java.net.SocketTimeoutException || e is java.io.IOException) {
                         delay(2500)
                     }
                 }
+
+                if (!client.isConnected || consecutiveErrors >= 3) {
+                    break
+                }
+            }
+
+            if (!isUserInitiatedDisconnect && _isConnected.value) {
+                AppLogger.w("StbRepository", "Connection lost unexpectedly. Triggering smart reconnect...")
+                triggerSmartReconnect()
+            }
+        }
+    }
+
+    fun triggerSmartReconnect() {
+        if (_isReconnecting.value || isUserInitiatedDisconnect) return
+        _isReconnecting.value = true
+        _reconnectEvent.tryEmit(ReconnectEvent.Attempting)
+
+        reconnectJob?.cancel()
+        reconnectJob = repoScope.launch {
+            val targetIp = appConfig.lastConnectedIp.ifBlank { _connectedIp.value }
+            AppLogger.i("StbRepository", "Starting smart auto-reconnect loop to $targetIp...")
+
+            var reconnected = false
+            var activeIp = targetIp
+            // 30 attempts, each with 3s delay = 90 seconds (standard STB reboot duration)
+            for (attempt in 1..30) {
+                if (!isActive || isUserInitiatedDisconnect) break
+                delay(3000)
+
+                // Try direct connect to last known IP
+                if (activeIp.isNotBlank()) {
+                    val ok = client.connect(activeIp, timeoutMs = 2500)
+                    if (ok) {
+                        reconnected = true
+                        break
+                    }
+                }
+
+                // Every 15 seconds (attempts 5, 10, 15, 20), run background UDP discovery in case DHCP IP changed
+                if (attempt % 5 == 0) {
+                    try {
+                        val devices = discovery.discover(timeoutMs = 2500)
+                        if (devices.isNotEmpty()) {
+                            val foundDevice = devices.first()
+                            activeIp = foundDevice.ip
+                            val ok = client.connect(activeIp, timeoutMs = 2500)
+                            if (ok) {
+                                reconnected = true
+                                break
+                            }
+                        }
+                    } catch (_: Exception) {}
+                }
+            }
+
+            _isReconnecting.value = false
+
+            if (reconnected) {
+                _isConnected.value = true
+                _connectedIp.value = activeIp
+                appConfig.lastConnectedIp = activeIp
+                _deviceModel.value = client.formattedModel
+                AppLogger.i("StbRepository", "Smart reconnect SUCCEEDED to $activeIp")
+                _reconnectEvent.tryEmit(ReconnectEvent.Reconnected(activeIp))
+                refreshData()
+            } else {
+                _isConnected.value = false
+                _currentState.value = null
+                AppLogger.w("StbRepository", "Smart reconnect FAILED after timeout.")
+                _reconnectEvent.tryEmit(ReconnectEvent.Failed)
             }
         }
     }
 
     fun disconnect() {
+        isUserInitiatedDisconnect = true
+        reconnectJob?.cancel()
+        reconnectJob = null
+        _isReconnecting.value = false
         monitorJob?.cancel()
         monitorJob = null
         client.disconnect()
@@ -227,7 +332,13 @@ class StbRepository(context: Context) {
 
     suspend fun restartStb(): Boolean {
         if (!client.isConnected) return false
-        return client.restartStb()
+        val ok = client.restartStb()
+        if (ok) {
+            isUserInitiatedDisconnect = false
+            client.disconnect()
+            triggerSmartReconnect()
+        }
+        return ok
     }
 
     suspend fun getMuteState(): Boolean? {

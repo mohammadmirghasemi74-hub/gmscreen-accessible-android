@@ -142,6 +142,28 @@ class RecordFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         updateFormatLabels()
+        syncPhoneRecordingUi()
+    }
+
+    private fun syncPhoneRecordingUi() {
+        if (!isAdded) return
+        val isRec = com.gmscreen.accessible.player.StreamRecorderManager.isRecording
+        if (isRec && !isRecordingOnPhone) {
+            isRecordingOnPhone = true
+            val chName = com.gmscreen.accessible.player.StreamRecorderManager.currentChannel?.serviceName ?: "شبکه"
+            txtInstantRecStatus.text = "در حال ضبط روی گوشی ($chName)..."
+            btnStopPhoneRec.visibility = View.VISIBLE
+            btnStopPhoneScheduledRec.visibility = View.VISIBLE
+            timerHandler.post(timerRunnable)
+        } else if (!isRec && isRecordingOnPhone) {
+            isRecordingOnPhone = false
+            timerHandler.removeCallbacks(timerRunnable)
+            btnStopPhoneRec.visibility = View.GONE
+            btnStopPhoneScheduledRec.visibility = View.GONE
+            btnStartPhoneVideoRec.isEnabled = true
+            btnStartPhoneAudioRec.isEnabled = true
+            updateFormatLabels()
+        }
     }
 
     private fun updateFormatLabels() {

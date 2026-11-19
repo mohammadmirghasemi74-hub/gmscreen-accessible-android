@@ -5,9 +5,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.gmscreen.accessible.GMScreenApplication
 import com.gmscreen.accessible.R
+import com.gmscreen.accessible.data.StbRepository
 import com.gmscreen.accessible.ui.fragment.BackupFragment
 import com.gmscreen.accessible.ui.fragment.ChannelsFragment
 import com.gmscreen.accessible.ui.fragment.ConnectionFragment
@@ -16,6 +19,7 @@ import com.gmscreen.accessible.ui.fragment.RemoteFragment
 import com.gmscreen.accessible.ui.fragment.SettingsFragment
 import com.gmscreen.accessible.ui.fragment.VoiceFragment
 import com.gmscreen.accessible.util.AccessibilityHelper
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -41,6 +45,36 @@ class MainActivity : AppCompatActivity() {
 
         setupViewPager()
         setupTabSelectorDialog()
+        observeReconnectEvents()
+    }
+
+    private fun observeReconnectEvents() {
+        val repository = GMScreenApplication.instance.repository
+        lifecycleScope.launch {
+            repository.reconnectEvent.collect { event ->
+                when (event) {
+                    is StbRepository.ReconnectEvent.Attempting -> {
+                        val msg = "ارتباط با رسیور قطع شد. در حال تلاش برای اتصال هوشمند مجدد..."
+                        AccessibilityHelper.announce(btnActiveTab, msg)
+                        AccessibilityHelper.vibrateWarning(this@MainActivity)
+                    }
+                    is StbRepository.ReconnectEvent.Reconnected -> {
+                        val msg = "اتصال به رسیور مجدداً برقرار شد"
+                        AccessibilityHelper.announce(btnActiveTab, msg)
+                        AccessibilityHelper.vibrateSuccess(this@MainActivity)
+                        if (GMScreenApplication.instance.appConfig.soundCuesEnabled) {
+                            AccessibilityHelper.playSoundCue()
+                        }
+                    }
+                    is StbRepository.ReconnectEvent.Failed -> {
+                        val msg = "برنامه نتوانست مجدداً به رسیور متصل شود؛ بازگشت به صفحه اتصال"
+                        AccessibilityHelper.announce(btnActiveTab, msg)
+                        AccessibilityHelper.vibrateWarning(this@MainActivity)
+                        switchToTab(0)
+                    }
+                }
+            }
+        }
     }
 
     override fun onResume() {

@@ -38,6 +38,7 @@ class AppConfig(context: Context) {
         private const val KEY_INSTALLATION_LOCK = "installation_lock"
         private const val KEY_AGE_RATING = "age_rating"
         private const val KEY_SEPARATE_AUDIO_BLUETOOTH = "separate_audio_bluetooth"
+        private const val KEY_REC_COUNTER = "recording_counter"
     }
 
     var lastConnectedIp: String
@@ -159,4 +160,18 @@ class AppConfig(context: Context) {
     var separateAudioToBluetooth: Boolean
         get() = prefs.getBoolean(KEY_SEPARATE_AUDIO_BLUETOOTH, false)
         set(value) = prefs.edit().putBoolean(KEY_SEPARATE_AUDIO_BLUETOOTH, value).apply()
+
+    var recordingCounter: Int
+        get() = prefs.getInt(KEY_REC_COUNTER, 0)
+        set(value) = prefs.edit().putInt(KEY_REC_COUNTER, value).apply()
+
+    fun getNextRecordingNumber(): Int {
+        val next = recordingCounter + 1
+        recordingCounter = next
+        return next
+    }
+
+    fun resetRecordingCounter() {
+        recordingCounter = 0
+    }
 }

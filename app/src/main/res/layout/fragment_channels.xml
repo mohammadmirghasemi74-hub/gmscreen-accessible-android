@@ -115,14 +115,26 @@
             android:singleLine="true" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnToggleRecordAudioInBar"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_marginEnd="6dp"
+            android:text="ضبط صوتی"
+            android:contentDescription="شروع یا توقف ضبط این جریان صوتی روی گوشی"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            app:backgroundTint="#B71C1C"
+            app:cornerRadius="8dp" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnStopAudioPlayback"
             android:layout_width="wrap_content"
             android:layout_height="44dp"
             android:text="توقف پخش صوتی"
             android:contentDescription="توقف پخش صوتی در گوشی"
             android:textColor="@color/white"
-            android:textSize="13sp"
-            app:backgroundTint="#B71C1C"
+            android:textSize="12sp"
+            app:backgroundTint="#263238"
             app:cornerRadius="8dp" />
     </LinearLayout>
 

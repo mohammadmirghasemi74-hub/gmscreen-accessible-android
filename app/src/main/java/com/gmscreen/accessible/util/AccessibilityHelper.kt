@@ -79,6 +79,28 @@ object AccessibilityHelper {
     }
 
     /**
+     * Trigger warning feedback (e.g. disconnect or error).
+     */
+    fun vibrateWarning(context: Context) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                }
+                vibrator?.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 80, 80, 80), -1))
+            } else {
+                @Suppress("DEPRECATION")
+                val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(longArrayOf(0, 80, 80, 80), -1)
+            }
+        } catch (_: Exception) {}
+    }
+
+    /**
      * Play earcon beep for voice recognition start/finish or button feedback.
      */
     fun playSoundCue(toneType: Int = ToneGenerator.TONE_PROP_BEEP) {

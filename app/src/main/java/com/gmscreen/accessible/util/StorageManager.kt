@@ -95,8 +95,7 @@ object StorageManager {
         }
 
         val primaryChannelDir = getChannelRecordingsDir(context, channelName)
-        val existingFiles = primaryChannelDir.listFiles { f -> f.isFile } ?: emptyArray()
-        var recCounter = existingFiles.size + 1
+        var recCounter = appConfig.getNextRecordingNumber()
 
         var fileName = JalaliCalendar.formatRecordingFilename(
             pattern = appConfig.recNamingPattern,
@@ -108,7 +107,7 @@ object StorageManager {
 
         var targetFile = File(primaryChannelDir, fileName)
         while (targetFile.exists()) {
-            recCounter++
+            recCounter = appConfig.getNextRecordingNumber()
             fileName = JalaliCalendar.formatRecordingFilename(
                 pattern = appConfig.recNamingPattern,
                 recCounter = recCounter,
