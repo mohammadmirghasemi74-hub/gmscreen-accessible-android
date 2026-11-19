@@ -1,22 +1,29 @@
 package com.gmscreen.accessible.ui.fragment
 
 import android.app.TimePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
 import android.text.InputType
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.gmscreen.accessible.GMScreenApplication
@@ -75,6 +82,28 @@ class RecordFragment : Fragment() {
                 val mb = String.format(Locale.US, "%.1f", com.gmscreen.accessible.player.StreamRecorderManager.recordedBytes / (1024f * 1024f))
                 txtInstantRecStatus.text = "در حال ضبط روی گوشی… %02d:%02d ($mb MB)".format(mins, secs)
                 timerHandler.postDelayed(this, 1000)
+            }
+        }
+    }
+
+    private var stbRecSeconds = 0
+    private val stbTimerHandler = Handler(Looper.getMainLooper())
+    private val stbTimerRunnable = object : Runnable {
+        override fun run() {
+            if (isStbRecording) {
+                stbRecSeconds++
+                val hours = stbRecSeconds / 3600
+                val mins = (stbRecSeconds % 3600) / 60
+                val secs = stbRecSeconds % 60
+                val timeStr = if (hours > 0) {
+                    "%02d:%02d:%02d".format(hours, mins, secs)
+                } else {
+                    "%02d:%02d".format(mins, secs)
+                }
+                txtStbRecordStatus.text = "در حال ضبط روی فلش رسیور… $timeStr"
+                btnStbToggleRecord.text = "توقف ضبط رسیور ($timeStr)"
+                btnStbToggleRecord.contentDescription = "در حال ضبط روی فلش رسیور به مدت $timeStr. برای توقف ضربه بزنید."
+                stbTimerHandler.postDelayed(this, 1000)
             }
         }
     }
@@ -267,13 +296,21 @@ class RecordFragment : Fragment() {
     private fun updateStbRecordButtonUi() {
         if (!isAdded) return
         if (isStbRecording) {
-            btnStbToggleRecord.text = "توقف ضبط رسیور (در حال حاضر فعال)"
-            btnStbToggleRecord.contentDescription = "رسیور در حال ضبط روی فلش است. برای توقف ضربه بزنید."
+            val hours = stbRecSeconds / 3600
+            val mins = (stbRecSeconds % 3600) / 60
+            val secs = stbRecSeconds % 60
+            val timeStr = if (hours > 0) "%02d:%02d:%02d".format(hours, mins, secs) else "%02d:%02d".format(mins, secs)
+            btnStbToggleRecord.text = "توقف ضبط رسیور ($timeStr)"
+            btnStbToggleRecord.contentDescription = "در حال ضبط روی فلش رسیور به مدت $timeStr. برای توقف ضربه بزنید."
             btnStbToggleRecord.setBackgroundColor(resources.getColor(R.color.accent_red, null))
-            txtStbRecordStatus.text = "وضعیت: رسیور در حال حاضر مشغول ضبط روی فلش مموری است"
+            txtStbRecordStatus.text = "در حال ضبط روی فلش رسیور… $timeStr"
             txtStbRecordStatus.setTextColor(resources.getColor(R.color.accent_red, null))
             btnStopStbScheduledRec.visibility = View.VISIBLE
+            stbTimerHandler.removeCallbacks(stbTimerRunnable)
+            stbTimerHandler.post(stbTimerRunnable)
         } else {
+            stbTimerHandler.removeCallbacks(stbTimerRunnable)
+            stbRecSeconds = 0
             btnStbToggleRecord.text = "شروع ضبط روی فلش رسیور"
             btnStbToggleRecord.contentDescription = "شروع ضبط کانال جاری بر روی حافظه فلش متصل به رسیور"
             btnStbToggleRecord.setBackgroundColor(resources.getColor(R.color.accent_green, null))
@@ -441,18 +478,130 @@ class RecordFragment : Fragment() {
     }
 
     private fun showChannelPicker(title: String, currentChannel: Channel, onChannelSelected: (Channel) -> Unit) {
-        val channels = repository.channels.value
-        val items = channels.mapIndexed { i, ch -> "${i + 1}. ${ch.serviceName}" }.toTypedArray()
+        val allChannels = repository.channels.value
+        if (allChannels.isEmpty()) {
+            Toast.makeText(requireContext(), "ابتدا باید به رسیور متصل شوید تا کانال‌ها دریافت شوند", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(title)
-            .setItems(items) { dialog, which ->
-                val chosen = channels.getOrNull(which)
-                if (chosen != null) onChannelSelected(chosen)
-                dialog.dismiss()
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_channel_picker, null)
+        val txtTitle = dialogView.findViewById<TextView>(R.id.txtPickerTitle)
+        val edtSearch = dialogView.findViewById<EditText>(R.id.edtPickerSearch)
+        val btnClear = dialogView.findViewById<ImageButton>(R.id.btnPickerClearSearch)
+        val recyclerView = dialogView.findViewById<RecyclerView>(R.id.recyclerPickerChannels)
+        val txtNoChannels = dialogView.findViewById<TextView>(R.id.txtPickerNoChannels)
+        val btnCancel = dialogView.findViewById<MaterialButton>(R.id.btnPickerCancel)
+
+        txtTitle.text = title
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .create()
+
+        val filteredChannels = mutableListOf<Channel>()
+        filteredChannels.addAll(allChannels)
+
+        lateinit var adapter: RecyclerView.Adapter<RecyclerView.ViewHolder>
+        adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+                val v = LayoutInflater.from(parent.context).inflate(R.layout.item_picker_channel, parent, false)
+                return object : RecyclerView.ViewHolder(v) {}
             }
-            .setNegativeButton("انصراف", null)
-            .show()
+
+            override fun getItemCount(): Int = filteredChannels.size
+
+            override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+                val ch = filteredChannels[position]
+                val txtNum = holder.itemView.findViewById<TextView>(R.id.txtPickerChannelNumber)
+                val txtName = holder.itemView.findViewById<TextView>(R.id.txtPickerChannelName)
+                val txtType = holder.itemView.findViewById<TextView>(R.id.txtPickerChannelType)
+                val badgeSelected = holder.itemView.findViewById<TextView>(R.id.badgePickerSelected)
+
+                val numStr = if (ch.realChannelNum > 0) ch.realChannelNum.toString() else (allChannels.indexOf(ch) + 1).toString()
+                txtNum.text = numStr
+                txtName.text = ch.serviceName
+                txtType.text = if (ch.isRadio) "رادیو" else "تلویزیون"
+
+                val isSelected = (ch.serviceId == currentChannel.serviceId)
+                badgeSelected.visibility = if (isSelected) View.VISIBLE else View.GONE
+                if (isSelected) {
+                    holder.itemView.setBackgroundResource(R.drawable.card_channel_playing_bg)
+                } else {
+                    holder.itemView.setBackgroundResource(R.drawable.card_channel_bg)
+                }
+
+                val typeLabel = if (ch.isRadio) "رادیو" else "کانال"
+                val selLabel = if (isSelected) "، در حال حاضر انتخاب شده" else ""
+                holder.itemView.contentDescription = "$typeLabel $numStr: ${ch.serviceName}$selLabel. برای انتخاب ضربه بزنید."
+
+                holder.itemView.setOnClickListener {
+                    val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                    imm?.hideSoftInputFromWindow(edtSearch.windowToken, 0)
+                    dialog.dismiss()
+                    onChannelSelected(ch)
+                }
+            }
+        }
+
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
+
+        fun filter(query: String) {
+            val q = query.trim().lowercase(Locale.ROOT)
+                .replace("ي", "ی")
+                .replace("ك", "ک")
+            filteredChannels.clear()
+            if (q.isEmpty()) {
+                filteredChannels.addAll(allChannels)
+            } else {
+                for (ch in allChannels) {
+                    val nameNorm = ch.serviceName.lowercase(Locale.ROOT)
+                        .replace("ي", "ی")
+                        .replace("ك", "ک")
+                    val num = if (ch.realChannelNum > 0) ch.realChannelNum.toString() else (allChannels.indexOf(ch) + 1).toString()
+                    if (nameNorm.contains(q) || num.contains(q)) {
+                        filteredChannels.add(ch)
+                    }
+                }
+            }
+            adapter.notifyDataSetChanged()
+            if (filteredChannels.isEmpty()) {
+                txtNoChannels.visibility = View.VISIBLE
+                recyclerView.visibility = View.GONE
+            } else {
+                txtNoChannels.visibility = View.GONE
+                recyclerView.visibility = View.VISIBLE
+            }
+            if (q.isNotEmpty()) {
+                AccessibilityHelper.announce(recyclerView, "${filteredChannels.size} شبکه یافت شد")
+            }
+        }
+
+        edtSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val text = s?.toString() ?: ""
+                btnClear.visibility = if (text.isNotEmpty()) View.VISIBLE else View.GONE
+                filter(text)
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        btnClear.setOnClickListener {
+            edtSearch.text?.clear()
+            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.hideSoftInputFromWindow(edtSearch.windowToken, 0)
+            edtSearch.clearFocus()
+            AccessibilityHelper.announce(dialogView, "متن جست‌وجو پاک شد و صفحه کلید بسته شد")
+        }
+
+        btnCancel.setOnClickListener {
+            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.hideSoftInputFromWindow(edtSearch.windowToken, 0)
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun confirmAndSendStbTimer(
@@ -473,6 +622,7 @@ class RecordFragment : Fragment() {
         val timerPayload = mapOf(
             "TimerIndex" to "0",
             "TimerProgramId" to channel.serviceId,
+            "TimerProgramName" to channel.serviceName,
             "TimerMonth" to mon.toString(),
             "TimerDay" to day.toString(),
             "TimerStartHour" to sh.toString(),
@@ -480,7 +630,7 @@ class RecordFragment : Fragment() {
             "TimerEndHour" to eh.toString(),
             "TimerEndMin" to em.toString(),
             "TimerRepeat" to repeatMode.toString(),
-            "TimerStatus" to "1",
+            "TimerStatus" to "2", // 2 = Record mode on ALi PVR STB!
             "TimerEventID" to "0",
             "auto_wake" to if (autoWake) "1" else "0",
             "auto_poweroff" to if (autoPowerOff) "1" else "0",
@@ -509,13 +659,16 @@ class RecordFragment : Fragment() {
             txtNoStbTimers.visibility = View.GONE
             for ((index, t) in timers.withIndex()) {
                 val progId = t["TimerProgramId"]?.toString() ?: ""
-                val ch = repository.channels.value.find { it.serviceId == progId }
-                val chName = ch?.serviceName ?: "کانال ناشناس ($progId)"
-                val sh = t["TimerStartHour"]?.toString() ?: "0"
-                val sm = t["TimerStartMin"]?.toString() ?: "0"
-                val eh = t["TimerEndHour"]?.toString() ?: "0"
-                val em = t["TimerEndMin"]?.toString() ?: "0"
-                val timerText = "تایمر ${index + 1}: $chName از $sh:$sm تا $eh:$em روی فلش"
+                val progName = t["TimerProgramName"]?.toString()?.takeIf { it.isNotBlank() }
+                val ch = repository.channels.value.find { 
+                    it.serviceId == progId || it.serviceId.endsWith(progId) || (progId.isNotBlank() && progId == it.serviceId.trimStart('0'))
+                }
+                val chName = ch?.serviceName ?: progName ?: "کانال ($progId)"
+                val sh = t["TimerStartHour"]?.toString()?.toIntOrNull() ?: 0
+                val sm = t["TimerStartMin"]?.toString()?.toIntOrNull() ?: 0
+                val eh = t["TimerEndHour"]?.toString()?.toIntOrNull() ?: 0
+                val em = t["TimerEndMin"]?.toString()?.toIntOrNull() ?: 0
+                val timerText = "تایمر ${index + 1}: $chName از %02d:%02d تا %02d:%02d روی فلش".format(sh, sm, eh, em)
 
                 val btn = MaterialButton(requireContext()).apply {
                     text = timerText
@@ -895,5 +1048,6 @@ class RecordFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         timerHandler.removeCallbacks(timerRunnable)
+        stbTimerHandler.removeCallbacks(stbTimerRunnable)
     }
 }

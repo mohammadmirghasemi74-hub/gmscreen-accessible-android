@@ -11,8 +11,8 @@ android {
         applicationId 'com.gmscreen.accessible'
         minSdk 24
         targetSdk 34
-        versionCode 28
-        versionName '2.3.25'
+        versionCode 29
+        versionName '2.3.26'
 
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'

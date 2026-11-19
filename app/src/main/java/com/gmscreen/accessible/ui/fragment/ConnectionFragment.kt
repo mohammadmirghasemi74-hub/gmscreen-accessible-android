@@ -67,12 +67,7 @@ class ConnectionFragment : Fragment() {
         btnAutoDiscover.contentDescription = "جستجوی مجدد رسیورهای موجود در شبکه وای‌فای"
 
         if (!repository.isConnected.value) {
-            val lastIp = appConfig.lastConnectedIp
-            if (lastIp.isNotBlank()) {
-                connectToStb(lastIp, fallbackToDiscovery = true)
-            } else {
-                startDiscovery()
-            }
+            startDiscovery()
         }
 
         return view

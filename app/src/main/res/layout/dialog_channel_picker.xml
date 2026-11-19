@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/bg_card"
+    android:padding="16dp">
+
+    <!-- Dialog Title -->
+    <TextView
+        android:id="@+id/txtPickerTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="انتخاب شبکه برای ضبط"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Live Search Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/search_box_bg"
+        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="10dp">
+
+        <EditText
+            android:id="@+id/edtPickerSearch"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@null"
+            android:hint="جست‌وجوی نام یا شماره کانال..."
+            android:textColorHint="@color/text_muted"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp"
+            android:singleLine="true"
+            android:imeOptions="actionSearch" />
+
+        <ImageButton
+            android:id="@+id/btnPickerClearSearch"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:contentDescription="دکمه پاک کردن متن جست‌وجو و بستن صفحه کلید"
+            android:visibility="gone"
+            app:tint="@color/text_secondary" />
+    </LinearLayout>
+
+    <!-- Channels List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerPickerChannels"
+        android:layout_width="match_parent"
+        android:layout_height="340dp"
+        android:scrollbars="vertical" />
+
+    <!-- No results text -->
+    <TextView
+        android:id="@+id/txtPickerNoChannels"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:gravity="center"
+        android:text="هیچ شبکه‌ای با این مشخصات یافت نشد"
+        android:textColor="@color/text_muted"
+        android:textSize="15sp"
+        android:visibility="gone" />
+
+    <!-- Cancel Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnPickerCancel"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="10dp"
+        android:text="انصراف"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        app:backgroundTint="@color/card_bg_elevated"
+        app:cornerRadius="12dp" />
+
+</LinearLayout>
