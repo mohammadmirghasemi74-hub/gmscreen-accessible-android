@@ -86,9 +86,9 @@ class ChannelsAdapter(
             badgeLock.visibility = if (channel.isScrambled) View.VISIBLE else View.GONE
 
             if (isCurrentlyPlaying) {
-                itemView.setBackgroundColor(ContextCompat.getColor(itemView.context, R.color.card_bg))
+                itemView.setBackgroundResource(R.drawable.card_channel_playing_bg)
             } else {
-                itemView.background = null
+                itemView.setBackgroundResource(R.drawable.card_channel_bg)
             }
 
             // Concise TalkBack announcement: no repetitive instructions

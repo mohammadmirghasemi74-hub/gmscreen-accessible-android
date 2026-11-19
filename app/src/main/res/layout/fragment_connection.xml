@@ -18,15 +18,15 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/divider"
+            app:cardCornerRadius="16dp"
+            app:strokeColor="@color/card_border"
             app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <TextView
                     android:id="@+id/txtStatus"
@@ -52,12 +52,13 @@
                     android:id="@+id/btnDisconnect"
                     android:layout_width="wrap_content"
                     android:layout_height="48dp"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="14dp"
                     android:text="@string/btn_disconnect"
                     android:textColor="@color/white"
+                    android:textStyle="bold"
                     android:visibility="gone"
                     app:backgroundTint="@color/accent_red"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="12dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -67,15 +68,15 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/divider"
+            app:cardCornerRadius="16dp"
+            app:strokeColor="@color/card_border"
             app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <TextView
                     android:id="@+id/lblDiscovered"
@@ -101,7 +102,7 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="15sp"
                         android:gravity="center"
-                        android:padding="12dp" />
+                        android:padding="16dp" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -114,7 +115,7 @@
             android:layout_marginBottom="16dp"
             android:visibility="gone"
             app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
+            app:cardCornerRadius="16dp"
             app:strokeColor="@color/primary"
             app:strokeWidth="1dp">
 
@@ -122,7 +123,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <TextView
                     android:layout_width="match_parent"
@@ -154,12 +155,13 @@
                     android:id="@+id/btnConnectManual"
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
                     android:text="@string/btn_connect_manual"
                     android:textColor="@color/white"
                     android:textSize="16sp"
+                    android:textStyle="bold"
                     app:backgroundTint="@color/primary"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="12dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -184,7 +186,7 @@
                 app:icon="@android:drawable/ic_menu_search"
                 app:iconGravity="textStart"
                 app:backgroundTint="@color/accent_green"
-                app:cornerRadius="12dp" />
+                app:cornerRadius="16dp" />
 
             <!-- Corner Toggle for Manual IP -->
             <com.google.android.material.button.MaterialButton

@@ -13,7 +13,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@color/card_bg"
-        android:padding="6dp">
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="8dp">
 
         <!-- TV / Radio Toggle (Left) -->
         <com.google.android.material.button.MaterialButton
@@ -24,8 +25,9 @@
             android:contentDescription="تغییر حالت به رادیو یا تلویزیون"
             android:textColor="@color/white"
             android:textSize="14sp"
+            android:textStyle="bold"
             app:backgroundTint="@color/primary"
-            app:cornerRadius="8dp" />
+            app:cornerRadius="14dp" />
 
         <!-- Search Bar with dynamic Clear button (Center) -->
         <LinearLayout
@@ -34,9 +36,9 @@
             android:layout_weight="1"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/badge_bg"
-            android:layout_marginHorizontal="6dp"
-            android:paddingHorizontal="8dp">
+            android:background="@drawable/search_box_bg"
+            android:layout_marginHorizontal="8dp"
+            android:paddingHorizontal="12dp">
 
             <EditText
                 android:id="@+id/edtSearch"
@@ -45,7 +47,7 @@
                 android:layout_weight="1"
                 android:background="@null"
                 android:hint="@string/search_channels_hint"
-                android:textColorHint="@color/text_secondary"
+                android:textColorHint="@color/text_muted"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:singleLine="true"
@@ -71,11 +73,11 @@
             android:text="ماهواره‌ها"
             android:contentDescription="انتخاب و فیلتر ماهواره"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            app:strokeColor="@color/divider"
+            android:textSize="13sp"
+            app:strokeColor="@color/card_border"
             app:strokeWidth="1dp"
-            app:backgroundTint="@color/card_bg"
-            app:cornerRadius="8dp" />
+            app:backgroundTint="@color/card_bg_elevated"
+            app:cornerRadius="14dp" />
 
     </LinearLayout>
 
@@ -84,23 +86,26 @@
         android:id="@+id/txtChannelCount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/black"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="4dp"
+        android:background="@color/card_bg_subtle"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="7dp"
         android:text="در حال بارگذاری کانال‌ها…"
         android:textColor="@color/accent_yellow"
         android:textSize="13sp"
+        android:textStyle="bold"
         android:focusable="true" />
 
     <!-- Persistent Audio Playback Bar (Shown only when playing audio-only) -->
     <LinearLayout
         android:id="@+id/layoutAudioPlayingBar"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="60dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="#1B5E20"
-        android:paddingHorizontal="12dp"
+        android:background="@drawable/card_channel_playing_bg"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginTop="6dp"
+        android:paddingHorizontal="14dp"
         android:visibility="gone">
 
         <TextView
@@ -123,19 +128,22 @@
             android:contentDescription="شروع یا توقف ضبط این جریان صوتی روی گوشی"
             android:textColor="@color/white"
             android:textSize="12sp"
-            app:backgroundTint="#B71C1C"
-            app:cornerRadius="8dp" />
+            android:textStyle="bold"
+            app:backgroundTint="@color/accent_red"
+            app:cornerRadius="12dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnStopAudioPlayback"
             android:layout_width="wrap_content"
             android:layout_height="44dp"
-            android:text="توقف پخش صوتی"
+            android:text="توقف پخش"
             android:contentDescription="توقف پخش صوتی در گوشی"
             android:textColor="@color/white"
             android:textSize="12sp"
-            app:backgroundTint="#263238"
-            app:cornerRadius="8dp" />
+            app:backgroundTint="@color/card_bg_elevated"
+            app:strokeColor="@color/card_border"
+            app:strokeWidth="1dp"
+            app:cornerRadius="12dp" />
     </LinearLayout>
 
     <!-- Jump to First / Last Channel Buttons Row (Visibility controlled by Settings) -->
@@ -159,9 +167,9 @@
             android:textColor="@color/white"
             android:textSize="12sp"
             app:backgroundTint="@color/card_bg"
-            app:strokeColor="@color/divider"
+            app:strokeColor="@color/card_border"
             app:strokeWidth="1dp"
-            app:cornerRadius="8dp" />
+            app:cornerRadius="12dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnJumpToLastChannel"
@@ -174,9 +182,9 @@
             android:textColor="@color/white"
             android:textSize="12sp"
             app:backgroundTint="@color/card_bg"
-            app:strokeColor="@color/divider"
+            app:strokeColor="@color/card_border"
             app:strokeWidth="1dp"
-            app:cornerRadius="8dp" />
+            app:cornerRadius="12dp" />
     </LinearLayout>
 
     <!-- Channels Container with Refresh FAB -->
@@ -189,7 +197,7 @@
             android:id="@+id/recyclerViewChannels"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingVertical="4dp"
+            android:paddingVertical="6dp"
             android:clipToPadding="false" />
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
@@ -201,9 +209,11 @@
             android:text="ضبط‌ها"
             android:contentDescription="مشاهده فایل‌های ضبط‌شده در حافظه گوشی"
             android:textColor="@color/white"
+            android:textStyle="bold"
             app:icon="@android:drawable/ic_menu_save"
             app:iconTint="@color/white"
-            app:backgroundTint="@color/secondary" />
+            app:backgroundTint="@color/secondary"
+            app:cornerRadius="24dp" />
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/fabRefreshChannels"
@@ -214,9 +224,11 @@
             android:text="به‌روزرسانی"
             android:contentDescription="به‌روزرسانی لیست شبکه‌ها از رسیور"
             android:textColor="@color/white"
+            android:textStyle="bold"
             app:icon="@android:drawable/ic_popup_sync"
             app:iconTint="@color/white"
-            app:backgroundTint="@color/primary" />
+            app:backgroundTint="@color/primary"
+            app:cornerRadius="24dp" />
 
     </FrameLayout>
 

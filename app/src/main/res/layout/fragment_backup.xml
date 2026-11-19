@@ -28,8 +28,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/divider"
+            app:cardCornerRadius="16dp"
+            app:strokeColor="@color/card_border"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -65,7 +65,7 @@
                     android:textSize="15sp"
                     android:layout_marginBottom="8dp"
                     app:backgroundTint="@color/primary"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="14dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnExportM3u"
@@ -75,7 +75,7 @@
                     android:textColor="@color/white"
                     android:textSize="15sp"
                     app:backgroundTint="@color/secondary"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="14dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -85,8 +85,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/divider"
+            app:cardCornerRadius="16dp"
+            app:strokeColor="@color/card_border"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -120,7 +120,7 @@
                     android:textColor="@color/white"
                     android:textSize="15sp"
                     app:backgroundTint="@color/accent_green"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="14dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -130,8 +130,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/divider"
+            app:cardCornerRadius="16dp"
+            app:strokeColor="@color/card_border"
             app:strokeWidth="1dp">
 
             <LinearLayout

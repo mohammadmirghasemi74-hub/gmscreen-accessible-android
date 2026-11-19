@@ -31,7 +31,7 @@
                 android:textSize="13sp"
                 android:textStyle="bold"
                 app:backgroundTint="#7B1FA2"
-                app:cornerRadius="10dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnPower"
@@ -45,7 +45,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 app:backgroundTint="@color/accent_red"
-                app:cornerRadius="10dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnMute"
@@ -59,7 +59,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 app:backgroundTint="@color/accent_yellow"
-                app:cornerRadius="10dp" />
+                app:cornerRadius="14dp" />
         </LinearLayout>
 
         <!-- 2. TV/Radio, SAT, FAV Row -->
@@ -79,9 +79,9 @@
                 android:contentDescription="@string/rcu_tv_radio"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSat"
@@ -93,9 +93,9 @@
                 android:contentDescription="@string/rcu_sat"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnFav"
@@ -107,9 +107,9 @@
                 android:contentDescription="@string/rcu_fav"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
         </LinearLayout>
 
         <!-- 3. Numeric Keypad (Exact Real Remote Layout: 1 2 3 / 4 5 6 / 7 8 9 / Recall 0 Info) -->
@@ -133,9 +133,9 @@
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDigit2"
@@ -148,9 +148,9 @@
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDigit3"
@@ -163,9 +163,9 @@
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <!-- 4, 5, 6 -->
             <com.google.android.material.button.MaterialButton
@@ -179,9 +179,9 @@
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDigit5"
@@ -194,9 +194,9 @@
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDigit6"
@@ -209,9 +209,9 @@
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <!-- 7, 8, 9 -->
             <com.google.android.material.button.MaterialButton
@@ -225,9 +225,9 @@
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDigit8"
@@ -240,9 +240,9 @@
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDigit9"
@@ -255,9 +255,9 @@
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <!-- Recall (Left of 0), 0, Sleep/Exit (Right of 0) -->
             <com.google.android.material.button.MaterialButton
@@ -271,9 +271,9 @@
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDigit0"
@@ -286,9 +286,9 @@
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSleep"
@@ -301,9 +301,9 @@
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
         </GridLayout>
 
         <!-- 4. Menu, EPG, Info, Exit Cluster -->
@@ -323,9 +323,9 @@
                 android:contentDescription="@string/rcu_menu"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEpg"
@@ -337,9 +337,9 @@
                 android:contentDescription="@string/rcu_epg"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnInfo"
@@ -351,9 +351,9 @@
                 android:contentDescription="@string/rcu_info"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnExit"
@@ -365,9 +365,9 @@
                 android:contentDescription="@string/rcu_exit"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
         </LinearLayout>
 
         <!-- 5. Navigation Ring (Up, Down, Left, Right, OK) -->
@@ -377,7 +377,7 @@
             android:layout_marginBottom="12dp"
             app:cardBackgroundColor="@color/card_bg"
             app:cardCornerRadius="16dp"
-            app:strokeColor="@color/divider"
+            app:strokeColor="@color/card_border"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -396,7 +396,7 @@
                     android:textColor="@color/white"
                     android:textSize="16sp"
                     app:backgroundTint="@color/secondary"
-                    app:cornerRadius="10dp" />
+                    app:cornerRadius="14dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -415,7 +415,7 @@
                         android:textColor="@color/white"
                         android:textSize="16sp"
                         app:backgroundTint="@color/secondary"
-                        app:cornerRadius="10dp" />
+                        app:cornerRadius="14dp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnOk"
@@ -439,7 +439,7 @@
                         android:textColor="@color/white"
                         android:textSize="16sp"
                         app:backgroundTint="@color/secondary"
-                        app:cornerRadius="10dp" />
+                        app:cornerRadius="14dp" />
                 </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
@@ -451,7 +451,7 @@
                     android:textColor="@color/white"
                     android:textSize="16sp"
                     app:backgroundTint="@color/secondary"
-                    app:cornerRadius="10dp" />
+                    app:cornerRadius="14dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -482,9 +482,9 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="4dp"
                     app:backgroundTint="@color/card_bg"
-                    app:strokeColor="@color/divider"
+                    app:strokeColor="@color/card_border"
                     app:strokeWidth="1dp"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="14dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnVolDown"
@@ -496,9 +496,9 @@
                     android:textSize="15sp"
                     android:textStyle="bold"
                     app:backgroundTint="@color/card_bg"
-                    app:strokeColor="@color/divider"
+                    app:strokeColor="@color/card_border"
                     app:strokeWidth="1dp"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="14dp" />
             </LinearLayout>
 
             <!-- Right Column: Channel (Next over Prev) -->
@@ -520,9 +520,9 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="4dp"
                     app:backgroundTint="@color/card_bg"
-                    app:strokeColor="@color/divider"
+                    app:strokeColor="@color/card_border"
                     app:strokeWidth="1dp"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="14dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnChPrev"
@@ -534,9 +534,9 @@
                     android:textSize="15sp"
                     android:textStyle="bold"
                     app:backgroundTint="@color/card_bg"
-                    app:strokeColor="@color/divider"
+                    app:strokeColor="@color/card_border"
                     app:strokeWidth="1dp"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="14dp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -557,7 +557,7 @@
                 android:contentDescription="@string/rcu_red"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/accent_red"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnGreen"
@@ -569,7 +569,7 @@
                 android:contentDescription="@string/rcu_green"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/accent_green"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnYellow"
@@ -581,7 +581,7 @@
                 android:contentDescription="@string/rcu_yellow"
                 android:textColor="@color/black"
                 app:backgroundTint="@color/accent_yellow"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBlue"
@@ -593,7 +593,7 @@
                 android:contentDescription="@string/rcu_blue"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/secondary"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="14dp" />
         </LinearLayout>
 
         <!-- 8. Media & Recording Cluster -->
@@ -626,7 +626,7 @@
                 android:contentDescription="@string/rcu_stop"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
                 app:cornerRadius="6dp" />
 
@@ -640,7 +640,7 @@
                 android:contentDescription="@string/rcu_play"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
                 app:cornerRadius="6dp" />
 
@@ -654,7 +654,7 @@
                 android:contentDescription="@string/rcu_pause"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
                 app:cornerRadius="6dp" />
 
@@ -668,7 +668,7 @@
                 android:contentDescription="@string/rcu_rew"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
                 app:cornerRadius="6dp" />
 
@@ -682,7 +682,7 @@
                 android:contentDescription="@string/rcu_ff"
                 android:textColor="@color/white"
                 app:backgroundTint="@color/card_bg"
-                app:strokeColor="@color/divider"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
                 app:cornerRadius="6dp" />
         </LinearLayout>

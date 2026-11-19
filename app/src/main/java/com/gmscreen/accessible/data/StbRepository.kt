@@ -298,6 +298,29 @@ class StbRepository(context: Context) {
         return ok
     }
 
+    suspend fun deleteChannel(channel: Channel): Boolean {
+        if (!client.isConnected) return false
+        val ok = client.deleteChannel(channel.serviceId, channel.isRadio)
+        if (ok) {
+            val currentList = _channels.value.toMutableList()
+            currentList.removeAll { it.serviceId == channel.serviceId }
+            var tvCounter = 1
+            var radioCounter = 1
+            for (ch in currentList) {
+                if (ch.isRadio) {
+                    ch.realChannelNum = radioCounter++
+                } else {
+                    ch.realChannelNum = tvCounter++
+                }
+            }
+            _channels.value = currentList
+            if (_currentChannel.value?.serviceId == channel.serviceId) {
+                _currentChannel.value = currentList.firstOrNull { it.isRadio == channel.isRadio }
+            }
+        }
+        return ok
+    }
+
     suspend fun refreshTimers() {
         if (!client.isConnected) return
         val timers = client.fetchTimers()

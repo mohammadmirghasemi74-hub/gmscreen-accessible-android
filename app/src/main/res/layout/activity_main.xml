@@ -13,22 +13,25 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@color/card_bg"
-        android:padding="8dp">
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnActiveTab"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
+            android:layout_height="56dp"
             android:text="سربرگ فعال: اتصال (برای تغییر کلیک کنید)"
             android:contentDescription="سربرگ فعال: اتصال. برای تغییر سربرگ دو بار ضربه بزنید"
             android:textColor="@color/white"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:textStyle="bold"
             app:icon="@android:drawable/ic_menu_sort_by_size"
             app:iconGravity="textStart"
             app:iconTint="@color/accent_yellow"
             app:backgroundTint="@color/primary"
-            app:cornerRadius="10dp" />
+            app:strokeColor="@color/primary_light"
+            app:strokeWidth="1dp"
+            app:cornerRadius="14dp" />
 
     </LinearLayout>
 

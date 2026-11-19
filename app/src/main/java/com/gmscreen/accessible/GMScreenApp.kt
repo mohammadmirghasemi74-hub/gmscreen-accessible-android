@@ -27,7 +27,7 @@ class GMScreenApplication : Application() {
 
         appConfig = AppConfig(this)
         repository = StbRepository(this)
-        AppLogger.i("App", "GMScreen Application started (v2.3.24)")
+        AppLogger.i("App", "GMScreen Application started (v2.3.25)")
     }
 
     companion object {

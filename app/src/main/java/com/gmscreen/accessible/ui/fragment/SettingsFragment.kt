@@ -77,11 +77,11 @@ class SettingsFragment : Fragment() {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    setMargins(0, 0, 0, 10)
+                    setMargins(0, 0, 0, 12)
                 }
-                radius = 12f
+                radius = 16f
                 setCardBackgroundColor(resources.getColor(R.color.card_bg, null))
-                strokeColor = resources.getColor(R.color.divider, null)
+                strokeColor = resources.getColor(R.color.card_border, null)
                 strokeWidth = 1
                 isClickable = true
                 isFocusable = true

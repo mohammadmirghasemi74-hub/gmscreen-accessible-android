@@ -564,6 +564,24 @@ class StbClient {
         ok
     }
 
+    suspend fun deleteChannel(programId: String, isRadio: Boolean): Boolean = withContext(Dispatchers.IO) {
+        lastUserCmdTime = System.currentTimeMillis()
+        val radioStr = if (isRadio) "1" else "0"
+        val payload = mapOf(
+            "TotalNum" to "1",
+            "array" to listOf(
+                mapOf(
+                    "TvState" to radioStr,
+                    "ProgramId" to programId
+                )
+            )
+        )
+        val res = sendCmd(1002, payload, expectReply = true, timeoutMs = 5000)
+        val ok = res != null
+        AppLogger.i("StbClient", "deleteChannel: programId=$programId, isRadio=$isRadio, result=$ok")
+        ok
+    }
+
     suspend fun saveStbSettings(settings: Map<String, Any>): Boolean = withContext(Dispatchers.IO) {
         lastUserCmdTime = System.currentTimeMillis()
         val payload = mapOf(

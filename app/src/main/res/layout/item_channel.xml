@@ -5,22 +5,24 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingHorizontal="12dp"
-    android:paddingVertical="10dp"
-    android:background="?attr/selectableItemBackground"
+    android:layout_marginHorizontal="10dp"
+    android:layout_marginVertical="4dp"
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="12dp"
+    android:background="@drawable/card_channel_bg"
     android:clickable="true"
     android:focusable="true">
 
-    <!-- Channel Number -->
+    <!-- Channel Number Badge -->
     <TextView
         android:id="@+id/txtChannelNumber"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:gravity="center"
-        android:background="@drawable/badge_bg"
+        android:background="@drawable/badge_pill_bg"
         android:text="1"
         android:textColor="@color/accent_yellow"
-        android:textSize="18sp"
+        android:textSize="17sp"
         android:textStyle="bold" />
 
     <!-- Channel Info -->
@@ -29,8 +31,8 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="8dp">
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="10dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -59,10 +61,10 @@
                 android:textColor="#FFFFFF"
                 android:textSize="11sp"
                 android:textStyle="bold"
-                android:background="@color/accent_green"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="2dp"
-                android:layout_marginStart="4dp"
+                android:background="@drawable/badge_playing_pill"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
+                android:layout_marginStart="6dp"
                 android:visibility="gone" />
 
             <!-- HD Badge -->
@@ -71,13 +73,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="HD"
-                android:textColor="@color/accent_green"
+                android:textColor="@color/accent_blue"
                 android:textSize="11sp"
                 android:textStyle="bold"
-                android:background="@color/black"
-                android:paddingHorizontal="4dp"
-                android:paddingVertical="1dp"
-                android:layout_marginStart="4dp"
+                android:background="@drawable/badge_hd_pill"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:layout_marginStart="6dp"
                 android:visibility="gone" />
 
             <!-- Scrambled Badge -->
@@ -85,11 +87,14 @@
                 android:id="@+id/badgeLock"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="$"
+                android:text="کارتی $"
                 android:textColor="@color/accent_red"
-                android:textSize="14sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
-                android:layout_marginStart="4dp"
+                android:background="@drawable/badge_lock_pill"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:layout_marginStart="6dp"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -98,7 +103,7 @@
             android:id="@+id/txtChannelDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="4dp"
             android:text="بدر ۵ • ۱۱۸۸۱ MHz"
             android:textColor="@color/text_secondary"
             android:textSize="13sp"
@@ -114,9 +119,10 @@
         android:text="@string/btn_play_channel"
         android:textColor="@color/white"
         android:textSize="13sp"
+        android:textStyle="bold"
         app:icon="@android:drawable/ic_media_play"
         app:iconGravity="textStart"
         app:backgroundTint="@color/primary"
-        app:cornerRadius="8dp" />
+        app:cornerRadius="22dp" />
 
 </LinearLayout>

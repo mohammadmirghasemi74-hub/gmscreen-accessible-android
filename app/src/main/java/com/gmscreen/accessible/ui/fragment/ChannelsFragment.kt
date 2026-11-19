@@ -735,7 +735,8 @@ class ChannelsFragment : Fragment() {
             "۹. کپی آدرس استریم زنده (RTSP URL)",
             "۱۰. افزودن به زمان‌بندی ضبط روی فلش رسیور",
             "۱۱. افزودن به زمان‌بندی ضبط روی حافظه گوشی",
-            "۱۲. حرکت دادن کانال به شماره دلخواه (Move Channel)"
+            "۱۲. حرکت دادن کانال به شماره دلخواه (Move Channel)",
+            "۱۳. حذف این کانال از حافظه رسیور (Delete Channel)"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -777,9 +778,54 @@ class ChannelsFragment : Fragment() {
                         Toast.makeText(requireContext(), "شبکه ${channel.serviceName} انتخاب شد؛ در سربرگ ضبط دکمه افزودن زمان‌بندی گوشی را بزنید", Toast.LENGTH_LONG).show()
                     }
                     11 -> promptMoveChannel(channel)
+                    12 -> promptDeleteChannel(channel)
                 }
             }
             .setNegativeButton("بستن", null)
+            .show()
+    }
+
+    private fun promptDeleteChannel(channel: Channel) {
+        val ip = repository.connectedIp.value
+        if (ip.isBlank() || !repository.isConnected.value) {
+            Toast.makeText(requireContext(), "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val chName = channel.serviceName
+        val typeStr = if (channel.isRadio) "رادیویی" else "تلویزیونی"
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("حذف کانال $chName")
+            .setMessage("آیا از حذف کامل کانال $typeStr «$chName» از حافظه رسیور اطمینان دارید؟\nاین عملیات این کانال را به‌طور کامل از لیست رسیور پاک می‌کند.")
+            .setPositiveButton("بله، حذف کن") { _, _ ->
+                if (currentAudioChannel?.serviceId == channel.serviceId) {
+                    stopAudioPlayback()
+                }
+
+                val startMsg = "در حال حذف کانال $chName از رسیور..."
+                AccessibilityHelper.announce(txtChannelCount, startMsg)
+                Toast.makeText(requireContext(), startMsg, Toast.LENGTH_SHORT).show()
+
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    val ok = repository.deleteChannel(channel)
+                    withContext(Dispatchers.Main) {
+                        if (ok) {
+                            filterChannels()
+                            val successMsg = "کانال $chName با موفقیت از رسیور حذف شد"
+                            AccessibilityHelper.announce(recyclerViewChannels, successMsg)
+                            AccessibilityHelper.vibrateSuccess(requireContext())
+                            Toast.makeText(requireContext(), successMsg, Toast.LENGTH_LONG).show()
+                        } else {
+                            val errMsg = "خطا در ارسال دستور حذف کانال به رسیور"
+                            AccessibilityHelper.announce(txtChannelCount, errMsg)
+                            AccessibilityHelper.vibrateWarning(requireContext())
+                            Toast.makeText(requireContext(), errMsg, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("انصراف", null)
             .show()
     }
 
