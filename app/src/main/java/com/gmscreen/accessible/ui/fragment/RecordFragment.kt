@@ -10,6 +10,7 @@ import android.os.Looper
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -101,12 +102,33 @@ class RecordFragment : Fragment() {
                     "%02d:%02d".format(mins, secs)
                 }
                 txtStbRecordStatus.text = "در حال ضبط روی فلش رسیور… $timeStr"
-                btnStbToggleRecord.text = "توقف ضبط رسیور ($timeStr)"
-                btnStbToggleRecord.contentDescription = "در حال ضبط روی فلش رسیور به مدت $timeStr. برای توقف ضربه بزنید."
                 stbTimerHandler.postDelayed(this, 1000)
             }
         }
     }
+
+    // Local STB Timers list
+    data class StbScheduledTimer(
+        val id: String,
+        val channelName: String,
+        val channelId: String,
+        val isRadio: Boolean,
+        val startHour: Int,
+        val startMinute: Int,
+        val durationMinutes: Int,
+        val endHour: Int,
+        val endMinute: Int,
+        val repeatMode: Int = 0,
+        val autoWake: Boolean = false,
+        val autoPowerOff: Boolean = false,
+        val autoDelete: Boolean = false,
+        var isRecordingActive: Boolean = false,
+        var isFinished: Boolean = false,
+        var lastTriggeredDate: String = ""
+    )
+    private val stbTimers = mutableListOf<StbScheduledTimer>()
+    private var isStbWatcherRunning = false
+    private var isPhoneWatcherRunning = false
 
     // Local Phone Timers list
     data class PhoneScheduledTimer(
@@ -161,6 +183,8 @@ class RecordFragment : Fragment() {
 
         setupListeners()
         observeData()
+        loadStbTimers()
+        startStbTimerWatcher()
         loadPhoneTimers()
         startPhoneTimerWatcher()
         updateFormatLabels()
@@ -248,8 +272,13 @@ class RecordFragment : Fragment() {
                     }
                 } else {
                     repository.sendRcuKey(RcuKey.STOP)
+                    kotlinx.coroutines.delay(800)
+                    repository.sendRcuKey(RcuKey.OK)
+                    kotlinx.coroutines.delay(500)
+                    repository.sendRcuKey(RcuKey.EXIT)
                     withContext(Dispatchers.Main) {
                         isStbRecording = false
+                        stbRecSeconds = 0
                         updateStbRecordButtonUi()
                         val msg = "دستور توقف ضبط به رسیور ارسال شد"
                         AccessibilityHelper.announce(btnStbToggleRecord, msg)
@@ -270,8 +299,13 @@ class RecordFragment : Fragment() {
         btnStopStbScheduledRec.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 repository.sendRcuKey(RcuKey.STOP)
+                kotlinx.coroutines.delay(800)
+                repository.sendRcuKey(RcuKey.OK)
+                kotlinx.coroutines.delay(500)
+                repository.sendRcuKey(RcuKey.EXIT)
                 withContext(Dispatchers.Main) {
                     isStbRecording = false
+                    stbRecSeconds = 0
                     updateStbRecordButtonUi()
                     val msg = "دستور توقف ضبط به رسیور ارسال شد"
                     AccessibilityHelper.announce(btnStopStbScheduledRec, msg)
@@ -300,8 +334,8 @@ class RecordFragment : Fragment() {
             val mins = (stbRecSeconds % 3600) / 60
             val secs = stbRecSeconds % 60
             val timeStr = if (hours > 0) "%02d:%02d:%02d".format(hours, mins, secs) else "%02d:%02d".format(mins, secs)
-            btnStbToggleRecord.text = "توقف ضبط رسیور ($timeStr)"
-            btnStbToggleRecord.contentDescription = "در حال ضبط روی فلش رسیور به مدت $timeStr. برای توقف ضربه بزنید."
+            btnStbToggleRecord.text = "توقف ضبط رسیور"
+            btnStbToggleRecord.contentDescription = "دکمه توقف ضبط رسیور"
             btnStbToggleRecord.setBackgroundColor(resources.getColor(R.color.accent_red, null))
             txtStbRecordStatus.text = "در حال ضبط روی فلش رسیور… $timeStr"
             txtStbRecordStatus.setTextColor(resources.getColor(R.color.accent_red, null))
@@ -322,12 +356,6 @@ class RecordFragment : Fragment() {
 
     private fun observeData() {
         viewLifecycleOwner.lifecycleScope.launch {
-            repository.stbTimers.collect { timers ->
-                displayStbTimers(timers)
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
             repository.pvrFiles.collect { files ->
                 displayStbPvrFiles(files)
             }
@@ -335,15 +363,31 @@ class RecordFragment : Fragment() {
     }
 
     private fun showAccessibleHourPicker(title: String, onHourSelected: (Int) -> Unit) {
-        val hours = Array(24) { h ->
-            val period = if (h < 12) "صبح" else if (h == 12) "ظهر" else if (h < 17) "بعدازظهر" else if (h < 20) "عصر" else "شب"
-            val h12 = if (h == 0) 12 else if (h > 12) h - 12 else h
-            String.format(Locale.US, "ساعت %02d (%d %s)", h, h12, period)
-        }
+        // Ordered from 1 AM (1 صبح/بامداد) through 12 AM (12 نیمه‌شب / ۲۴)
+        val orderedHours = (1..23).toList() + listOf(0)
+        val hourLabels = orderedHours.map { h ->
+            val h12 = if (h == 0 || h == 12) 12 else if (h > 12) h - 12 else h
+            val period = when {
+                h in 1..4 -> "بامداد"
+                h in 5..11 -> "صبح"
+                h == 12 -> "ظهر"
+                h in 13..16 -> "بعدازظهر"
+                h in 17..19 -> "عصر"
+                h in 20..23 -> "شب"
+                else -> "۱۲ بعد از ظهر / نیمه‌شب"
+            }
+            if (h == 0) {
+                "ساعت ۰۰:۰۰ (۱۲ بعد از ظهر / نیمه‌شب)"
+            } else {
+                "ساعت %02d:۰۰ (%d %s)".format(h, h12, period)
+            }
+        }.toTypedArray()
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(title)
-            .setItems(hours) { _, which ->
-                onHourSelected(which)
+            .setItems(hourLabels) { _, which ->
+                val chosenHour = orderedHours[which]
+                onHourSelected(chosenHour)
             }
             .setNegativeButton("انصراف", null)
             .show()
@@ -468,7 +512,33 @@ class RecordFragment : Fragment() {
                     }
                 }
                 .setPositiveButton("ثبت زمان‌بندی در رسیور") { _, _ ->
+                    var dur = (endH * 60 + endM) - (startH * 60 + startM)
+                    if (dur <= 0) dur += 24 * 60
+
+                    val newTimer = StbScheduledTimer(
+                        id = System.currentTimeMillis().toString(),
+                        channelName = targetChannel.serviceName,
+                        channelId = targetChannel.serviceId,
+                        isRadio = targetChannel.isRadio,
+                        startHour = startH,
+                        startMinute = startM,
+                        durationMinutes = dur,
+                        endHour = endH,
+                        endMinute = endM,
+                        repeatMode = repeatMode,
+                        autoWake = autoWake,
+                        autoPowerOff = autoPowerOff,
+                        autoDelete = autoDelete
+                    )
+                    stbTimers.add(newTimer)
+                    saveStbTimers()
+                    renderStbTimers()
+
                     confirmAndSendStbTimer(targetChannel, startH, startM, endH, endM, repeatMode, autoWake, autoPowerOff, autoDelete)
+
+                    val msg = "زمان‌بندی ضبط ${targetChannel.serviceName} روی فلش رسیور از %02d:%02d تا %02d:%02d ثبت شد".format(startH, startM, endH, endM)
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(containerStbTimers, msg)
                 }
                 .setNegativeButton("انصراف", null)
                 .show()
@@ -638,37 +708,23 @@ class RecordFragment : Fragment() {
         )
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val ok = repository.addStbTimer(timerPayload)
-            withContext(Dispatchers.Main) {
-                if (ok) {
-                    val msg = "زمان‌بندی ضبط ${channel.serviceName} از %02d:%02d تا %02d:%02d روی رسیور ثبت شد".format(sh, sm, eh, em)
-                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                    AccessibilityHelper.announce(containerStbTimers, msg)
-                } else {
-                    Toast.makeText(requireContext(), "خطا در ثبت تایمر روی رسیور", Toast.LENGTH_SHORT).show()
-                }
-            }
+            try {
+                repository.addStbTimer(timerPayload)
+            } catch (_: Exception) {}
         }
     }
 
-    private fun displayStbTimers(timers: List<Map<String, Any>>) {
+    private fun renderStbTimers() {
+        if (!isAdded) return
         containerStbTimers.removeAllViews()
-        if (timers.isEmpty()) {
+        if (stbTimers.isEmpty()) {
             txtNoStbTimers.visibility = View.VISIBLE
         } else {
             txtNoStbTimers.visibility = View.GONE
-            for ((index, t) in timers.withIndex()) {
-                val progId = t["TimerProgramId"]?.toString() ?: ""
-                val progName = t["TimerProgramName"]?.toString()?.takeIf { it.isNotBlank() }
-                val ch = repository.channels.value.find { 
-                    it.serviceId == progId || it.serviceId.endsWith(progId) || (progId.isNotBlank() && progId == it.serviceId.trimStart('0'))
-                }
-                val chName = ch?.serviceName ?: progName ?: "کانال ($progId)"
-                val sh = t["TimerStartHour"]?.toString()?.toIntOrNull() ?: 0
-                val sm = t["TimerStartMin"]?.toString()?.toIntOrNull() ?: 0
-                val eh = t["TimerEndHour"]?.toString()?.toIntOrNull() ?: 0
-                val em = t["TimerEndMin"]?.toString()?.toIntOrNull() ?: 0
-                val timerText = "تایمر ${index + 1}: $chName از %02d:%02d تا %02d:%02d روی فلش".format(sh, sm, eh, em)
+            for ((index, t) in stbTimers.withIndex()) {
+                val timerText = "تایمر ${index + 1}: ${t.channelName} از %02d:%02d تا %02d:%02d روی فلش".format(
+                    t.startHour, t.startMinute, t.endHour, t.endMinute
+                )
 
                 val btn = MaterialButton(requireContext()).apply {
                     text = timerText
@@ -682,11 +738,22 @@ class RecordFragment : Fragment() {
                     textSize = 13f
                     setOnClickListener {
                         MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("حذف تایمر رسیور")
-                            .setMessage("آیا می‌خواهید $timerText را از حافظه رسیور حذف کنید؟")
+                            .setTitle("حذف زمان‌بندی رسیور")
+                            .setMessage("آیا می‌خواهید $timerText را حذف کنید؟")
                             .setPositiveButton("بله، حذف کن") { _, _ ->
+                                stbTimers.remove(t)
+                                saveStbTimers()
+                                renderStbTimers()
+                                AccessibilityHelper.announce(containerStbTimers, "زمان‌بندی رسیور حذف شد")
                                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                                    repository.deleteStbTimer(t)
+                                    try {
+                                        val dummyPayload = mapOf(
+                                            "TimerProgramId" to t.channelId,
+                                            "TimerStartHour" to t.startHour.toString(),
+                                            "TimerStartMin" to t.startMinute.toString()
+                                        )
+                                        repository.deleteStbTimer(dummyPayload)
+                                    } catch (_: Exception) {}
                                 }
                             }
                             .setNegativeButton("انصراف", null)
@@ -694,6 +761,151 @@ class RecordFragment : Fragment() {
                     }
                 }
                 containerStbTimers.addView(btn)
+            }
+        }
+    }
+
+    private fun saveStbTimers() {
+        val ctx = context ?: return
+        val file = File(StorageManager.getRecordingsDir(ctx), "stb_scheduled_timers.json")
+        try {
+            val json = Gson().toJson(stbTimers)
+            file.writeText(json, Charsets.UTF_8)
+        } catch (_: Exception) {}
+    }
+
+    private fun loadStbTimers() {
+        val ctx = context ?: return
+        val file = File(StorageManager.getRecordingsDir(ctx), "stb_scheduled_timers.json")
+        if (file.exists()) {
+            try {
+                val json = file.readText(Charsets.UTF_8)
+                val type = object : TypeToken<List<StbScheduledTimer>>() {}.type
+                val loaded: List<StbScheduledTimer> = Gson().fromJson(json, type)
+                stbTimers.clear()
+                stbTimers.addAll(loaded)
+            } catch (_: Exception) {}
+        }
+        renderStbTimers()
+    }
+
+    private fun startStbTimerWatcher() {
+        if (isStbWatcherRunning) return
+        isStbWatcherRunning = true
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            while (true) {
+                try {
+                    val cal = Calendar.getInstance()
+                    val curH = cal.get(Calendar.HOUR_OF_DAY)
+                    val curM = cal.get(Calendar.MINUTE)
+                    val curDay = cal.get(Calendar.DAY_OF_YEAR)
+                    val todayStr = "$curDay-${cal.get(Calendar.YEAR)}"
+
+                    val toDelete = mutableListOf<StbScheduledTimer>()
+
+                    for (t in stbTimers.toList()) {
+                        // Check Start:
+                        val canStartToday = (t.repeatMode != 0) || (t.lastTriggeredDate != todayStr)
+                        if (!t.isRecordingActive && t.startHour == curH && t.startMinute == curM && canStartToday) {
+                            t.isRecordingActive = true
+                            t.isFinished = false
+                            t.lastTriggeredDate = todayStr
+                            saveStbTimers()
+
+                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                                try {
+                                    // 1. Auto wake if STB standby
+                                    if (t.autoWake && repository.isConnected.value) {
+                                        try {
+                                            repository.client.sendCmd(1009, expectReply = false)
+                                            kotlinx.coroutines.delay(2000)
+                                        } catch (_: Exception) {}
+                                    }
+
+                                    // 2. Switch to channel if needed
+                                    val ch = repository.channels.value.find { it.serviceId == t.channelId }
+                                    if (ch != null) {
+                                        repository.switchChannel(ch)
+                                        kotlinx.coroutines.delay(1200)
+                                    }
+
+                                    // 3. Send RcuKey.RECORD to start PVR recording on STB USB
+                                    repository.sendRcuKey(RcuKey.RECORD)
+
+                                    withContext(Dispatchers.Main) {
+                                        if (isAdded) {
+                                            isStbRecording = true
+                                            updateStbRecordButtonUi()
+                                            val startMsg = "ضبط زمان‌بندی‌شده شبکه ${t.channelName} بر روی حافظه فلش رسیور آغاز شد."
+                                            Toast.makeText(requireContext(), startMsg, Toast.LENGTH_LONG).show()
+                                            AccessibilityHelper.announce(txtStbRecordStatus, startMsg)
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("RecordFragment", "Error starting scheduled STB recording", e)
+                                }
+                            }
+                        }
+
+                        // Check End:
+                        if (t.isRecordingActive && t.endHour == curH && t.endMinute == curM && !t.isFinished) {
+                            t.isFinished = true
+                            t.isRecordingActive = false
+                            saveStbTimers()
+
+                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                                try {
+                                    // 1. Send STOP -> 800ms -> OK -> 500ms -> EXIT
+                                    repository.sendRcuKey(RcuKey.STOP)
+                                    kotlinx.coroutines.delay(800)
+                                    repository.sendRcuKey(RcuKey.OK)
+                                    kotlinx.coroutines.delay(500)
+                                    repository.sendRcuKey(RcuKey.EXIT)
+
+                                    withContext(Dispatchers.Main) {
+                                        if (isAdded) {
+                                            isStbRecording = false
+                                            stbRecSeconds = 0
+                                            updateStbRecordButtonUi()
+                                            val endMsg = "ضبط زمان‌بندی‌شده شبکه ${t.channelName} بر روی حافظه فلش به پایان رسید."
+                                            Toast.makeText(requireContext(), endMsg, Toast.LENGTH_LONG).show()
+                                            AccessibilityHelper.announce(txtStbRecordStatus, endMsg)
+                                        }
+                                    }
+
+                                    // 2. Auto poweroff STB if enabled
+                                    if (t.autoPowerOff && repository.isConnected.value) {
+                                        kotlinx.coroutines.delay(3000)
+                                        repository.sendRcuKey(RcuKey.POWER)
+                                        withContext(Dispatchers.Main) {
+                                            if (isAdded) {
+                                                AccessibilityHelper.announce(txtStbRecordStatus, "رسیور پس از اتمام ضبط به حالت آماده‌به‌کار خاموش شد.")
+                                            }
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("RecordFragment", "Error stopping scheduled STB recording", e)
+                                }
+                            }
+
+                            // 3. Auto delete if enabled
+                            if (t.autoDelete && t.repeatMode == 0) {
+                                toDelete.add(t)
+                            }
+                        }
+                    }
+
+                    if (toDelete.isNotEmpty()) {
+                        stbTimers.removeAll(toDelete)
+                        saveStbTimers()
+                        withContext(Dispatchers.Main) {
+                            renderStbTimers()
+                        }
+                    }
+                } catch (_: Exception) {}
+
+                kotlinx.coroutines.delay(5000) // check every 5 seconds
             }
         }
     }
@@ -882,6 +1094,8 @@ class RecordFragment : Fragment() {
     }
 
     private fun startPhoneTimerWatcher() {
+        if (isPhoneWatcherRunning) return
+        isPhoneWatcherRunning = true
         viewLifecycleOwner.lifecycleScope.launch {
             while (true) {
                 val cal = Calendar.getInstance()
