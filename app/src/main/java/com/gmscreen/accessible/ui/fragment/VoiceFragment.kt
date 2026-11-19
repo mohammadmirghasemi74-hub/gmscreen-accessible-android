@@ -121,7 +121,7 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
             txtVoiceStatus.text = getString(R.string.voice_listening)
             txtRecognizedQuery.visibility = View.GONE
             txtExecutionResult.visibility = View.GONE
-            AccessibilityHelper.announce(txtVoiceStatus, "گوش به زنگ… بفرمایید")
+            // Do not speak announcement here so mic doesn't record TalkBack
             if (appConfig.soundCuesEnabled) {
                 AccessibilityHelper.playSoundCue()
             }
@@ -137,15 +137,63 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
         txtVoiceStatus.text = "در حال دریافت صدا…"
     }
 
-    override fun onResults(recognizedText: String) {
+    override fun onResults(candidates: List<String>) {
         btnMic.text = "شروع گفتار"
         txtVoiceStatus.text = "صدا دریافت شد، در حال پردازش…"
 
-        txtRecognizedQuery.visibility = View.VISIBLE
-        txtRecognizedQuery.text = "عبارت شنیده شده: «$recognizedText»"
-        AccessibilityHelper.announce(txtRecognizedQuery, "شنیده شد: $recognizedText")
+        val primary = candidates.firstOrNull() ?: ""
+        val channels = repository.channels.value
 
-        processVoiceCommand(recognizedText)
+        // 1. Try matching RCU actions across all candidates
+        for (text in candidates) {
+            val rcuAction = ChannelMatcher.matchVoiceAction(text)
+            if (rcuAction != null) {
+                txtRecognizedQuery.visibility = View.VISIBLE
+                txtRecognizedQuery.text = "عبارت شنیده شده: «$text»"
+                AccessibilityHelper.announce(txtRecognizedQuery, "شنیده شد: $text")
+                handleRcuAction(rcuAction)
+                return
+            }
+        }
+
+        // 2. Try matching Channels across all candidates
+        for (text in candidates) {
+            val matchedChannel = ChannelMatcher.findBestChannel(text, channels)
+            if (matchedChannel != null) {
+                txtRecognizedQuery.visibility = View.VISIBLE
+                txtRecognizedQuery.text = "عبارت شنیده شده: «$text»"
+                AccessibilityHelper.announce(txtRecognizedQuery, "شنیده شد: $text")
+
+                val msg = "شبکه ${matchedChannel.serviceName} پیدا شد. در حال تعویض کانال…"
+                txtExecutionResult.visibility = View.VISIBLE
+                txtExecutionResult.text = "شبکه پخش شد: ${matchedChannel.serviceName}"
+                AccessibilityHelper.announce(txtExecutionResult, msg)
+
+                if (appConfig.hapticFeedbackEnabled) {
+                    AccessibilityHelper.vibrateSuccess(requireContext())
+                }
+
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    val switched = repository.switchChannel(matchedChannel)
+                    withContext(Dispatchers.Main) {
+                        if (switched && appConfig.soundCuesEnabled) {
+                            AccessibilityHelper.playSoundCue()
+                        }
+                    }
+                }
+                return
+            }
+        }
+
+        // 3. Not found
+        txtRecognizedQuery.visibility = View.VISIBLE
+        txtRecognizedQuery.text = "عبارت شنیده شده: «$primary»"
+        AccessibilityHelper.announce(txtRecognizedQuery, "شنیده شد: $primary")
+
+        val notFoundMsg = "کانال یا دستوری برای «$primary» پیدا نشد. لطفاً مجدداً امتحان کنید."
+        txtExecutionResult.visibility = View.VISIBLE
+        txtExecutionResult.text = notFoundMsg
+        AccessibilityHelper.announce(txtExecutionResult, notFoundMsg)
     }
 
     override fun onWakeWordTriggered(remainingCommand: String) {

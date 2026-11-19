@@ -376,12 +376,24 @@ class StbClient {
         StbState(playingServiceId = playingPid)
     }
 
-    suspend fun fetchBoxInfo(): Map<String, Any>? = withContext(Dispatchers.IO) {
-        var res = sendCmd(14, timeoutMs = 6000)
-        if (res.isNullOrEmpty()) {
-            res = sendCmd(15, timeoutMs = 6000)
-        }
+    suspend fun getStbTime(): Map<String, Any>? = withContext(Dispatchers.IO) {
+        val res = sendCmd(11, timeoutMs = 3000)
         res?.firstOrNull()
+    }
+
+    suspend fun fetchBoxInfo(): Map<String, Any>? = withContext(Dispatchers.IO) {
+        var res = sendCmd(14, timeoutMs = 5000)
+        if (res.isNullOrEmpty()) {
+            res = sendCmd(15, timeoutMs = 5000)
+        }
+        val merged = (res?.firstOrNull() ?: emptyMap()).toMutableMap()
+        try {
+            val timeRes = getStbTime()
+            if (timeRes != null) {
+                merged.putAll(timeRes)
+            }
+        } catch (_: Exception) {}
+        merged
     }
 
     suspend fun fetchSatellites(): List<Satellite> = withContext(Dispatchers.IO) {
@@ -574,6 +586,34 @@ class StbClient {
         val ok = res != null
         AppLogger.i("StbClient", "saveStbSettings: result=$ok, payload=$payload")
         ok
+    }
+
+    suspend fun restartStb(): Boolean = withContext(Dispatchers.IO) {
+        lastUserCmdTime = System.currentTimeMillis()
+        val res = sendCmd(1043, expectReply = false, timeoutMs = 2000)
+        AppLogger.i("StbClient", "restartStb (Request 1043) sent")
+        true
+    }
+
+    suspend fun getMuteState(): Boolean? = withContext(Dispatchers.IO) {
+        val res = sendCmd(19, timeoutMs = 3000)
+        if (!res.isNullOrEmpty()) {
+            val data = res[0]["Data"]?.toString()?.toIntOrNull()
+            if (data != null) return@withContext (data == 1)
+        }
+        null
+    }
+
+    suspend fun isStbPowerOn(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            var res = sendCmd(14, timeoutMs = 3000)
+            if (res.isNullOrEmpty()) res = sendCmd(15, timeoutMs = 3000)
+            if (!res.isNullOrEmpty()) {
+                val mode = res[0]["PowerMode"]?.toString()?.toIntOrNull()
+                if (mode != null) return@withContext (mode == 1)
+            }
+        } catch (_: Exception) {}
+        true
     }
 
     suspend fun sendRcuKey(keyCode: Int): Boolean = withContext(Dispatchers.IO) {

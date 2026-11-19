@@ -258,7 +258,6 @@ class ChannelsFragment : Fragment() {
         val allChannels = repository.channels.value
         if (allChannels.isEmpty()) {
             Toast.makeText(requireContext(), "هنوز شبکه‌ای دریافت نشده است", Toast.LENGTH_SHORT).show()
-            AccessibilityHelper.announce(btnSatelliteFilter, "هنوز شبکه‌ای از رسیور دریافت نشده است")
             return
         }
 
@@ -790,7 +789,6 @@ class ChannelsFragment : Fragment() {
     private fun showChannelEpgDialog(channel: Channel) {
         val progName = channel.serviceName
         Toast.makeText(requireContext(), "در حال دریافت جدول برنامه‌های $progName...", Toast.LENGTH_SHORT).show()
-        AccessibilityHelper.announce(txtChannelCount, "در حال دریافت جدول برنامه‌های $progName از رسیور")
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val epgData = repository.getEpg(channel.serviceId)
@@ -799,7 +797,6 @@ class ChannelsFragment : Fragment() {
                 if (programs.isEmpty()) {
                     val msg = "جدول برنامه‌ای برای $progName در رسیور یافت نشد"
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                    AccessibilityHelper.announce(txtChannelCount, msg)
                 } else {
                     val items = programs.map { p ->
                         val timeStr = if (p.startRaw.isNotBlank() && p.endRaw.isNotBlank()) {
@@ -845,11 +842,9 @@ class ChannelsFragment : Fragment() {
                 if (msg != null) {
                     val fullMsg = "$progName: $msg"
                     Toast.makeText(requireContext(), fullMsg, Toast.LENGTH_LONG).show()
-                    AccessibilityHelper.announce(txtChannelCount, fullMsg)
                 } else {
                     val fallback = "اطلاعات برنامه در حال پخش برای $progName در جدول رسیور یافت نشد"
                     Toast.makeText(requireContext(), fallback, Toast.LENGTH_SHORT).show()
-                    AccessibilityHelper.announce(txtChannelCount, fallback)
                 }
             }
         }
@@ -897,11 +892,9 @@ class ChannelsFragment : Fragment() {
                 if (file != null) {
                     val msg = "ضبط زنده شبکه ${channel.serviceName} در گوشی آغاز شد: ${file.name}"
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                    AccessibilityHelper.announce(txtChannelCount, msg)
                 } else {
                     val msg = "خطا در شروع ضبط زنده روی گوشی"
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                    AccessibilityHelper.announce(txtChannelCount, msg)
                 }
             }
         }

@@ -55,18 +55,23 @@ object AppLogger {
         }
     }
 
+    fun getLogsDir(context: Context): File {
+        val root = StorageManager.getAppRootDir(context)
+        val logsDir = File(root, "logs")
+        if (!logsDir.exists()) logsDir.mkdirs()
+        return logsDir
+    }
+
     fun getLogFile(context: Context): File {
         return try {
-            val root = StorageManager.getAppRootDir(context)
-            val logsDir = File(root, "logs")
-            if (!logsDir.exists()) logsDir.mkdirs()
-            File(logsDir, "gmscreen.log")
+            val dir = getLogsDir(context)
+            File(dir, "gmscreen.log")
         } catch (_: Exception) {
             File(context.filesDir, "gmscreen.log")
         }
     }
 
-    fun getRecentLogs(context: Context? = null): String {
+    private fun ensureLogsLoaded(context: Context?) {
         synchronized(lock) {
             if (memoryLogs.isEmpty()) {
                 val ctx = context ?: try { com.gmscreen.accessible.GMScreenApplication.instance } catch (_: Exception) { null }
@@ -81,32 +86,128 @@ object AppLogger {
                     } catch (_: Exception) {}
                 }
             }
+        }
+    }
 
+    fun getRecentLogs(context: Context? = null): String {
+        ensureLogsLoaded(context)
+        synchronized(lock) {
             val deviceHeader = """
                 === سیستم خطایابی و ثبت رویدادهای GM Screen Accessible ===
-                نسخه برنامه: v2.3.20
-                دستگاه: ${Build.MANUFACTURER} ${Build.MODEL}
-                نسخه اندروید: ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})
+                دستگاه: ${Build.MANUFACTURER} ${Build.MODEL} (Android ${Build.VERSION.RELEASE})
                 تعداد سطرهای ثبت‌شده: ${memoryLogs.size}
                 ==========================================================
             """.trimIndent()
 
             return if (memoryLogs.isEmpty()) {
-                "$deviceHeader\n\nهنوز خطایی یا رویداد غیرمنتظره‌ای در سیستم ثبت نشده است."
+                "$deviceHeader\n\nهنوز خطایی یا رویدادی در سیستم ثبت نشده است."
             } else {
                 "$deviceHeader\n\n" + memoryLogs.joinToString("\n")
             }
         }
     }
 
-    fun exportLogsToTxt(context: Context): File {
-        val root = StorageManager.getAppRootDir(context)
-        val logsDir = File(root, "logs")
-        if (!logsDir.exists()) logsDir.mkdirs()
-        val exportFile = File(logsDir, "gmscreen_export.txt")
-        val content = getRecentLogs(context)
-        exportFile.writeText(content, Charsets.UTF_8)
-        return exportFile
+    fun getRecentLogsHtml(context: Context? = null): String {
+        ensureLogsLoaded(context)
+        val plainText = getRecentLogs(context)
+        val escaped = plainText
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\n", "<br>")
+
+        return """
+            <!DOCTYPE html>
+            <html lang="fa" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>گزارش کامل رویدادها و خطاهای سیستم</title>
+                <style>
+                    body {
+                        font-family: Tahoma, Segoe UI, sans-serif;
+                        background-color: #121212;
+                        color: #e0e0e0;
+                        line-height: 1.8;
+                        margin: 16px;
+                        font-size: 14px;
+                    }
+                    h1 {
+                        color: #64b5f6;
+                        border-bottom: 2px solid #1976d2;
+                        padding-bottom: 8px;
+                        font-size: 18px;
+                    }
+                    .info-box {
+                        background-color: #1e1e1e;
+                        border: 1px solid #333333;
+                        border-radius: 8px;
+                        padding: 12px;
+                        margin-bottom: 16px;
+                    }
+                    .log-container {
+                        background-color: #1a1a1a;
+                        border: 1px solid #444;
+                        border-radius: 6px;
+                        padding: 14px;
+                        font-family: monospace;
+                        font-size: 13px;
+                        white-space: pre-wrap;
+                        word-break: break-all;
+                        direction: ltr;
+                        text-align: left;
+                        color: #a5d6a7;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>گزارش رویدادها و خطایابی نرم‌افزار GM Screen</h1>
+                <div class="info-box">
+                    دستگاه: ${Build.MANUFACTURER} ${Build.MODEL} (اندروید ${Build.VERSION.RELEASE})<br>
+                    این گزارش جهت بررسی خطاهای شبکه، رسیور و ریموت کنترل تهیه شده است.
+                </div>
+                <div class="log-container">$escaped</div>
+            </body>
+            </html>
+        """.trimIndent()
+    }
+
+    fun exportLogs(context: Context, asHtml: Boolean): File {
+        val dir = getLogsDir(context)
+        val ext = if (asHtml) "html" else "txt"
+        val fileName = JalaliCalendar.formatJalaliLogFilename(ext)
+        val file = File(dir, fileName)
+        val content = if (asHtml) getRecentLogsHtml(context) else getRecentLogs(context)
+        file.writeText(content, Charsets.UTF_8)
+        return file
+    }
+
+    fun listExportedLogFiles(context: Context): List<File> {
+        val dir = getLogsDir(context)
+        val files = dir.listFiles { f ->
+            f.isFile && (f.name.endsWith(".html", ignoreCase = true) || f.name.endsWith(".txt", ignoreCase = true))
+                    && f.name != "gmscreen.log"
+        } ?: emptyArray()
+        return files.sortedByDescending { it.lastModified() }
+    }
+
+    fun deleteExportedLogFile(file: File): Boolean {
+        return try {
+            if (file.exists()) file.delete() else true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun deleteAllExportedLogs(context: Context): Int {
+        val files = listExportedLogFiles(context)
+        var count = 0
+        for (f in files) {
+            try {
+                if (f.delete()) count++
+            } catch (_: Exception) {}
+        }
+        return count
     }
 
     fun clearLogs(context: Context): Boolean {

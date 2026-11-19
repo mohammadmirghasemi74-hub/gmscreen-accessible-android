@@ -61,10 +61,10 @@ class SettingsFragment : Fragment() {
             Pair("۵. تنظیمات راهنمای برنامه‌ها و اعلام خودکار (EPG & Announcements)", ::openEpgSettingsDialog),
             Pair("۶. تنظیمات کنترل صوتی و بیدارباش (Voice & Wake-Word)", ::openVoiceSettingsDialog),
             Pair("۷. تنظیمات دسترس‌پذیری، ویبره و دکمه‌های پرش (Accessibility)", ::openAccessibilitySettingsDialog),
-            Pair("۸. مشاهده لاگ‌های سیستم و خطایابی خودکار (System Logs)", ::openSystemLogsDialog),
-            Pair("۹. کتابچه راهنمای جامع کاربری نرم‌افزار (Help HTML)", ::openHelpBrowser),
-            Pair("۱۰. راهنمای کامل فرامین صوتی (Voice Help HTML)", ::openVoiceHelpBrowser),
-            Pair("۱۱. درباره نرم‌افزار و مشخصات سازنده (About GM Screen)", ::openAboutBrowser)
+            Pair("۸. مدیریت و مشاهده لاگ‌های سیستم (System Logs)", ::openSystemLogsDialog),
+            Pair("۹. کتابچه راهنمای جامع کاربری نرم‌افزار", ::openHelpBrowser),
+            Pair("۱۰. راهنمای کامل فرامین صوتی", ::openVoiceHelpBrowser),
+            Pair("۱۱. درباره نرم‌افزار و مشخصات سازنده", ::openAboutBrowser)
         )
 
         for ((title, handler) in categories) {
@@ -181,13 +181,13 @@ class SettingsFragment : Fragment() {
                 val modeText = if (isRadio) "رادیو (Radio)" else "تلویزیون (TV)"
                 val chText = "$channelCount شبکه ذخیره شده"
 
-                val timeStr = if (info != null && info.containsKey("Year")) {
-                    val y = info["Year"]?.toString() ?: ""
-                    val m = info["Month"]?.toString() ?: ""
-                    val d = info["Day"]?.toString() ?: ""
-                    val h = info["Hour"]?.toString()?.toIntOrNull() ?: 0
-                    val min = info["Min"]?.toString()?.toIntOrNull() ?: 0
-                    val sec = info["Sec"]?.toString()?.toIntOrNull() ?: 0
+                val timeStr = if (info != null && (info.containsKey("StbYear") || info.containsKey("Year"))) {
+                    val y = (info["StbYear"] ?: info["Year"])?.toString() ?: ""
+                    val m = (info["StbMonth"] ?: info["Month"])?.toString() ?: ""
+                    val d = (info["StbDay"] ?: info["Day"])?.toString() ?: ""
+                    val h = (info["StbHour"] ?: info["Hour"])?.toString()?.toIntOrNull() ?: 0
+                    val min = (info["StbMin"] ?: info["Min"])?.toString()?.toIntOrNull() ?: 0
+                    val sec = (info["StbSec"] ?: info["Sec"])?.toString()?.toIntOrNull() ?: 0
                     String.format(Locale.US, "%s/%s/%s - %02d:%02d:%02d", y, m, d, h, min, sec)
                 } else {
                     "نامشخص"
@@ -707,7 +707,6 @@ class SettingsFragment : Fragment() {
 
                 val msg = "تنظیمات ضبط با موفقیت ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(containerSettingsList, msg)
             }
             .setNeutralButton("📁 مشاهده فایل‌ها") { _, _ ->
                 com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext())
@@ -832,7 +831,6 @@ class SettingsFragment : Fragment() {
 
                 val msg = "تنظیمات راهنمای برنامه‌ها با موفقیت ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(containerSettingsList, msg)
             }
             .setNegativeButton("انصراف", null)
             .show()
@@ -920,7 +918,6 @@ class SettingsFragment : Fragment() {
 
                 val msg = "تنظیمات صوتی با موفقیت ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(containerSettingsList, msg)
             }
             .setNegativeButton("انصراف", null)
             .show()
@@ -1044,139 +1041,189 @@ class SettingsFragment : Fragment() {
 
                 val msg = "تنظیمات دسترس‌پذیری ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(containerSettingsList, msg)
             }
             .setNegativeButton("انصراف", null)
             .show()
     }
 
     private fun openSystemLogsDialog() {
-        val scrollView = ScrollView(requireContext()).apply {
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        }
-        val layout = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(32, 24, 32, 24)
-        }
-        scrollView.addView(layout)
+        val options = arrayOf(
+            "۱. مشاهده گزارش زنده در مرورگر داخلی",
+            "۲. ذخیره فایل لاگ با تاریخ شمسی (HTML و TXT)",
+            "۳. مدیریت فایل‌های لاگ ذخیره‌شده",
+            "۴. باز کردن پوشه لاگ‌ها در مدیریت فایل",
+            "۵. پاک‌سازی کامل لاگ‌های سیستم"
+        )
 
-        val logFile = AppLogger.getLogFile(requireContext())
-        val logFilePath = logFile.absolutePath
-
-        val txtHeader = TextView(requireContext()).apply {
-            text = "مسیر فایل لاگ اصلی در گوشی:\n$logFilePath\n\nشما می‌توانید متن زیر را بخوانید، کپی کنید، خروجی متنی TXT بگیرید یا کل لاگ‌ها را پاک کنید:"
-            setTextColor(resources.getColor(R.color.text_secondary, null))
-            textSize = 13f
-            setPadding(0, 0, 0, 16)
-        }
-        layout.addView(txtHeader)
-
-        // Button row: Export TXT and Clear Logs
-        val btnRow = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                setMargins(0, 0, 0, 16)
-            }
-        }
-
-        val btnExportTxt = com.google.android.material.button.MaterialButton(requireContext()).apply {
-            text = "💾 خروجی TXT"
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginEnd = 8
-            }
-            contentDescription = "ذخیره لاگ‌ها به عنوان فایل متنی TXT در حافظه گوشی"
-        }
-
-        val btnClearLogs = com.google.android.material.button.MaterialButton(requireContext()).apply {
-            text = "🗑️ پاک‌سازی لاگ‌ها"
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginStart = 8
-            }
-            contentDescription = "پاک‌سازی و حذف کامل فایل و لاگ‌های ثبت‌شده"
-        }
-
-        btnRow.addView(btnExportTxt)
-        btnRow.addView(btnClearLogs)
-        layout.addView(btnRow)
-
-        val txtLogs = TextView(requireContext()).apply {
-            text = AppLogger.getRecentLogs(requireContext())
-            setTextColor(resources.getColor(R.color.text_primary, null))
-            textSize = 12f
-            setTextIsSelectable(true)
-            isFocusable = true
-            contentDescription = "محتوای کامل گزارشات و خطاهای سیستم"
-        }
-        layout.addView(txtLogs)
-
-        var dialogRef: androidx.appcompat.app.AlertDialog? = null
-
-        btnExportTxt.setOnClickListener {
-            try {
-                val exported = AppLogger.exportLogsToTxt(requireContext())
-                val msg = "فایل لاگ با موفقیت در مسیر زیر ذخیره شد:\n${exported.absolutePath}"
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                AccessibilityHelper.announce(txtHeader, msg)
-
-                val uri = androidx.core.content.FileProvider.getUriForFile(
-                    requireContext(),
-                    "${requireContext().packageName}.fileprovider",
-                    exported
-                )
-                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    putExtra(Intent.EXTRA_SUBJECT, "GMScreen System Logs")
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("مدیریت و مشاهده لاگ‌های سیستم")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        val html = AppLogger.getRecentLogsHtml(requireContext())
+                        InternalBrowserActivity.openHtml(requireContext(), html, "گزارش زنده رویدادهای سیستم")
+                    }
+                    1 -> {
+                        try {
+                            val fHtml = AppLogger.exportLogs(requireContext(), asHtml = true)
+                            val fTxt = AppLogger.exportLogs(requireContext(), asHtml = false)
+                            val msg = "لاگ با موفقیت در دو فرمت HTML و TXT ذخیره شد:\n${fHtml.name}"
+                            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                        } catch (e: Exception) {
+                            Toast.makeText(requireContext(), "خطا در ذخیره لاگ: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    2 -> openExportedLogsManagerDialog()
+                    3 -> openLogsFolder()
+                    4 -> confirmClearSystemLogs()
                 }
-                startActivity(Intent.createChooser(shareIntent, "ارسال یا مشاهده فایل لاگ"))
-            } catch (ex: Exception) {
-                val err = "خطا در استخراج فایل لاگ: ${ex.message}"
-                Toast.makeText(requireContext(), err, Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        btnClearLogs.setOnClickListener {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("پاک‌سازی گزارشات سیستم")
-                .setMessage("آیا مطمئن هستید که می‌خواهید تمام گزارشات و لاگ‌های ذخیره‌شده را به طور کامل پاک کنید؟")
-                .setPositiveButton("بله، پاک شود") { _, _ ->
-                    AppLogger.clearLogs(requireContext())
-                    txtLogs.text = AppLogger.getRecentLogs(requireContext())
-                    val msg = "تمام لاگ‌های سیستم با موفقیت پاک شدند"
-                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                    AccessibilityHelper.announce(txtHeader, msg)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
-        dialogRef = MaterialAlertDialogBuilder(requireContext())
-            .setTitle("مشاهده لاگ‌های سیستم و خطایابی")
-            .setView(scrollView)
-            .setPositiveButton("📋 کپی لاگ‌ها") { _, _ ->
-                val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val logs = AppLogger.getRecentLogs(requireContext())
-                val clip = ClipData.newPlainText("GMScreen Logs", logs)
-                clipboard.setPrimaryClip(clip)
-                val msg = "متن کامل لاگ‌های سیستم در حافظه کلیپ‌بورد کپی شد"
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(containerSettingsList, msg)
-            }
-            .setNeutralButton("📤 اشتراک‌گذاری") { _, _ ->
-                val logs = AppLogger.getRecentLogs(requireContext())
-                val sendIntent = Intent().apply {
-                    action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_TEXT, logs)
-                    type = "text/plain"
-                }
-                val shareIntent = Intent.createChooser(sendIntent, "ارسال لاگ‌های GM Screen")
-                startActivity(shareIntent)
             }
             .setNegativeButton("بستن", null)
-            .create()
+            .show()
+    }
 
-        dialogRef.show()
+    private fun openExportedLogsManagerDialog() {
+        val files = AppLogger.listExportedLogFiles(requireContext())
+        if (files.isEmpty()) {
+            Toast.makeText(requireContext(), "هیچ فایل لاگ ذخیره‌شده‌ای یافت نشد", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val items = files.map { file ->
+            val sizeKb = String.format(Locale.US, "%.1f KB", file.length() / 1024f)
+            val icon = if (file.name.endsWith(".html", ignoreCase = true)) "🌐" else "📄"
+            "$icon ${file.name} ($sizeKb)"
+        }.toTypedArray()
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("فایل‌های لاگ ذخیره‌شده (${files.size} فایل)")
+            .setItems(items) { _, which ->
+                val selectedFile = files.getOrNull(which)
+                if (selectedFile != null) {
+                    showSingleLogFileActions(selectedFile)
+                }
+            }
+            .setPositiveButton("حذف همه لاگ‌ها") { _, _ ->
+                confirmDeleteAllExportedLogs(files.size)
+            }
+            .setNeutralButton("پوشه لاگ‌ها") { _, _ ->
+                openLogsFolder()
+            }
+            .setNegativeButton("بازگشت") { _, _ ->
+                openSystemLogsDialog()
+            }
+            .show()
+    }
+
+    private fun showSingleLogFileActions(file: File) {
+        val options = arrayOf(
+            "۱. مشاهده در مرورگر داخلی",
+            "۲. کپی متن فایل",
+            "۳. اشتراک‌گذاری یا ارسال فایل",
+            "۴. حذف این فایل"
+        )
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(file.name)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        if (file.name.endsWith(".html", ignoreCase = true)) {
+                            InternalBrowserActivity.openFile(requireContext(), file.absolutePath, file.name)
+                        } else {
+                            val content = file.readText(Charsets.UTF_8)
+                            val html = """
+                                <!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>${file.name}</title></head>
+                                <body style="background:#121212;color:#e0e0e0;font-family:monospace;white-space:pre-wrap;padding:12px;">$content</body></html>
+                            """.trimIndent()
+                            InternalBrowserActivity.openHtml(requireContext(), html, file.name)
+                        }
+                    }
+                    1 -> {
+                        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val content = file.readText(Charsets.UTF_8)
+                        val clip = ClipData.newPlainText("Log File Content", content)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(requireContext(), "محتوای فایل در کلیپ‌بورد کپی شد", Toast.LENGTH_SHORT).show()
+                    }
+                    2 -> {
+                        try {
+                            val uri = androidx.core.content.FileProvider.getUriForFile(
+                                requireContext(),
+                                "${requireContext().packageName}.fileprovider",
+                                file
+                            )
+                            val mime = if (file.name.endsWith(".html", ignoreCase = true)) "text/html" else "text/plain"
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = mime
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                putExtra(Intent.EXTRA_SUBJECT, file.name)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            startActivity(Intent.createChooser(shareIntent, "ارسال فایل لاگ"))
+                        } catch (e: Exception) {
+                            Toast.makeText(requireContext(), "خطا در ارسال فایل: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    3 -> {
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("حذف فایل لاگ")
+                            .setMessage("آیا از حذف فایل «${file.name}» مطمئن هستید؟")
+                            .setPositiveButton("بله، حذف شود") { _, _ ->
+                                val ok = AppLogger.deleteExportedLogFile(file)
+                                val msg = if (ok) "فایل «${file.name}» حذف شد" else "خطا در حذف فایل"
+                                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                                openExportedLogsManagerDialog()
+                            }
+                            .setNegativeButton("انصراف") { _, _ ->
+                                openExportedLogsManagerDialog()
+                            }
+                            .show()
+                    }
+                }
+            }
+            .setNegativeButton("بازگشت") { _, _ ->
+                openExportedLogsManagerDialog()
+            }
+            .show()
+    }
+
+    private fun confirmDeleteAllExportedLogs(count: Int) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("حذف تمام لاگ‌های ذخیره‌شده")
+            .setMessage("آیا مطمئن هستید که می‌خواهید تمام $count فایل لاگ ذخیره‌شده را حذف کنید؟")
+            .setPositiveButton("بله، همه حذف شوند") { _, _ ->
+                val deleted = AppLogger.deleteAllExportedLogs(requireContext())
+                Toast.makeText(requireContext(), "تمام لاگ‌های ذخیره‌شده حذف شدند ($deleted فایل)", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun confirmClearSystemLogs() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("پاک‌سازی کامل لاگ‌های سیستم")
+            .setMessage("آیا مطمئن هستید که می‌خواهید تمام لاگ‌ها و گزارشات ثبت‌شده در سیستم پاک شوند؟")
+            .setPositiveButton("بله، پاک شود") { _, _ ->
+                AppLogger.clearLogs(requireContext())
+                Toast.makeText(requireContext(), "تمام لاگ‌های سیستم با موفقیت پاک شدند", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun openLogsFolder() {
+        try {
+            val logsDir = AppLogger.getLogsDir(requireContext())
+            val uri = android.net.Uri.parse(logsDir.absolutePath)
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "resource/folder")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+        } catch (_: Exception) {
+            val path = AppLogger.getLogsDir(requireContext()).absolutePath
+            Toast.makeText(requireContext(), "مسیر پوشه لاگ‌ها:\n$path", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun openHelpBrowser() {

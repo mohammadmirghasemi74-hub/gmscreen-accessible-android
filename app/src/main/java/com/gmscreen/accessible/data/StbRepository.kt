@@ -221,6 +221,21 @@ class StbRepository(context: Context) {
         return client.sendRcuKey(keyCode)
     }
 
+    suspend fun restartStb(): Boolean {
+        if (!client.isConnected) return false
+        return client.restartStb()
+    }
+
+    suspend fun getMuteState(): Boolean? {
+        if (!client.isConnected) return null
+        return client.getMuteState()
+    }
+
+    suspend fun isStbPowerOn(): Boolean {
+        if (!client.isConnected) return false
+        return client.isStbPowerOn()
+    }
+
     suspend fun addStbTimer(timer: Map<String, Any>): Boolean {
         if (!client.isConnected) return false
         val ok = client.addStbTimer(timer)

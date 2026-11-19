@@ -61,7 +61,6 @@ class BackupFragment : Fragment() {
             if (channels.isEmpty()) {
                 val msg = "لیست کانال‌ها خالی است. ابتدا به رسیور متصل شوید تا کانال‌ها دریافت شوند."
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(txtBackupStatus, msg)
                 return@setOnClickListener
             }
 
@@ -69,7 +68,6 @@ class BackupFragment : Fragment() {
             val file = StorageManager.saveBackupChannels(requireContext(), channels, model)
             val msg = "پشتیبان‌گیری از ${channels.size} کانال در فایل ${file.name} با موفقیت انجام شد."
             txtBackupStatus.text = msg
-            AccessibilityHelper.announce(txtBackupStatus, msg)
             Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
             loadBackupsList()
         }
@@ -80,14 +78,12 @@ class BackupFragment : Fragment() {
             if (channels.isEmpty() || ip.isBlank()) {
                 val msg = "برای ساخت پلی‌لیست، اتصال به رسیور و دریافت کانال‌ها الزامی است."
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(txtBackupStatus, msg)
                 return@setOnClickListener
             }
 
             val file = StorageManager.exportM3uPlaylist(requireContext(), channels, ip)
             val msg = "پلی‌لیست M3U در مسیر GMScreen/playlists ذخیره شد."
             txtBackupStatus.text = msg
-            AccessibilityHelper.announce(txtBackupStatus, msg)
             Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
         }
 
@@ -95,7 +91,6 @@ class BackupFragment : Fragment() {
             if (repository.connectedIp.value.isBlank()) {
                 val msg = "رسیور متصل نیست. ابتدا به رسیور متصل شوید."
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(txtBackupStatus, msg)
                 return@setOnClickListener
             }
 

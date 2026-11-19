@@ -83,4 +83,18 @@ object JalaliCalendar {
             }
         }
     }
+
+    fun formatJalaliLogFilename(ext: String): String {
+        val cal = Calendar.getInstance()
+        val gy = cal.get(Calendar.YEAR)
+        val gm = cal.get(Calendar.MONTH) + 1
+        val gd = cal.get(Calendar.DAY_OF_MONTH)
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+        val minute = cal.get(Calendar.MINUTE)
+
+        val (jy, jm, jd) = gregorianToJalali(gy, gm, gd)
+        val mName = if (jm in 1..12) JALALI_MONTH_NAMES[jm] else "$jm"
+        val cleanExt = if (ext.startsWith(".")) ext else ".$ext"
+        return "گزارش_سیستم_${jd}_${mName}_${jy}_ساعت_${hour}_و_${minute}$cleanExt"
+    }
 }

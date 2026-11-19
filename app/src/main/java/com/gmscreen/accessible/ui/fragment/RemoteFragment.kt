@@ -7,12 +7,16 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.gmscreen.accessible.GMScreenApplication
 import com.gmscreen.accessible.R
 import com.gmscreen.accessible.protocol.RcuKey
 import com.gmscreen.accessible.util.AccessibilityHelper
+import com.gmscreen.accessible.util.AppLogger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class RemoteFragment : Fragment() {
 
@@ -30,9 +34,89 @@ class RemoteFragment : Fragment() {
     }
 
     private fun setupButtons(rootView: View) {
+        // 1. Restart STB Button with Confirmation
+        rootView.findViewById<MaterialButton?>(R.id.btnRestart)?.setOnClickListener { btn ->
+            if (appConfig.hapticFeedbackEnabled) {
+                AccessibilityHelper.vibrateClick(requireContext())
+            }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("راه‌اندازی مجدد رسیور")
+                .setMessage("آیا می‌خواهید رسیور را راه‌اندازی مجدد (ری‌استارت) کنید؟")
+                .setPositiveButton("بله، ری‌استارت شود") { _, _ ->
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        AppLogger.i("Remote", "Sending STB restart command (request 1043)")
+                        val ok = repository.restartStb()
+                        withContext(Dispatchers.Main) {
+                            val msg = if (ok) "دستور ری‌استارت ارسال شد. رسیور در حال راه‌اندازی مجدد است." else "خطا در ارسال دستور ری‌استارت"
+                            AccessibilityHelper.announce(btn, msg)
+                        }
+                    }
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 2. Power Button with Smart State Detection
+        rootView.findViewById<MaterialButton?>(R.id.btnPower)?.setOnClickListener { btn ->
+            try {
+                if (appConfig.hapticFeedbackEnabled) {
+                    AccessibilityHelper.vibrateClick(requireContext())
+                }
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        val wasOn = repository.isStbPowerOn()
+                        repository.sendRcuKey(RcuKey.POWER_TOGGLE)
+                        val msg = if (wasOn) "رسیور خاموش شد (حالت استندبای)" else "رسیور روشن شد"
+                        AppLogger.i("Remote", "Power toggle executed: wasOn=$wasOn, message=$msg")
+                        withContext(Dispatchers.Main) {
+                            AccessibilityHelper.announce(btn, msg)
+                        }
+                    } catch (e: Exception) {
+                        AppLogger.e("Remote", "Error toggling power: ${e.message}", e)
+                        withContext(Dispatchers.Main) {
+                            AccessibilityHelper.announce(btn, "پاور رسیور")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                AppLogger.e("Remote", "Error on power click: ${e.message}", e)
+            }
+        }
+
+        // 3. Mute Button with Smart State Query
+        rootView.findViewById<MaterialButton?>(R.id.btnMute)?.setOnClickListener { btn ->
+            try {
+                if (appConfig.hapticFeedbackEnabled) {
+                    AccessibilityHelper.vibrateClick(requireContext())
+                }
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        repository.sendRcuKey(RcuKey.MUTE)
+                        delay(250)
+                        val isMuted = repository.getMuteState()
+                        val msg = when (isMuted) {
+                            true -> "صدا قطع شد"
+                            false -> "صدا وصل شد"
+                            null -> "بی‌صدا"
+                        }
+                        AppLogger.i("Remote", "Mute toggle: isMuted=$isMuted, message=$msg")
+                        withContext(Dispatchers.Main) {
+                            AccessibilityHelper.announce(btn, msg)
+                        }
+                    } catch (e: Exception) {
+                        AppLogger.e("Remote", "Error toggling mute: ${e.message}", e)
+                        withContext(Dispatchers.Main) {
+                            AccessibilityHelper.announce(btn, "بی‌صدا")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                AppLogger.e("Remote", "Error on mute click: ${e.message}", e)
+            }
+        }
+
+        // 4. Standard Remote Keypad Mapping (Power, Mute, Restart handled separately above)
         val keyMap = mapOf(
-            R.id.btnPower to Pair(RcuKey.POWER_TOGGLE, "پاور رسیور"),
-            R.id.btnMute to Pair(RcuKey.MUTE, "بی‌صدا"),
             R.id.btnTvRadio to Pair(RcuKey.TV_RADIO, "تلویزیون و رادیو"),
             R.id.btnSat to Pair(RcuKey.SATELLITE, "ماهواره"),
             R.id.btnFav to Pair(RcuKey.FAVORITE, "کانال‌های دلخواه"),
@@ -77,7 +161,7 @@ class RemoteFragment : Fragment() {
             val (keyCode, desc) = info
             rootView.findViewById<MaterialButton?>(viewId)?.setOnClickListener { btn ->
                 try {
-                    com.gmscreen.accessible.util.AppLogger.i("Remote", "Key pressed: $desc (code=$keyCode)")
+                    AppLogger.i("Remote", "Key pressed: $desc (code=$keyCode)")
                     if (appConfig.hapticFeedbackEnabled) {
                         AccessibilityHelper.vibrateClick(requireContext())
                     }
@@ -85,12 +169,12 @@ class RemoteFragment : Fragment() {
                         try {
                             repository.sendRcuKey(keyCode)
                         } catch (e: Exception) {
-                            com.gmscreen.accessible.util.AppLogger.e("Remote", "Error sending key $keyCode: ${e.message}", e)
+                            AppLogger.e("Remote", "Error sending key $keyCode: ${e.message}", e)
                         }
                     }
                     AccessibilityHelper.announce(btn, desc)
                 } catch (e: Exception) {
-                    com.gmscreen.accessible.util.AppLogger.e("Remote", "Error on button click $desc: ${e.message}", e)
+                    AppLogger.e("Remote", "Error on button click $desc: ${e.message}", e)
                 }
             }
         }

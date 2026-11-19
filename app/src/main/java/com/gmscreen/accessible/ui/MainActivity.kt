@@ -43,6 +43,14 @@ class MainActivity : AppCompatActivity() {
         setupTabSelectorDialog()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (com.gmscreen.accessible.util.RecordingsDialogHelper.shouldReopenOnResume) {
+            com.gmscreen.accessible.util.RecordingsDialogHelper.shouldReopenOnResume = false
+            com.gmscreen.accessible.util.RecordingsDialogHelper.reopenLastPlayedFolder(this)
+        }
+    }
+
     private fun setupViewPager() {
         val fragments: List<Fragment> = listOf(
             ConnectionFragment(),

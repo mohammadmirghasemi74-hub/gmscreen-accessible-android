@@ -171,7 +171,6 @@ class RecordFragment : Fragment() {
             if (repository.connectedIp.value.isBlank()) {
                 val msg = "رسیور متصل نیست. ابتدا در سربرگ اتصال وصل شوید."
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                AccessibilityHelper.announce(txtStbRecordStatus, msg)
                 return@setOnClickListener
             }
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
@@ -345,7 +344,6 @@ class RecordFragment : Fragment() {
                 if (ok) {
                     val msg = "زمان‌بندی ضبط ${channel.serviceName} از %02d:%02d تا %02d:%02d روی رسیور ثبت شد".format(sh, sm, eh, em)
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                    AccessibilityHelper.announce(containerStbTimers, msg)
                 } else {
                     Toast.makeText(requireContext(), "خطا در ثبت تایمر روی رسیور", Toast.LENGTH_SHORT).show()
                 }
@@ -471,7 +469,6 @@ class RecordFragment : Fragment() {
 
                     val msg = "زمان‌بندی ضبط ${targetChannel.serviceName} در ساعت %02d:%02d به مدت $durationMinutes دقیقه ثبت شد".format(startH, startM)
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                    AccessibilityHelper.announce(containerPhoneTimers, msg)
                 }
                 .setNegativeButton("انصراف", null)
                 .show()
@@ -601,7 +598,6 @@ class RecordFragment : Fragment() {
         if (ip.isBlank() || channel == null) {
             val msg = "رسیور متصل نیست یا شبکه‌ای انتخاب نشده است"
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-            AccessibilityHelper.announce(txtInstantRecStatus, msg)
             return
         }
 

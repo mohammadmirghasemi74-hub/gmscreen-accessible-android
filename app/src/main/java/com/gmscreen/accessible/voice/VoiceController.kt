@@ -18,7 +18,7 @@ class VoiceController(
     interface VoiceListener {
         fun onReady()
         fun onListening()
-        fun onResults(recognizedText: String)
+        fun onResults(candidates: List<String>)
         fun onError(errorMessage: String)
         fun onWakeWordTriggered(remainingCommand: String)
     }
@@ -58,11 +58,10 @@ class VoiceController(
 
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fa-IR")
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "fa-IR")
-                putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, "fa-IR")
-                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
-                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fa")
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "fa")
+                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
+                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
                 // Tuned specifically for phone microphones
                 putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 2000L)
                 putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1500L)
@@ -163,7 +162,7 @@ class VoiceController(
                     }
                 }, 1000)
             } else {
-                listener.onResults(text)
+                listener.onResults(matches)
             }
         } else {
             if (!isWakeWordActive) {
