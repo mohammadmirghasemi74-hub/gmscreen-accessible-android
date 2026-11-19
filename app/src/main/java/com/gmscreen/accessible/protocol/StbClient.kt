@@ -665,10 +665,6 @@ class StbClient {
         sendRcuKey(RcuKey.POWER_TOGGLE)
     }
 
-    suspend fun restartStb(): Boolean = withContext(Dispatchers.IO) {
-        sendCmd(1043, expectReply = false, timeoutMs = 2000) != null
-    }
-
     suspend fun getEpg(programId: String): Map<String, Any>? = withContext(Dispatchers.IO) {
         try {
             val payload = mapOf("array" to listOf(mapOf("ProgramId" to programId)))
