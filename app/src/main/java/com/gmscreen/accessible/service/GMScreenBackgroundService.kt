@@ -283,8 +283,9 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
                         val channelStr = "$type ${ch.serviceName} $numStr".trim()
                         updateServiceNotification()
 
-                        // Speak channel aloud via TTS if this change happened after initial start
-                        if (!isInitial) {
+                        // Only announce via TTS if the app is in the background.
+                        // When in foreground, ChannelsFragment handles the TalkBack screen reader announcement!
+                        if (!isInitial && !GMScreenApplication.instance.isAppInForeground) {
                             AppLogger.i("GMScreenBackgroundService", "Announcing channel in background: $channelStr")
                             TtsHelper.speak(channelStr, interrupt = true)
                         }
@@ -298,24 +299,31 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
         val repository = GMScreenApplication.instance.repository
         serviceScope.launch {
             repository.reconnectEvent.collect { event ->
+                val inBg = !GMScreenApplication.instance.isAppInForeground
                 when (event) {
                     is StbRepository.ReconnectEvent.Attempting -> {
-                        TtsHelper.speak("ارتباط با رسیور قطع شد. در حال تلاش برای اتصال هوشمند مجدد...", interrupt = true)
-                        if (GMScreenApplication.instance.appConfig.soundCuesEnabled) {
-                            AccessibilityHelper.playDisconnectSoundCue()
+                        if (inBg) {
+                            TtsHelper.speak("ارتباط با رسیور قطع شد. در حال تلاش برای اتصال هوشمند مجدد...", interrupt = true)
+                            if (GMScreenApplication.instance.appConfig.soundCuesEnabled) {
+                                AccessibilityHelper.playDisconnectSoundCue()
+                            }
                         }
                     }
                     is StbRepository.ReconnectEvent.Reconnected -> {
-                        TtsHelper.speak("اتصال به رسیور مجدداً برقرار شد", interrupt = true)
-                        if (GMScreenApplication.instance.appConfig.soundCuesEnabled) {
-                            AccessibilityHelper.playSoundCue()
+                        if (inBg) {
+                            TtsHelper.speak("اتصال به رسیور مجدداً برقرار شد", interrupt = true)
+                            if (GMScreenApplication.instance.appConfig.soundCuesEnabled) {
+                                AccessibilityHelper.playSoundCue()
+                            }
                         }
                         updateServiceNotification()
                     }
                     is StbRepository.ReconnectEvent.Failed -> {
-                        TtsHelper.speak("برنامه نتوانست مجدداً به رسیور متصل شود", interrupt = true)
-                        if (GMScreenApplication.instance.appConfig.soundCuesEnabled) {
-                            AccessibilityHelper.playDisconnectSoundCue()
+                        if (inBg) {
+                            TtsHelper.speak("برنامه نتوانست مجدداً به رسیور متصل شود", interrupt = true)
+                            if (GMScreenApplication.instance.appConfig.soundCuesEnabled) {
+                                AccessibilityHelper.playDisconnectSoundCue()
+                            }
                         }
                     }
                 }

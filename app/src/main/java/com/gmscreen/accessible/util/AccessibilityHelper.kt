@@ -18,9 +18,13 @@ object AccessibilityHelper {
 
     init {
         try {
-            toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, 70)
+            toneGenerator = ToneGenerator(AudioManager.STREAM_ACCESSIBILITY, 70)
         } catch (_: Exception) {
-            toneGenerator = null
+            try {
+                toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, 70)
+            } catch (_: Exception) {
+                toneGenerator = null
+            }
         }
     }
 
