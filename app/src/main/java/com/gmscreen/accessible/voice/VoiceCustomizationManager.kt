@@ -19,14 +19,51 @@ object VoiceCustomizationManager {
     private const val TAG = "VoiceCustomization"
     private const val FILE_ACTIONS = "custom_voice_commands.json"
     private const val FILE_CHANNEL_ALIASES = "custom_channel_aliases.json"
+    private const val FILE_DISABLED_ACTIONS = "disabled_voice_actions.json"
+    private const val FILE_SYNCED_CHANNEL_IDS = "synced_channel_ids.json"
 
     val DEFAULT_ACTIONS = listOf(
-        // ۱. پاور و استندبای
+        // ۱. پیمایش سربرگ‌های برنامه
+        VoiceAction(
+            "tab_connection", "پیمایش سربرگ‌های برنامه", "رفتن به سربرگ اتصال به رسیور",
+            listOf("سربرگ اتصال", "صفحه اتصال", "برو به اتصال", "بخش اتصال", "تب اتصال")
+        ),
+        VoiceAction(
+            "tab_channels", "پیمایش سربرگ‌های برنامه", "رفتن به سربرگ کانال‌ها و پخش زنده",
+            listOf("سربرگ کانال ها", "صفحه کانال ها", "برو به کانال ها", "لیست کانال ها", "لیست شبکه ها", "بخش کانال ها", "تب کانال ها")
+        ),
+        VoiceAction(
+            "tab_remote", "پیمایش سربرگ‌های برنامه", "رفتن به سربرگ ریموت کنترل",
+            listOf("سربرگ ریموت", "صفحه ریموت", "برو به ریموت", "کنترل رسیور", "بخش ریموت", "تب ریموت")
+        ),
+        VoiceAction(
+            "tab_record", "پیمایش سربرگ‌های برنامه", "رفتن به سربرگ ضبط و PVR",
+            listOf("سربرگ ضبط", "صفحه ضبط", "برو به ضبط", "بخش ضبط", "تب ضبط")
+        ),
+        VoiceAction(
+            "tab_voice", "پیمایش سربرگ‌های برنامه", "رفتن به سربرگ فرامین صوتی",
+            listOf("سربرگ صوتی", "صفحه صوتی", "برو به دستورات صوتی", "فرامین صوتی", "تب صوتی")
+        ),
+        VoiceAction(
+            "tab_settings", "پیمایش سربرگ‌های برنامه", "رفتن به سربرگ تنظیمات و راهنما",
+            listOf("سربرگ تنظیمات", "صفحه تنظیمات", "برو به تنظیمات", "بخش تنظیمات", "تب تنظیمات")
+        ),
+        VoiceAction(
+            "tab_backup", "پیمایش سربرگ‌های برنامه", "رفتن به سربرگ بکاپ و پشتیبان‌گیری",
+            listOf("سربرگ بکاپ", "صفحه بکاپ", "برو به بکاپ", "پشتیبان گیری", "تب بکاپ")
+        ),
+
+        // ۲. پاور و استندبای
         VoiceAction(
             "power", "مدیریت پاور و استندبای", "روشن یا خاموش کردن رسیور (پاور)",
             listOf("خاموش کردن رسیور", "روشن کردن رسیور", "خاموش کردن", "روشن کردن", "پاور رسیور", "دکمه پاور", "پاور", "سابر", "صابر", "هابر", "استندبای")
         ),
-        // ۲. جابجایی کانال‌ها
+        VoiceAction(
+            "sleep_timer", "مدیریت پاور و استندبای", "تنظیم تایمر خواب رسیور (Sleep Timer)",
+            listOf("تایمر خواب", "اسلیپ", "تنظیم خواب رسیور", "اسلیپ رسیور")
+        ),
+
+        // ۳. جابجایی و انتخاب کانال‌ها
         VoiceAction(
             "ch_next", "جابجایی و انتخاب کانال‌ها", "رفتن به کانال بعدی",
             listOf("کانال بعد", "کانال بعدی", "شبکه بعد", "شبکه بعدی", "برو کانال بعد")
@@ -34,6 +71,18 @@ object VoiceCustomizationManager {
         VoiceAction(
             "ch_prev", "جابجایی و انتخاب کانال‌ها", "رفتن به کانال قبلی",
             listOf("کانال قبل", "کانال قبلی", "شبکه قبل", "شبکه قبلی", "برو کانال قبل")
+        ),
+        VoiceAction(
+            "jump_first_channel", "جابجایی و انتخاب کانال‌ها", "پرش به ابتدای لیست کانال‌ها (کانال اول)",
+            listOf("کانال اول", "شبکه اول", "برو به کانال اول", "ابتدای لیست کانال ها", "اولین کانال")
+        ),
+        VoiceAction(
+            "jump_last_channel", "جابجایی و انتخاب کانال‌ها", "پرش به انتهای لیست کانال‌ها (کانال آخر)",
+            listOf("کانال آخر", "شبکه آخر", "برو به کانال آخر", "انتهای لیست کانال ها", "آخرین کانال")
+        ),
+        VoiceAction(
+            "filter_satellites", "جابجایی و انتخاب کانال‌ها", "باز کردن منوی فیلتر ماهواره‌ها",
+            listOf("فیلتر ماهواره", "انتخاب ماهواره", "ماهواره ها", "لیست ماهواره ها")
         ),
         VoiceAction(
             "recall", "جابجایی و انتخاب کانال‌ها", "بازگشت به کانال قبلی رسیور (Recall)",
@@ -55,7 +104,8 @@ object VoiceCustomizationManager {
             "search_channels", "جابجایی و انتخاب کانال‌ها", "رفتن به کادر جستجوی کانال",
             listOf("جستجوی کانال", "یافتن کانال", "جستجوی شبکه", "کادر جستجو")
         ),
-        // ۳. کنترل صدا و تصویر
+
+        // ۴. کنترل صدا و تصویر
         VoiceAction(
             "vol_up", "کنترل صدا و تصویر", "افزایش صدای رسیور",
             listOf("صدا زیاد", "صدای بیشتر", "افزایش صدا", "صدا بالا", "بلندتر", "صدا رو زیاد کن")
@@ -76,7 +126,8 @@ object VoiceCustomizationManager {
             "subtitle", "کنترل صدا و تصویر", "روشن یا خاموش کردن زیرنویس شبکه",
             listOf("زیرنویس", "نمایش زیرنویس", "قطع زیرنویس")
         ),
-        // ۴. منوها و ریموت
+
+        // ۵. منوها و ابزارهای ریموت
         VoiceAction(
             "menu", "منوها و ابزارهای ریموت", "باز کردن منوی اصلی رسیور",
             listOf("منو", "منوی رسیور", "منوی اصلی")
@@ -97,7 +148,8 @@ object VoiceCustomizationManager {
             "info", "منوها و ابزارهای ریموت", "اطلاعات و مشخصات برنامه در حال پخش (Info)",
             listOf("اینفو", "اطلاعات شبکه", "مشخصات برنامه", "اطلاعات کانال")
         ),
-        // ۵. دکمه‌های رنگی
+
+        // ۶. دکمه‌های رنگی ریموت
         VoiceAction(
             "red_btn", "دکمه‌های رنگی ریموت", "دکمه قرمز ریموت کنترل",
             listOf("دکمه قرمز", "کلید قرمز")
@@ -114,14 +166,23 @@ object VoiceCustomizationManager {
             "blue_btn", "دکمه‌های رنگی ریموت", "دکمه آبی ریموت کنترل",
             listOf("دکمه آبی", "کلید آبی")
         ),
-        // ۶. ضبط و رسانه
+
+        // ۷. ضبط و رسانه
         VoiceAction(
             "rec_stb", "ضبط و پخش رسانه", "شروع یا توقف ضبط روی فلش رسیور",
-            listOf("ضبط رسیور", "ضبط روی فلش", "شروع ضبط رسیور", "توقف ضبط رسیور")
+            listOf("ضبط رسیور", "ضبط روی فلش", "شروع ضبط رسیور", "ضبط فلش")
+        ),
+        VoiceAction(
+            "stop_stb_rec", "ضبط و پخش رسانه", "توقف ضبط روی فلش مموری رسیور",
+            listOf("توقف ضبط رسیور", "قطع ضبط رسیور", "استپ ضبط رسیور", "توقف ضبط فلش")
         ),
         VoiceAction(
             "rec_phone", "ضبط و پخش رسانه", "شروع یا توقف ضبط در گوشی",
-            listOf("ضبط گوشی", "شروع ضبط گوشی", "توقف ضبط گوشی", "ضبط کانال")
+            listOf("ضبط گوشی", "شروع ضبط گوشی", "ضبط کانال")
+        ),
+        VoiceAction(
+            "stop_phone_rec", "ضبط و پخش رسانه", "توقف ضبط در حافظه گوشی",
+            listOf("توقف ضبط گوشی", "قطع ضبط گوشی", "استپ ضبط گوشی")
         ),
         VoiceAction(
             "stream", "ضبط و پخش رسانه", "پخش زنده تصویر در گوشی",
@@ -136,6 +197,10 @@ object VoiceCustomizationManager {
             listOf("فایل های ضبط شده", "آرشیو ضبط", "لیست ضبط", "پوشه ضبط")
         ),
         VoiceAction(
+            "open_stb_files", "ضبط و پخش رسانه", "مشاهده لیست فایل‌های ضبط شده فلش رسیور",
+            listOf("فایل های فلش", "ضبط های رسیور", "فایل های رسیور", "لیست ضبط رسیور")
+        ),
+        VoiceAction(
             "add_timer", "ضبط و پخش رسانه", "تعریف زمان‌بندی جدید برای ضبط خودکار",
             listOf("زمان بندی جدید", "تایمر ضبط", "زمان بندی ضبط", "تعریف زمان بندی")
         ),
@@ -143,7 +208,8 @@ object VoiceCustomizationManager {
             "reset_counter", "ضبط و پخش رسانه", "صفر کردن شمارنده فایل‌های ضبط",
             listOf("صفر کردن شمارنده", "ریست شمارنده ضبط", "شمارنده ضبط صفر")
         ),
-        // ۷. ابزارهای هوشمند و برنامه
+
+        // ۸. ابزارهای هوشمند و برنامه
         VoiceAction(
             "wake_enable", "ابزارهای هوشمند", "روشن کردن بیدارباش و شنیدن پیوسته",
             listOf("روشن کردن بیدارباش", "فعال کردن شنیدن پیوسته", "بیدارباش روشن")
@@ -180,12 +246,16 @@ object VoiceCustomizationManager {
 
     private var customActionsMap = mutableMapOf<String, List<String>>()
     private var customChannelAliasesMap = mutableMapOf<String, MutableList<String>>() // serviceId -> list of aliases
+    private var disabledActionsSet = mutableSetOf<String>()
+    private var syncedChannelIds = mutableSetOf<String>()
     private var isLoaded = false
 
     fun init(context: Context) {
         if (!isLoaded) {
             loadCustomActions(context)
             loadChannelAliases(context)
+            loadDisabledActions(context)
+            loadSyncedChannelIds(context)
             isLoaded = true
         }
     }
@@ -212,6 +282,75 @@ object VoiceCustomizationManager {
             file.writeText(json)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error saving custom voice actions: ${e.message}")
+        }
+    }
+
+    private fun loadDisabledActions(context: Context) {
+        try {
+            val file = File(context.filesDir, FILE_DISABLED_ACTIONS)
+            if (file.exists()) {
+                val json = file.readText()
+                val type = object : TypeToken<Set<String>>() {}.type
+                val set: Set<String> = Gson().fromJson(json, type)
+                disabledActionsSet.clear()
+                disabledActionsSet.addAll(set)
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Error loading disabled actions: ${e.message}")
+        }
+    }
+
+    private fun saveDisabledActions(context: Context) {
+        try {
+            val file = File(context.filesDir, FILE_DISABLED_ACTIONS)
+            val json = Gson().toJson(disabledActionsSet)
+            file.writeText(json)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Error saving disabled actions: ${e.message}")
+        }
+    }
+
+    fun isActionEnabled(actionId: String): Boolean {
+        return !disabledActionsSet.contains(actionId)
+    }
+
+    fun setActionEnabled(context: Context, actionId: String, enabled: Boolean) {
+        if (enabled) {
+            disabledActionsSet.remove(actionId)
+        } else {
+            disabledActionsSet.add(actionId)
+        }
+        saveDisabledActions(context)
+    }
+
+    fun toggleAction(context: Context, actionId: String): Boolean {
+        val newState = !isActionEnabled(actionId)
+        setActionEnabled(context, actionId, newState)
+        return newState
+    }
+
+    private fun loadSyncedChannelIds(context: Context) {
+        try {
+            val file = File(context.filesDir, FILE_SYNCED_CHANNEL_IDS)
+            if (file.exists()) {
+                val json = file.readText()
+                val type = object : TypeToken<Set<String>>() {}.type
+                val set: Set<String> = Gson().fromJson(json, type)
+                syncedChannelIds.clear()
+                syncedChannelIds.addAll(set)
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Error loading synced channel IDs: ${e.message}")
+        }
+    }
+
+    private fun saveSyncedChannelIds(context: Context) {
+        try {
+            val file = File(context.filesDir, FILE_SYNCED_CHANNEL_IDS)
+            val json = Gson().toJson(syncedChannelIds)
+            file.writeText(json)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Error saving synced channel IDs: ${e.message}")
         }
     }
 
@@ -273,12 +412,16 @@ object VoiceCustomizationManager {
 
     fun resetAction(context: Context, actionId: String) {
         customActionsMap.remove(actionId)
+        disabledActionsSet.remove(actionId)
         saveCustomActions(context)
+        saveDisabledActions(context)
     }
 
     fun resetAllActions(context: Context) {
         customActionsMap.clear()
+        disabledActionsSet.clear()
         saveCustomActions(context)
+        saveDisabledActions(context)
     }
 
     fun getChannelAliasesMap(): Map<String, List<String>> = customChannelAliasesMap
@@ -305,38 +448,65 @@ object VoiceCustomizationManager {
 
     fun resetAllChannelAliases(context: Context) {
         customChannelAliasesMap.clear()
+        syncedChannelIds.clear()
         saveChannelAliases(context)
+        saveSyncedChannelIds(context)
     }
 
     /**
-     * Automatically extracts aliases from channels and registers them for voice recognition.
-     * Returns Pair(addedChannelsCount, totalAliasesCount)
+     * Called automatically when STB channels are first loaded/received.
+     * Silently indexes channels if they are not already indexed.
+     */
+    fun autoIndexChannels(context: Context, channels: List<Channel>) {
+        if (channels.isEmpty()) return
+        init(context)
+        var changed = false
+        for (ch in channels) {
+            if (!syncedChannelIds.contains(ch.serviceId)) {
+                syncedChannelIds.add(ch.serviceId)
+                val list = customChannelAliasesMap.getOrPut(ch.serviceId) { mutableListOf() }
+                val generated = generateDefaultAliases(ch)
+                for (a in generated) {
+                    if (!list.contains(a)) list.add(a)
+                }
+                changed = true
+            }
+        }
+        if (changed) {
+            saveChannelAliases(context)
+            saveSyncedChannelIds(context)
+            AppLogger.i(TAG, "Auto-indexed ${channels.size} channels into voice vocabulary")
+        }
+    }
+
+    /**
+     * Manually triggers sync when user clicks the button.
+     * Returns Pair(newChannelsCount, totalChannelsCount)
      */
     fun syncChannelsWithVoice(context: Context, channels: List<Channel>): Pair<Int, Int> {
-        var addedCount = 0
-        var totalAliases = 0
+        init(context)
+        var newChannelsCount = 0
 
         for (channel in channels) {
+            val isNew = !syncedChannelIds.contains(channel.serviceId)
+            if (isNew) {
+                newChannelsCount++
+                syncedChannelIds.add(channel.serviceId)
+            }
+
             val list = customChannelAliasesMap.getOrPut(channel.serviceId) { mutableListOf() }
             val generated = generateDefaultAliases(channel)
-            var channelHasNew = false
-
             for (a in generated) {
                 if (!list.contains(a)) {
                     list.add(a)
-                    channelHasNew = true
                 }
             }
-
-            if (channelHasNew) {
-                addedCount++
-            }
-            totalAliases += list.size
         }
 
         saveChannelAliases(context)
-        AppLogger.i(TAG, "Synced voice aliases: $addedCount channels updated, total aliases: $totalAliases")
-        return Pair(addedCount, totalAliases)
+        saveSyncedChannelIds(context)
+        AppLogger.i(TAG, "Manual voice sync: $newChannelsCount new channels detected among ${channels.size} total channels")
+        return Pair(newChannelsCount, channels.size)
     }
 
     private fun generateDefaultAliases(channel: Channel): List<String> {
@@ -391,13 +561,14 @@ object VoiceCustomizationManager {
     }
 
     /**
-     * Checks if a spoken query matches any customizable voice action.
+     * Checks if a spoken query matches any enabled customizable voice action.
      */
     fun matchVoiceAction(query: String): String? {
         val norm = ChannelMatcher.normalizePersian(query)
         if (norm.isBlank()) return null
 
         for (action in DEFAULT_ACTIONS) {
+            if (!isActionEnabled(action.id)) continue
             val phrases = getEffectivePhrases(action.id)
             for (p in phrases) {
                 val pNorm = ChannelMatcher.normalizePersian(p)

@@ -308,6 +308,93 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
                 }
                 return
             }
+            "tab_connection" -> { (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(0); return }
+            "tab_channels" -> { (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(1); return }
+            "tab_remote" -> { (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(2); return }
+            "tab_record" -> { (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3); return }
+            "tab_voice" -> { (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(4); return }
+            "tab_settings" -> { (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(5); return }
+            "tab_backup" -> { (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(6); return }
+            "open_settings" -> { (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(5); return }
+            "open_stb_files" -> { (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3); return }
+            "jump_first_channel" -> {
+                val first = repository.channels.value.firstOrNull()
+                if (first != null) {
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        repository.switchChannel(first)
+                        withContext(Dispatchers.Main) {
+                            val msg = "انتقال به کانال اول: ${first.serviceName}"
+                            txtExecutionResult.visibility = View.VISIBLE
+                            txtExecutionResult.text = msg
+                            AccessibilityHelper.announce(txtExecutionResult, msg)
+                        }
+                    }
+                }
+                return
+            }
+            "jump_last_channel" -> {
+                val last = repository.channels.value.lastOrNull()
+                if (last != null) {
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        repository.switchChannel(last)
+                        withContext(Dispatchers.Main) {
+                            val msg = "انتقال به کانال آخر: ${last.serviceName}"
+                            txtExecutionResult.visibility = View.VISIBLE
+                            txtExecutionResult.text = msg
+                            AccessibilityHelper.announce(txtExecutionResult, msg)
+                        }
+                    }
+                }
+                return
+            }
+            "stop_stb_rec" -> {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    repository.sendRcuKey(RcuKey.STOP)
+                    kotlinx.coroutines.delay(800)
+                    repository.sendRcuKey(RcuKey.OK)
+                    kotlinx.coroutines.delay(500)
+                    repository.sendRcuKey(RcuKey.EXIT)
+                    withContext(Dispatchers.Main) {
+                        val msg = "دستور توقف ضبط رسیور ارسال شد"
+                        txtExecutionResult.visibility = View.VISIBLE
+                        txtExecutionResult.text = msg
+                        AccessibilityHelper.announce(txtExecutionResult, msg)
+                    }
+                }
+                return
+            }
+            "stop_phone_rec" -> {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    com.gmscreen.accessible.player.StreamRecorderManager.stopRecording()
+                    withContext(Dispatchers.Main) {
+                        val msg = "ضبط گوشی متوقف و ذخیره شد"
+                        txtExecutionResult.visibility = View.VISIBLE
+                        txtExecutionResult.text = msg
+                        AccessibilityHelper.announce(txtExecutionResult, msg)
+                    }
+                }
+                return
+            }
+            "sleep_timer" -> {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    repository.sendRcuKey(RcuKey.SLEEP_TIMER)
+                    withContext(Dispatchers.Main) {
+                        val msg = "منوی تایمر خواب رسیور باز شد"
+                        txtExecutionResult.visibility = View.VISIBLE
+                        txtExecutionResult.text = msg
+                        AccessibilityHelper.announce(txtExecutionResult, msg)
+                    }
+                }
+                return
+            }
+            "filter_satellites" -> {
+                (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(1)
+                val msg = "انتقال به لیست کانال‌ها جهت انتخاب ماهواره"
+                txtExecutionResult.visibility = View.VISIBLE
+                txtExecutionResult.text = msg
+                AccessibilityHelper.announce(txtExecutionResult, msg)
+                return
+            }
         }
 
         val (keyCode, desc) = when (action) {

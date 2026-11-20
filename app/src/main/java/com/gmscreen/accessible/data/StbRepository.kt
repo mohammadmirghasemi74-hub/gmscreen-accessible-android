@@ -260,6 +260,7 @@ class StbRepository(context: Context) {
 
                 _currentChannel.value = matched
                 _channels.value = chList
+                com.gmscreen.accessible.voice.VoiceCustomizationManager.autoIndexChannels(context, chList)
             }
 
             // 5. Fetch transponders in background only if not cached yet (needed for stream playback)

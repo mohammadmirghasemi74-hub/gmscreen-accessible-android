@@ -867,20 +867,16 @@ class RecordFragment : Fragment() {
         onEdit: () -> Unit,
         onDelete: () -> Unit
     ) {
-        val options = arrayOf(
-            "۱. ویرایش این زمان‌بندی",
-            "۲. حذف این زمان‌بندی"
-        )
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(title)
-            .setMessage(timerSummary)
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> onEdit()
-                    1 -> onDelete()
-                }
+            .setMessage("مشخصات زمان‌بندی:\n$timerSummary\n\nعملیات مورد نظر خود را انتخاب کنید:")
+            .setPositiveButton("ویرایش زمان‌بندی") { _, _ ->
+                onEdit()
             }
-            .setNegativeButton("انصراف", null)
+            .setNegativeButton("حذف زمان‌بندی") { _, _ ->
+                onDelete()
+            }
+            .setNeutralButton("انصراف", null)
             .show()
     }
 

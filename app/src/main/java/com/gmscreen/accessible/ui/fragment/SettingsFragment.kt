@@ -1232,13 +1232,8 @@ class SettingsFragment : Fragment() {
         }
 
         // 4. Voice Commands Customization & Management
-        addSettingRow(contentLayout, "۴. مدیریت و شخصی‌سازی فرامین صوتی رسیور", "مشاهده، ویرایش، افزودن و بازنشانی فرامین") { _, _ ->
+        addSettingRow(contentLayout, "۴. مدیریت و شخصی‌سازی فرامین صوتی رسیور", "مشاهده، ویرایش، افزودن، همگام‌سازی و بازنشانی فرامین") { _, _ ->
             VoiceCustomizationDialogHelper.showVoiceCustomizationMenu(requireContext(), repository)
-        }
-
-        // 5. Automatic Channel Sync to Voice
-        addSettingRow(contentLayout, "۵. همگام‌سازی و افزودن خودکار کانال‌های رسیور به فرامین صوتی", "تشخیص و ثبت هوشمند شبکه‌های جدید") { _, row ->
-            VoiceCustomizationDialogHelper.syncChannels(requireContext(), repository, row)
         }
 
         MaterialAlertDialogBuilder(requireContext())
@@ -1399,6 +1394,38 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
+        // 7. Preferred TTS Engine
+        val installedEngines = com.gmscreen.accessible.util.TtsHelper.getInstalledEngines(requireContext())
+        var draftEngine = appConfig.preferredTtsEngine
+        val currentEngineLabel = if (draftEngine.isBlank()) {
+            "تشخیص خودکار / eSpeak (پیش‌فرض)"
+        } else {
+            installedEngines.find { it.first == draftEngine }?.second ?: draftEngine
+        }
+        addSettingRow(contentLayout, "۷. موتور تبدیل متن به گفتار (TTS Engine)", currentEngineLabel) { txtVal, row ->
+            val engineOptions = mutableListOf<String>()
+            engineOptions.add("تشخیص خودکار و ترجیح eSpeak (پیش‌فرض)")
+            for (eng in installedEngines) {
+                engineOptions.add("${eng.second} (${eng.first})")
+            }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("انتخاب موتور صوتی TTS")
+                .setItems(engineOptions.toTypedArray()) { _, which ->
+                    if (which == 0) {
+                        draftEngine = ""
+                        txtVal.text = "تشخیص خودکار / eSpeak (پیش‌فرض)"
+                    } else {
+                        val chosen = installedEngines[which - 1]
+                        draftEngine = chosen.first
+                        txtVal.text = chosen.second
+                    }
+                    row.contentDescription = "موتور صوتی: ${txtVal.text}"
+                    AccessibilityHelper.announce(row, txtVal.text.toString())
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("تنظیمات دسترس‌پذیری و خروجی صدا")
             .setView(scrollView)
@@ -1409,6 +1436,8 @@ class SettingsFragment : Fragment() {
                 appConfig.showJumpToFirstChannel = draftJumpFirst
                 appConfig.showJumpToLastChannel = draftJumpLast
                 appConfig.separateAudioToBluetooth = draftSeparateAudio
+                appConfig.preferredTtsEngine = draftEngine
+                com.gmscreen.accessible.util.TtsHelper.init(requireContext())
 
                 val msg = "تنظیمات دسترس‌پذیری ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
@@ -1418,13 +1447,15 @@ class SettingsFragment : Fragment() {
     }
 
     private fun openSystemLogsDialog() {
+        val smartErrorState = if (appConfig.logOnlyErrors) "روشن (فقط خطاها - بهینه و بدون لاگ اضافی)" else "خاموش (ثبت کامل تمامی رویدادها)"
         val options = arrayOf(
-            "۱. مشاهده گزارش زنده در مرورگر داخلی",
-            "۲. ذخیره لاگ متنی (TXT)",
-            "۳. ذخیره لاگ وب (HTML)",
-            "۴. مدیریت و مشاهده فایل‌های لاگ",
-            "۵. باز کردن پوشه لاگ‌ها در مدیریت فایل",
-            "۶. پاک‌سازی کامل لاگ‌های سیستم"
+            "۱. وضعیت لاگ هوشمند: $smartErrorState (کلیک برای تغییر)",
+            "۲. مشاهده گزارش زنده در مرورگر داخلی",
+            "۳. ذخیره لاگ متنی (TXT)",
+            "۴. ذخیره لاگ وب (HTML)",
+            "۵. مدیریت و مشاهده فایل‌های لاگ",
+            "۶. باز کردن پوشه لاگ‌ها در مدیریت فایل",
+            "۷. پاک‌سازی کامل لاگ‌های سیستم"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -1432,10 +1463,17 @@ class SettingsFragment : Fragment() {
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> {
+                        appConfig.logOnlyErrors = !appConfig.logOnlyErrors
+                        val newLabel = if (appConfig.logOnlyErrors) "ثبت هوشمند فقط خطاها فعال شد. در صورت عدم بروز خطا، هیچ فایل لاگی ایجاد نخواهد شد." else "ثبت کامل تمامی رویدادها فعال شد."
+                        Toast.makeText(requireContext(), newLabel, Toast.LENGTH_LONG).show()
+                        AccessibilityHelper.announce(containerSettingsList, newLabel)
+                        openSystemLogsDialog()
+                    }
+                    1 -> {
                         val html = AppLogger.getRecentLogsHtml(requireContext())
                         InternalBrowserActivity.openHtml(requireContext(), html, "گزارش زنده رویدادهای سیستم")
                     }
-                    1 -> {
+                    2 -> {
                         try {
                             val fTxt = AppLogger.exportLogs(requireContext(), asHtml = false)
                             val msg = "لاگ متنی با موفقیت ذخیره شد:\n${fTxt.name}"
@@ -1445,7 +1483,7 @@ class SettingsFragment : Fragment() {
                             Toast.makeText(requireContext(), "خطا در ذخیره لاگ: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
-                    2 -> {
+                    3 -> {
                         try {
                             val fHtml = AppLogger.exportLogs(requireContext(), asHtml = true)
                             val msg = "لاگ وب با موفقیت ذخیره شد:\n${fHtml.name}"
@@ -1455,9 +1493,9 @@ class SettingsFragment : Fragment() {
                             Toast.makeText(requireContext(), "خطا در ذخیره لاگ: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
-                    3 -> openExportedLogsManagerDialog()
-                    4 -> openLogsFolder()
-                    5 -> confirmClearSystemLogs()
+                    4 -> openExportedLogsManagerDialog()
+                    5 -> openLogsFolder()
+                    6 -> confirmClearSystemLogs()
                 }
             }
             .setNegativeButton("بستن", null)

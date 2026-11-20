@@ -268,18 +268,21 @@ object ChannelMatcher {
             if (matchedTokens == 0) continue
 
             if (matchedTokens >= qTokens.size) score += 300
-            if (nClean == qTokenized) score += 2000
+            if (nClean == qTokenized) score += 5000
+            if (sName.equals(qClean, ignoreCase = true)) score += 5000
 
             // Digits matching
             val chDigits = Regex("\\b\\d+\\b").findAll(nClean).map { it.value }.toSet()
             if (queryDigits.isNotEmpty()) {
                 if (chDigits.containsAll(queryDigits)) {
-                    score += 2500
+                    score += 3500
                 } else if (chDigits.isNotEmpty()) {
+                    score -= 4000
+                } else {
                     score -= 3000
                 }
             } else if (chDigits.isNotEmpty()) {
-                score -= 200
+                score -= 400
             }
 
             // GEM Disambiguation

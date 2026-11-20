@@ -99,6 +99,9 @@ class MainActivity : AppCompatActivity() {
             repository.reconnectEvent.collect { event ->
                 when (event) {
                     is StbRepository.ReconnectEvent.Attempting -> {
+                        if (GMScreenApplication.instance.appConfig.soundCuesEnabled) {
+                            AccessibilityHelper.playDisconnectSoundCue()
+                        }
                         val msg = "ارتباط با رسیور قطع شد. در حال تلاش برای اتصال هوشمند مجدد..."
                         AccessibilityHelper.announce(btnActiveTab, msg)
                         AccessibilityHelper.vibrateWarning(this@MainActivity)
@@ -112,6 +115,9 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     is StbRepository.ReconnectEvent.Failed -> {
+                        if (GMScreenApplication.instance.appConfig.soundCuesEnabled) {
+                            AccessibilityHelper.playDisconnectSoundCue()
+                        }
                         val msg = "برنامه نتوانست مجدداً به رسیور متصل شود؛ بازگشت به صفحه اتصال"
                         AccessibilityHelper.announce(btnActiveTab, msg)
                         AccessibilityHelper.vibrateWarning(this@MainActivity)

@@ -23,6 +23,8 @@ object AppLogger {
     fun w(tag: String, message: String, throwable: Throwable? = null) = log("WARN", tag, message, throwable)
     fun e(tag: String, message: String, throwable: Throwable? = null) = log("ERROR", tag, message, throwable)
 
+    private var currentSessionErrorFile: File? = null
+
     private fun log(level: String, tag: String, message: String, throwable: Throwable?) {
         val timeStr = synchronized(dateFormat) { dateFormat.format(Date()) }
         val errStr = throwable?.let { "\n" + Log.getStackTraceString(it) } ?: ""
@@ -43,16 +45,62 @@ object AppLogger {
 
             try {
                 val app = com.gmscreen.accessible.GMScreenApplication.instance
-                val logFile = getLogFile(app)
-                val parent = logFile.parentFile
-                if (parent != null && !parent.exists()) {
-                    parent.mkdirs()
-                }
-                FileWriter(logFile, true).use { fw ->
-                    fw.appendLine(entry)
+                val logOnlyErrors = try { app.appConfig.logOnlyErrors } catch (_: Exception) { true }
+
+                if (logOnlyErrors) {
+                    // Smart Error-Only logging: only create/write to file when an actual error occurs!
+                    if (level == "ERROR" || throwable != null) {
+                        val errorFile = getOrCreateSessionErrorFile(app)
+                        val breadcrumbs = memoryLogs.takeLast(20).joinToString("\n")
+                        val errorReport = buildString {
+                            appendLine("==============================================================")
+                            appendLine("گزارش خطای هوشمند GM Screen Accessible")
+                            appendLine("زمان وقوع: $timeStr")
+                            appendLine("دستگاه: ${Build.MANUFACTURER} ${Build.MODEL} (Android ${Build.VERSION.RELEASE})")
+                            appendLine("تگ خطا: $tag")
+                            appendLine("پیام خطا: $message")
+                            if (errStr.isNotBlank()) {
+                                appendLine("جزئیات استک‌تریس:")
+                                appendLine(errStr)
+                            }
+                            appendLine("--------------------------------------------------------------")
+                            appendLine("رویدادهای اخیر سیستم قبل از بروز خطا (Context Breadcrumbs):")
+                            appendLine(breadcrumbs)
+                            appendLine("==============================================================")
+                            appendLine()
+                        }
+                        val parent = errorFile.parentFile
+                        if (parent != null && !parent.exists()) {
+                            parent.mkdirs()
+                        }
+                        FileWriter(errorFile, true).use { fw ->
+                            fw.append(errorReport)
+                        }
+                    }
+                } else {
+                    // Full logging mode
+                    val logFile = getLogFile(app)
+                    val parent = logFile.parentFile
+                    if (parent != null && !parent.exists()) {
+                        parent.mkdirs()
+                    }
+                    FileWriter(logFile, true).use { fw ->
+                        fw.appendLine(entry)
+                    }
                 }
             } catch (_: Exception) {}
         }
+    }
+
+    private fun getOrCreateSessionErrorFile(context: Context): File {
+        if (currentSessionErrorFile != null) {
+            return currentSessionErrorFile!!
+        }
+        val dir = getLogsDir(context)
+        val fileTime = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val f = File(dir, "error_log_$fileTime.txt")
+        currentSessionErrorFile = f
+        return f
     }
 
     fun getLogsDir(context: Context): File {

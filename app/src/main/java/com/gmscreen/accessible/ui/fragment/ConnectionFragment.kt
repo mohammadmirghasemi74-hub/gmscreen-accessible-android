@@ -102,6 +102,9 @@ class ConnectionFragment : Fragment() {
 
         btnDisconnect.setOnClickListener {
             repository.disconnect()
+            if (appConfig.soundCuesEnabled) {
+                AccessibilityHelper.playDisconnectSoundCue()
+            }
             val msg = "اتصال به رسیور قطع شد"
             AccessibilityHelper.announce(txtStatus, msg)
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()

@@ -108,4 +108,13 @@ object AccessibilityHelper {
             toneGenerator?.startTone(toneType, 120)
         } catch (_: Exception) {}
     }
+
+    /**
+     * Play distinct descending tone when connection to receiver is lost or disconnected.
+     */
+    fun playDisconnectSoundCue() {
+        try {
+            toneGenerator?.startTone(ToneGenerator.TONE_PROP_NACK, 250)
+        } catch (_: Exception) {}
+    }
 }

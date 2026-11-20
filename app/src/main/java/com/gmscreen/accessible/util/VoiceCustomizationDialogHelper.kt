@@ -28,9 +28,9 @@ object VoiceCustomizationDialogHelper {
 
         val (addedCount, totalCount) = VoiceCustomizationManager.syncChannelsWithVoice(context, channels)
         val msg = if (addedCount > 0) {
-            "همگام‌سازی با موفقیت انجام شد: تعداد $addedCount کانال جدید شناسایی و به دایره لغات فرامین صوتی افزوده شد (مجموعاً $totalCount عبارت صوتی فعال)."
+            "همگام‌سازی با موفقیت انجام شد: تعداد $addedCount کانال جدید در رسیور شناسایی و به عنوان فرامین صوتی ثبت شد (مجموعاً $totalCount شبکه رسیور)."
         } else {
-            "همه $totalCount شبکه و عبارت صوتی از قبل همگام و به‌روز هستند."
+            "تعداد کل $totalCount شبکه رسیور بررسی شد. ۰ کانال جدید یافت شد (هیچ شبکه جدیدی به رسیور اضافه نشده است). تمامی شبکه‌ها قبلاً همگام شده‌اند."
         }
 
         MaterialAlertDialogBuilder(context)
@@ -84,18 +84,18 @@ object VoiceCustomizationDialogHelper {
                     showActionsInCategoryDialog(context, selectedCat)
                 }
             }
-            .setNegativeButton("بازگشت") { _, _ ->
-                // Dismisses
-            }
+            .setNegativeButton("بازگشت", null)
             .show()
     }
 
     private fun showActionsInCategoryDialog(context: Context, category: String) {
         val actions = VoiceCustomizationManager.DEFAULT_ACTIONS.filter { it.category == category }
         val items = actions.map { action ->
+            val isEnabled = VoiceCustomizationManager.isActionEnabled(action.id)
+            val statusTag = if (isEnabled) "[فعال]" else "[خاموش]"
             val phrases = VoiceCustomizationManager.getEffectivePhrases(action.id)
-            val phraseText = if (phrases.isNotEmpty()) phrases.joinToString("، ") else "بدون عبارت (غیرفعال)"
-            "${action.title}\nفرامین فعال: $phraseText"
+            val phraseText = if (phrases.isNotEmpty()) phrases.joinToString("، ") else "بدون عبارت"
+            "$statusTag ${action.title}\nفرامین: $phraseText"
         }.toTypedArray()
 
         MaterialAlertDialogBuilder(context)
@@ -117,9 +117,11 @@ object VoiceCustomizationDialogHelper {
     private fun showAllActionsSearchDialog(context: Context) {
         val actions = VoiceCustomizationManager.DEFAULT_ACTIONS
         val items = actions.map { action ->
+            val isEnabled = VoiceCustomizationManager.isActionEnabled(action.id)
+            val statusTag = if (isEnabled) "[فعال]" else "[خاموش]"
             val phrases = VoiceCustomizationManager.getEffectivePhrases(action.id)
-            val phraseText = if (phrases.isNotEmpty()) phrases.joinToString("، ") else "غیرفعال"
-            "[${action.category}] ${action.title}\nفرامین: $phraseText"
+            val phraseText = if (phrases.isNotEmpty()) phrases.joinToString("، ") else "بدون عبارت"
+            "$statusTag [${action.category}] ${action.title}\nفرامین: $phraseText"
         }.toTypedArray()
 
         MaterialAlertDialogBuilder(context)
@@ -142,6 +144,7 @@ object VoiceCustomizationDialogHelper {
         onBack: () -> Unit
     ) {
         val currentPhrases = VoiceCustomizationManager.getEffectivePhrases(action.id)
+        val isEnabled = VoiceCustomizationManager.isActionEnabled(action.id)
 
         val scrollView = ScrollView(context)
         val container = LinearLayout(context).apply {
@@ -152,16 +155,39 @@ object VoiceCustomizationDialogHelper {
 
         // Description header
         val txtHeader = TextView(context).apply {
-            text = "گروه: ${action.category}\nعنوان: ${action.title}\n\nبرای حذف یا ویرایش روی هر عبارت کلیک کنید:"
+            text = "گروه: ${action.category}\nعنوان: ${action.title}\n\nبرای خاموش/روشن کردن، حذف یا ویرایش از گزینه‌های زیر استفاده کنید:"
             setTextColor(context.resources.getColor(R.color.text_primary, null))
             textSize = 14f
-            setPadding(0, 0, 0, 16)
+            setPadding(0, 0, 0, 12)
         }
         container.addView(txtHeader)
 
+        // 1. Toggle Enable / Disable Button
+        val btnToggle = MaterialButton(context).apply {
+            val statusLabel = if (isEnabled) "روشن (فعال)" else "خاموش (غیرفعال)"
+            text = "وضعیت قابلیت: $statusLabel (کلیک برای تغییر)"
+            contentDescription = "وضعیت قابلیت صوتی ${action.title}: $statusLabel. برای تغییر وضعیت دو بار ضربه بزنید"
+            setBackgroundColor(if (isEnabled) context.resources.getColor(R.color.primary, null) else context.resources.getColor(R.color.card_bg, null))
+            setTextColor(context.resources.getColor(android.R.color.white, null))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(0, 4, 0, 16) }
+
+            setOnClickListener {
+                val newState = VoiceCustomizationManager.toggleAction(context, action.id)
+                val newStatus = if (newState) "روشن (فعال)" else "خاموش (غیرفعال)"
+                val announceMsg = "قابلیت ${action.title} $newStatus شد"
+                Toast.makeText(context, announceMsg, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(this, announceMsg)
+                showActionDetailDialog(context, action, onBack)
+            }
+        }
+        container.addView(btnToggle)
+
         if (currentPhrases.isEmpty()) {
             val txtEmpty = TextView(context).apply {
-                text = "در حال حاضر هیچ عبارت صوتی برای این قابلیت ثبت نشده و غیرفعال است."
+                text = "در حال حاضر هیچ عبارت صوتی برای این قابلیت ثبت نشده است."
                 setTextColor(context.resources.getColor(R.color.text_secondary, null))
                 textSize = 13f
                 setPadding(0, 8, 0, 16)
@@ -208,6 +234,34 @@ object VoiceCustomizationDialogHelper {
             }
         }
         container.addView(btnAdd)
+
+        // Clear All Phrases Button
+        if (currentPhrases.isNotEmpty()) {
+            val btnClear = MaterialButton(context).apply {
+                text = "خالی کردن کلیه عبارات این قابلیت"
+                contentDescription = "پاک کردن تمام فرامین صوتی ثبت شده برای ${action.title}"
+                setBackgroundColor(context.resources.getColor(R.color.card_bg, null))
+                setTextColor(context.resources.getColor(R.color.text_primary, null))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { setMargins(0, 6, 0, 6) }
+
+                setOnClickListener {
+                    MaterialAlertDialogBuilder(context)
+                        .setTitle("خالی کردن فرامین")
+                        .setMessage("آیا می‌خواهید تمام عبارات صوتی «${action.title}» پاک شوند؟")
+                        .setPositiveButton("بله، پاک شود") { _, _ ->
+                            VoiceCustomizationManager.setPhrases(context, action.id, emptyList())
+                            Toast.makeText(context, "عبارات صوتی این قابلیت خالی شد", Toast.LENGTH_SHORT).show()
+                            showActionDetailDialog(context, action, onBack)
+                        }
+                        .setNegativeButton("انصراف", null)
+                        .show()
+                }
+            }
+            container.addView(btnClear)
+        }
 
         // Reset to Default Button
         val btnReset = MaterialButton(context).apply {
