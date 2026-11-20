@@ -36,12 +36,26 @@ import kotlinx.coroutines.withContext
 class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
     private lateinit var playerView: PlayerView
-    private lateinit var btnExitPlayer: ImageButton
     private lateinit var btnToggleRecordInPlayer: MaterialButton
 
     private var exoPlayer: ExoPlayer? = null
     private var channelName: String = "شبکه"
     private var serviceId: String = ""
+
+    private var tapCount = 0
+    private val tapHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val tapRunnable = Runnable {
+        when (tapCount) {
+            2 -> {
+                AccessibilityHelper.announce(playerView, "بستن پخش‌کننده")
+                finish()
+            }
+            3 -> {
+                toggleRecording()
+            }
+        }
+        tapCount = 0
+    }
 
     private val repository get() = GMScreenApplication.instance.repository
     private val appConfig get() = GMScreenApplication.instance.appConfig
@@ -70,28 +84,56 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
         setContentView(R.layout.activity_video_player)
 
         playerView = findViewById(R.id.playerViewFullscreen)
-        btnExitPlayer = findViewById(R.id.btnExitPlayer)
         btnToggleRecordInPlayer = findViewById(R.id.btnToggleRecordInPlayer)
 
         channelName = intent.getStringExtra("EXTRA_CHANNEL_NAME") ?: "شبکه"
         serviceId = intent.getStringExtra("EXTRA_SERVICE_ID") ?: ""
 
-        AccessibilityHelper.announce(playerView, "پخش ویدیویی تمام‌صفحه $channelName. برای بستن صفحه، دکمه خروج در گوشه بالای صفحه را بزنید یا دوبار روی صفحه ضربه بزنید.")
+        AccessibilityHelper.announce(
+            playerView,
+            "پخش ویدیویی تمام‌صفحه $channelName. با دو ضربه روی صفحه، پخش‌کننده بسته می‌شود؛ و با سه ضربه، ضبط روی گوشی شروع یا متوقف می‌شود."
+        )
 
-        btnExitPlayer.setOnClickListener {
-            finish()
-        }
-
-        val gestureDetector = androidx.core.view.GestureDetectorCompat(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: android.view.MotionEvent): Boolean {
-                finish()
-                return true
-            }
-        })
+        // Gestures: 2 taps to close, 3 taps to toggle recording
         playerView.setOnTouchListener { _, event ->
-            gestureDetector.onTouchEvent(event)
+            if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                tapCount++
+                tapHandler.removeCallbacks(tapRunnable)
+                tapHandler.postDelayed(tapRunnable, 400L)
+            }
             false
         }
+
+        // Accessibility actions for TalkBack
+        androidx.core.view.ViewCompat.setAccessibilityDelegate(playerView, object : androidx.core.view.AccessibilityDelegateCompat() {
+            override fun onInitializeAccessibilityNodeInfo(host: android.view.View, info: androidx.core.view.accessibility.AccessibilityNodeInfoCompat) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.addAction(
+                    androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat(
+                        androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK,
+                        "بستن پخش‌کننده (یا دو ضربه)"
+                    )
+                )
+                info.addAction(
+                    androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat(
+                        R.id.action_toggle_record,
+                        "شروع یا توقف ضبط گوشی (یا سه ضربه)"
+                    )
+                )
+            }
+
+            override fun performAccessibilityAction(host: android.view.View, action: Int, args: Bundle?): Boolean {
+                if (action == androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK) {
+                    finish()
+                    return true
+                }
+                if (action == R.id.action_toggle_record) {
+                    toggleRecording()
+                    return true
+                }
+                return super.performAccessibilityAction(host, action, args)
+            }
+        })
 
         setupRecordButton()
 
@@ -118,41 +160,45 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
         updateRecordButtonUi(isCurrentlyRec)
 
         btnToggleRecordInPlayer.setOnClickListener {
-            val channel = repository.channels.value.find { it.serviceId == serviceId }
-            val ip = repository.connectedIp.value
-            if (channel == null || ip.isBlank()) {
-                Toast.makeText(this, "مشخصات شبکه جهت ضبط یافت نشد", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            toggleRecording()
+        }
+    }
 
-            if (StreamRecorderManager.isRecording) {
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val file = StreamRecorderManager.stopRecording()
-                    withContext(Dispatchers.Main) {
-                        updateRecordButtonUi(false)
-                        val msg = "ضبط ویدیو متوقف و با موفقیت ذخیره شد: ${file?.name ?: ""}"
-                        AccessibilityHelper.announce(btnToggleRecordInPlayer, msg)
-                        Toast.makeText(this@VideoPlayerActivity, msg, Toast.LENGTH_LONG).show()
-                    }
+    private fun toggleRecording() {
+        val channel = repository.channels.value.find { it.serviceId == serviceId }
+        val ip = repository.connectedIp.value
+        if (channel == null || ip.isBlank()) {
+            Toast.makeText(this, "مشخصات شبکه جهت ضبط یافت نشد", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (StreamRecorderManager.isRecording) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val file = StreamRecorderManager.stopRecording()
+                withContext(Dispatchers.Main) {
+                    updateRecordButtonUi(false)
+                    val msg = "ضبط ویدیو متوقف و با موفقیت ذخیره شد: ${file?.name ?: ""}"
+                    AccessibilityHelper.announce(playerView, msg)
+                    Toast.makeText(this@VideoPlayerActivity, msg, Toast.LENGTH_LONG).show()
                 }
-            } else {
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val file = StreamRecorderManager.startRecording(
-                        this@VideoPlayerActivity,
-                        repository.client,
-                        ip,
-                        channel,
-                        isAudioOnly = false
-                    )
-                    withContext(Dispatchers.Main) {
-                        if (file != null) {
-                            updateRecordButtonUi(true)
-                            val msg = "ضبط همزمان ویدیویی شبکه ${channel.serviceName} روی گوشی آغاز شد"
-                            AccessibilityHelper.announce(btnToggleRecordInPlayer, msg)
-                            Toast.makeText(this@VideoPlayerActivity, msg, Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(this@VideoPlayerActivity, "خطا در شروع ضبط همزمان", Toast.LENGTH_SHORT).show()
-                        }
+            }
+        } else {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val file = StreamRecorderManager.startRecording(
+                    this@VideoPlayerActivity,
+                    repository.client,
+                    ip,
+                    channel,
+                    isAudioOnly = false
+                )
+                withContext(Dispatchers.Main) {
+                    if (file != null) {
+                        updateRecordButtonUi(true)
+                        val msg = "ضبط همزمان ویدیویی شبکه ${channel.serviceName} روی گوشی آغاز شد"
+                        AccessibilityHelper.announce(playerView, msg)
+                        Toast.makeText(this@VideoPlayerActivity, msg, Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@VideoPlayerActivity, "خطا در شروع ضبط همزمان", Toast.LENGTH_SHORT).show()
                     }
                 }
             }

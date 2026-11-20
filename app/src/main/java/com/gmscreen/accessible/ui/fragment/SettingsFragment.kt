@@ -1071,6 +1071,7 @@ class SettingsFragment : Fragment() {
         var draftAutoChannel = appConfig.autoAnnounceChannel
         var draftAutoEpg = appConfig.autoAnnounceEpg
         var draftEpgDetail = appConfig.epgAnnounceDetail
+        var draftBackgroundEpg = appConfig.backgroundAnnounceEpg
 
         val scrollView = ScrollView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -1144,6 +1145,24 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
+        // 4. Background EPG Announcement
+        addSettingRow(contentLayout, "۴. اعلام جدول پخش برنامه (EPG) در پس‌زمینه", if (draftBackgroundEpg) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
+            val opts = arrayOf("فعال (اعلام خودکار عنوان برنامه EPG هنگام تعویض کانال با کنترل فیزیکی)", "غیرفعال (پیش‌فرض)")
+            val cur = if (draftBackgroundEpg) 0 else 1
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("اعلام EPG در پس‌زمینه")
+                .setSingleChoiceItems(opts, cur) { dlg, which ->
+                    draftBackgroundEpg = (which == 0)
+                    val label = if (draftBackgroundEpg) "فعال" else "غیرفعال (پیش‌فرض)"
+                    txtVal.text = label
+                    row.contentDescription = "اعلام EPG در پس‌زمینه: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("تنظیمات راهنمای برنامه‌ها و اعلام خودکار")
             .setView(scrollView)
@@ -1151,6 +1170,7 @@ class SettingsFragment : Fragment() {
                 appConfig.autoAnnounceChannel = draftAutoChannel
                 appConfig.autoAnnounceEpg = draftAutoEpg
                 appConfig.epgAnnounceDetail = draftEpgDetail
+                appConfig.backgroundAnnounceEpg = draftBackgroundEpg
 
                 val msg = "تنظیمات راهنمای برنامه‌ها با موفقیت ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
@@ -1275,6 +1295,9 @@ class SettingsFragment : Fragment() {
                 appConfig.voiceAlwaysListening = draftListening
                 appConfig.soundCuesEnabled = draftSound
                 appConfig.voiceWakeWord = draftWakeWord
+
+                // Immediately update background wake-word listening service state
+                com.gmscreen.accessible.service.GMScreenBackgroundService.updateWakeWordState(requireContext())
 
                 val msg = "تنظیمات صوتی با موفقیت ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()

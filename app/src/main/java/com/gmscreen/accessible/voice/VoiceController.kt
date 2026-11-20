@@ -80,20 +80,8 @@ class VoiceController(
         isWakeWordActive = enabled
         isPausedDueToExternalAudio = false
         if (enabled) {
-            try {
-                audioManager?.requestAudioFocus(
-                    audioFocusChangeListener,
-                    AudioManager.STREAM_VOICE_CALL,
-                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
-                )
-            } catch (_: Exception) {}
-            muteSystemSounds(true)
             startListening()
         } else {
-            try {
-                audioManager?.abandonAudioFocus(audioFocusChangeListener)
-            } catch (_: Exception) {}
-            muteSystemSounds(false)
             stopListening()
         }
     }
@@ -101,9 +89,13 @@ class VoiceController(
     fun isWakeWordEnabled(): Boolean = isWakeWordActive
 
     fun startListening() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            mainHandler.post { startListening() }
+            return
+        }
         if (isPausedDueToExternalAudio) return
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
-            listener.onError("سرویس تشخیص گفتار گوگل در این دستگاه در دسترس نیست")
+            listener.onError("سرویس تشخیص گفتار در این دستگاه در دسترس نیست")
             return
         }
 
@@ -120,7 +112,7 @@ class VoiceController(
                 putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10)
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
                 putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false)
-                // Tuned specifically for phone microphones: high sensitivity and natural speaking pace
+                // Tuned specifically for microphones: high sensitivity and natural speaking pace
                 putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 3000L)
                 putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2500L)
                 putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
@@ -131,7 +123,15 @@ class VoiceController(
             isListening = true
         } catch (e: Exception) {
             Log.e(TAG, "Error starting speech recognition", e)
-            listener.onError("خطا در راه‌اندازی ضبط صدا: ${e.message}")
+            if (isWakeWordActive) {
+                mainHandler.postDelayed({
+                    if (isWakeWordActive && !isPausedDueToExternalAudio) {
+                        startListening()
+                    }
+                }, 3000L)
+            } else {
+                listener.onError("خطا در راه‌اندازی ضبط صدا: ${e.message}")
+            }
         }
     }
 
@@ -210,59 +210,73 @@ class VoiceController(
         }
     }
 
+    private fun checkWakeWordMatches(matches: List<String>): Pair<Boolean, String> {
+        val configured = try {
+            com.gmscreen.accessible.util.AppConfig(context).voiceWakeWord.trim()
+        } catch (_: Exception) { "" }
+
+        val candidateWords = mutableListOf<String>()
+        if (configured.isNotBlank()) {
+            candidateWords.add(configured)
+        }
+        for (ww in WAKE_WORDS) {
+            if (!candidateWords.any { it.equals(ww, ignoreCase = true) }) {
+                candidateWords.add(ww)
+            }
+        }
+
+        for (text in matches) {
+            val cleaned = text.trim()
+            for (ww in candidateWords) {
+                if (cleaned.contains(ww, ignoreCase = true)) {
+                    val remainder = cleaned.replace(Regex(Regex.escape(ww), RegexOption.IGNORE_CASE), "").trim()
+                    return Pair(true, remainder)
+                }
+            }
+        }
+        return Pair(false, "")
+    }
+
     override fun onResults(results: Bundle?) {
         isListening = false
         val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-        if (!matches.isNullOrEmpty()) {
-            val text = matches[0]
-            if (isWakeWordActive) {
-                val cleaned = text.trim()
-                var wakeDetected = false
-                var commandRemainder = ""
 
-                val configured = try {
-                    com.gmscreen.accessible.util.AppConfig(context).voiceWakeWord.trim()
-                } catch (_: Exception) { "" }
-
-                val candidateWords = mutableListOf<String>()
-                if (configured.isNotBlank()) {
-                    candidateWords.add(configured)
-                }
-                for (ww in WAKE_WORDS) {
-                    if (!candidateWords.any { it.equals(ww, ignoreCase = true) }) {
-                        candidateWords.add(ww)
-                    }
-                }
-
-                for (ww in candidateWords) {
-                    if (cleaned.contains(ww, ignoreCase = true)) {
-                        wakeDetected = true
-                        commandRemainder = cleaned.replace(Regex(Regex.escape(ww), RegexOption.IGNORE_CASE), "").trim()
-                        break
-                    }
-                }
+        if (isWakeWordActive) {
+            if (!matches.isNullOrEmpty()) {
+                val (wakeDetected, commandRemainder) = checkWakeWordMatches(matches)
                 if (wakeDetected) {
-                    muteSystemSounds(false)
                     listener.onWakeWordTriggered(commandRemainder)
                 }
-                // Continue wake word loop
-                mainHandler.postDelayed({
-                    if (isWakeWordActive) {
-                        muteSystemSounds(true)
-                        startListening()
-                    }
-                }, 1000)
-            } else {
-                listener.onResults(matches)
             }
+            // Always continue listening loop if wake word mode is active
+            mainHandler.postDelayed({
+                if (isWakeWordActive && !isPausedDueToExternalAudio) {
+                    startListening()
+                }
+            }, 800L)
         } else {
-            if (!isWakeWordActive) {
+            if (!matches.isNullOrEmpty()) {
+                listener.onResults(matches)
+            } else {
                 listener.onError("صدایی تشخیص داده نشد")
             }
         }
     }
 
-    override fun onPartialResults(partialResults: Bundle?) {}
+    override fun onPartialResults(partialResults: Bundle?) {
+        if (!isWakeWordActive) return
+        val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) ?: return
+        val (wakeDetected, commandRemainder) = checkWakeWordMatches(matches)
+        if (wakeDetected) {
+            stopListening()
+            listener.onWakeWordTriggered(commandRemainder)
+            mainHandler.postDelayed({
+                if (isWakeWordActive && !isPausedDueToExternalAudio) {
+                    startListening()
+                }
+            }, 1200L)
+        }
+    }
 
     override fun onEvent(eventType: Int, params: Bundle?) {}
 }

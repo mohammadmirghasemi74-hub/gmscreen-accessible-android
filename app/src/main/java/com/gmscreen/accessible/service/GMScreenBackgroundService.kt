@@ -98,6 +98,20 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
         fun notifyStbRecordingState(isRecording: Boolean, channelName: String) {
             activeServiceInstance?.handleStbRecordingState(isRecording, channelName)
         }
+
+        fun updateWakeWordState(context: Context) {
+            val appConfig = GMScreenApplication.instance.appConfig
+            val instance = activeServiceInstance
+            if (appConfig.voiceAlwaysListening) {
+                if (instance != null) {
+                    instance.initBackgroundWakeWord()
+                } else {
+                    startService(context)
+                }
+            } else {
+                instance?.stopBackgroundWakeWord()
+            }
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -288,6 +302,24 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
                         if (!isInitial && !GMScreenApplication.instance.isAppInForeground) {
                             AppLogger.i("GMScreenBackgroundService", "Announcing channel in background: $channelStr")
                             TtsHelper.speak(channelStr, interrupt = true)
+
+                            if (GMScreenApplication.instance.appConfig.backgroundAnnounceEpg) {
+                                serviceScope.launch(Dispatchers.IO) {
+                                    try {
+                                        val epgData = repository.getEpg(ch.serviceId)
+                                        val (cur, nxt) = com.gmscreen.accessible.util.EpgHelper.extractCurrentAndNextEvent(epgData)
+                                        val epgMsg = com.gmscreen.accessible.util.EpgHelper.buildEpgAnnouncement(
+                                            cur,
+                                            nxt,
+                                            GMScreenApplication.instance.appConfig.epgAnnounceDetail
+                                        )
+                                        if (!epgMsg.isNullOrBlank() && !GMScreenApplication.instance.isAppInForeground) {
+                                            delay(400)
+                                            TtsHelper.speak(epgMsg, interrupt = false)
+                                        }
+                                    } catch (_: Exception) {}
+                                }
+                            }
                         }
                     }
                 }
@@ -404,17 +436,30 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
 
     // --- Background Wake Word ("های رسیور") ---
 
-    private fun initBackgroundWakeWord() {
+    fun initBackgroundWakeWord() {
         val appConfig = GMScreenApplication.instance.appConfig
         if (appConfig.voiceAlwaysListening) {
             try {
-                bgVoiceController = VoiceController(this, this)
+                if (bgVoiceController == null) {
+                    bgVoiceController = VoiceController(this, this)
+                }
                 bgVoiceController?.setWakeWordMode(true)
                 AppLogger.i("GMScreenBackgroundService", "Background wake word listening enabled")
             } catch (e: Exception) {
                 AppLogger.e("GMScreenBackgroundService", "Failed to start wake word in background: ${e.message}")
             }
+        } else {
+            stopBackgroundWakeWord()
         }
+    }
+
+    fun stopBackgroundWakeWord() {
+        try {
+            bgVoiceController?.setWakeWordMode(false)
+            bgVoiceController?.stopListening()
+            bgVoiceController = null
+            AppLogger.i("GMScreenBackgroundService", "Background wake word listening stopped")
+        } catch (_: Exception) {}
     }
 
     override fun onReady() {}

@@ -15,20 +15,6 @@
         app:resize_mode="fit"
         app:surface_type="surface_view" />
 
-    <!-- Discrete, fully accessible exit button for screen readers (visually unobtrusive to sighted viewers) -->
-    <ImageButton
-        android:id="@+id/btnExitPlayer"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="top|start"
-        android:layout_margin="8dp"
-        android:background="@android:color/transparent"
-        android:alpha="0.08"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
-        android:contentDescription="خروج از پخش زنده و بستن صفحه"
-        android:importantForAccessibility="yes"
-        app:tint="@color/white" />
-
     <!-- Instant Record Toggle Button inside Video Player -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnToggleRecordInPlayer"

@@ -41,7 +41,12 @@ class AppConfig(context: Context) {
         private const val KEY_REC_COUNTER = "recording_counter"
         private const val KEY_LOG_ONLY_ERRORS = "log_only_errors"
         private const val KEY_BACKUP_METHOD = "backup_method"
+        private const val KEY_BACKGROUND_ANNOUNCE_EPG = "background_announce_epg"
     }
+
+    var backgroundAnnounceEpg: Boolean
+        get() = prefs.getBoolean(KEY_BACKGROUND_ANNOUNCE_EPG, false)
+        set(value) = prefs.edit().putBoolean(KEY_BACKGROUND_ANNOUNCE_EPG, value).apply()
 
     var backupMethod: String
         get() = prefs.getString(KEY_BACKUP_METHOD, "auto") ?: "auto"
