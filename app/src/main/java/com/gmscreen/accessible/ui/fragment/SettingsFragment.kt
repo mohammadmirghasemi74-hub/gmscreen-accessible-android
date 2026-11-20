@@ -1211,20 +1211,52 @@ class SettingsFragment : Fragment() {
 
         // 3. Wake word
         addSettingRow(contentLayout, "۳. عبارت کلیدی بیدارباش صوتی", draftWakeWord) { txtVal, row ->
-            val input = EditText(requireContext()).apply {
-                hint = "عبارت بیدارباش (مثلاً: جی ام اسکرین)"
-                setText(draftWakeWord)
-            }
+            val presetLabels = arrayOf(
+                "های رسیور (پیش‌فرض)",
+                "های دیوایس",
+                "جی ام اسکرین",
+                "رسیور",
+                "دستگاه",
+                "دستیار صوتی",
+                "سفارشی (تایپ عبارت دلخواه)..."
+            )
+            val presetValues = listOf(
+                "های رسیور",
+                "های دیوایس",
+                "جی ام اسکرین",
+                "رسیور",
+                "دستگاه",
+                "دستیار صوتی"
+            )
+
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("تنظیم عبارت بیدارباش صوتی")
-                .setView(input)
-                .setPositiveButton("تأیید") { _, _ ->
-                    val word = input.text.toString().trim()
-                    if (word.isNotBlank()) {
-                        draftWakeWord = word
+                .setTitle("انتخاب عبارت بیدارباش صوتی")
+                .setItems(presetLabels) { _, which ->
+                    if (which < presetValues.size) {
+                        draftWakeWord = presetValues[which]
                         txtVal.text = draftWakeWord
                         row.contentDescription = "عبارت بیدارباش: $draftWakeWord"
-                        AccessibilityHelper.announce(row, draftWakeWord)
+                        AccessibilityHelper.announce(row, "عبارت بیدارباش صوتی به $draftWakeWord تغییر یافت")
+                    } else {
+                        val input = EditText(requireContext()).apply {
+                            hint = "عبارت بیدارباش دلخواه (مثلاً: سلام رسیور)"
+                            setText(draftWakeWord)
+                            setSingleLine()
+                        }
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("تایپ عبارت بیدارباش سفارشی")
+                            .setView(input)
+                            .setPositiveButton("تأیید") { _, _ ->
+                                val word = input.text.toString().trim()
+                                if (word.isNotBlank()) {
+                                    draftWakeWord = word
+                                    txtVal.text = draftWakeWord
+                                    row.contentDescription = "عبارت بیدارباش: $draftWakeWord"
+                                    AccessibilityHelper.announce(row, "عبارت بیدارباش سفارشی تنظیم شد: $draftWakeWord")
+                                }
+                            }
+                            .setNegativeButton("انصراف", null)
+                            .show()
                     }
                 }
                 .setNegativeButton("انصراف", null)

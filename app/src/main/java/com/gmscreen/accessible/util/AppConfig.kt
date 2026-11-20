@@ -40,7 +40,12 @@ class AppConfig(context: Context) {
         private const val KEY_SEPARATE_AUDIO_BLUETOOTH = "separate_audio_bluetooth"
         private const val KEY_REC_COUNTER = "recording_counter"
         private const val KEY_LOG_ONLY_ERRORS = "log_only_errors"
+        private const val KEY_BACKUP_METHOD = "backup_method"
     }
+
+    var backupMethod: String
+        get() = prefs.getString(KEY_BACKUP_METHOD, "auto") ?: "auto"
+        set(value) = prefs.edit().putString(KEY_BACKUP_METHOD, value).apply()
 
     var lastConnectedIp: String
         get() = prefs.getString(KEY_LAST_IP, "") ?: ""

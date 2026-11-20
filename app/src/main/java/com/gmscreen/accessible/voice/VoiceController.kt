@@ -219,7 +219,22 @@ class VoiceController(
                 val cleaned = text.trim()
                 var wakeDetected = false
                 var commandRemainder = ""
+
+                val configured = try {
+                    com.gmscreen.accessible.util.AppConfig(context).voiceWakeWord.trim()
+                } catch (_: Exception) { "" }
+
+                val candidateWords = mutableListOf<String>()
+                if (configured.isNotBlank()) {
+                    candidateWords.add(configured)
+                }
                 for (ww in WAKE_WORDS) {
+                    if (!candidateWords.any { it.equals(ww, ignoreCase = true) }) {
+                        candidateWords.add(ww)
+                    }
+                }
+
+                for (ww in candidateWords) {
                     if (cleaned.contains(ww, ignoreCase = true)) {
                         wakeDetected = true
                         commandRemainder = cleaned.replace(Regex(Regex.escape(ww), RegexOption.IGNORE_CASE), "").trim()

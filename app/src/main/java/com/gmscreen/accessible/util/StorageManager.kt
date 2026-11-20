@@ -163,11 +163,193 @@ object StorageManager {
         val sb = StringBuilder()
         sb.append("#EXTM3U\n")
         for (ch in channels) {
-            sb.append("#EXTINF:-1,${ch.serviceName}\n")
+            sb.append("#EXTINF:-1 tvg-id=\"${ch.serviceId}\",${ch.serviceName}\n")
             sb.append("${ch.toSatIpUrl(hostIp)}\n")
         }
         file.writeText(sb.toString(), Charsets.UTF_8)
         return file
+    }
+
+    fun exportPlaylists(
+        context: Context,
+        channels: List<Channel>,
+        hostIp: String,
+        doIndividual: Boolean,
+        doCombined: Boolean
+    ): Int {
+        var createdCount = 0
+        val targetDir = getPlaylistsDir(context)
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+
+        fun sanitizeFilename(name: String): String {
+            return name.replace(Regex("[\\\\/*?:\"<>|]"), "_").trim().ifEmpty { "Channel" }
+        }
+
+        if (doIndividual) {
+            channels.forEachIndexed { idx, ch ->
+                val num = idx + 1
+                val safeName = sanitizeFilename(ch.serviceName)
+                val fileName = String.format(Locale.US, "%03d - %s.m3u", num, safeName)
+                val file = File(targetDir, fileName)
+                val lines = listOf(
+                    "#EXTM3U",
+                    "#EXTINF:-1 tvg-id=\"${ch.serviceId}\",${ch.serviceName}",
+                    ch.toSatIpUrl(hostIp)
+                )
+                file.writeText(lines.joinToString("\n") + "\n", Charsets.UTF_8)
+                createdCount++
+            }
+        }
+
+        if (doCombined) {
+            val fileName = "All_Selected_Channels_$timeStamp.m3u"
+            val file = File(targetDir, fileName)
+            val sb = StringBuilder()
+            sb.append("#EXTM3U\n")
+            channels.forEach { ch ->
+                sb.append("#EXTINF:-1 tvg-id=\"${ch.serviceId}\",${ch.serviceName}\n")
+                sb.append("${ch.toSatIpUrl(hostIp)}\n")
+            }
+            file.writeText(sb.toString(), Charsets.UTF_8)
+            createdCount++
+        }
+
+        return createdCount
+    }
+
+    fun exportChannelsToWordDocx(
+        context: Context,
+        channels: List<Channel>,
+        stbModel: String
+    ): File {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val destFile = File(getBackupsDir(context), "Channels_List_$timeStamp.docx")
+
+        val contentTypes = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>"""
+
+        val rels = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>"""
+
+        fun esc(text: String?): String {
+            return (text ?: "")
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&apos;")
+        }
+
+        val headers = listOf(
+            Pair("ردیف", 1000),
+            Pair("نام شبکه", 3200),
+            Pair("نوع", 1300),
+            Pair("ماهواره", 2200),
+            Pair("فرکانس", 1400),
+            Pair("پلاریته", 1100),
+            Pair("سیمبل‌ریت", 1400)
+        )
+
+        val hdrSb = StringBuilder()
+        hdrSb.append("<w:tr><w:trPr><w:tblHeader/><w:bidi/></w:trPr>")
+        for ((hTitle, w) in headers) {
+            hdrSb.append("<w:tc><w:tcPr><w:tcW w:w=\"$w\" w:type=\"dxa\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"2B6CB0\"/></w:tcPr>")
+            hdrSb.append("<w:p><w:pPr><w:jc w:val=\"center\"/><w:bidi/></w:pPr>")
+            hdrSb.append("<w:r><w:rPr><w:rFonts w:ascii=\"Tahoma\" w:cs=\"Tahoma\"/><w:b/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:color w:val=\"FFFFFF\"/><w:rtl/></w:rPr>")
+            hdrSb.append("<w:t>${esc(hTitle)}</w:t></w:r></w:p></w:tc>")
+        }
+        hdrSb.append("</w:tr>")
+
+        val rowsSb = StringBuilder()
+        rowsSb.append(hdrSb)
+
+        channels.forEachIndexed { idx, ch ->
+            val rowIdx = idx + 1
+            val name = ch.serviceName.ifBlank { "شبکه $rowIdx" }
+            val chType = if (ch.isRadio) "رادیویی" else "تلویزیونی"
+            val satName = ch.satelliteName.ifBlank { if (ch.satIndex > 0) "ماهواره #${ch.satIndex}" else "نامشخص" }
+            val freq = if (ch.frequency > 0) ch.frequency.toString() else "-"
+            val pol = "-"
+            val sr = "-"
+
+            val rowData = listOf(
+                Pair(rowIdx.toString(), 1000),
+                Pair(name, 3200),
+                Pair(chType, 1300),
+                Pair(satName, 2200),
+                Pair(freq, 1400),
+                Pair(pol, 1100),
+                Pair(sr, 1400)
+            )
+
+            val bgColor = if (rowIdx % 2 == 0) "F7FAFC" else "FFFFFF"
+            rowsSb.append("<w:tr><w:trPr><w:bidi/></w:trPr>")
+            for ((valText, w) in rowData) {
+                rowsSb.append("<w:tc><w:tcPr><w:tcW w:w=\"$w\" w:type=\"dxa\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"$bgColor\"/></w:tcPr>")
+                rowsSb.append("<w:p><w:pPr><w:jc w:val=\"center\"/><w:bidi/></w:pPr>")
+                rowsSb.append("<w:r><w:rPr><w:rFonts w:ascii=\"Tahoma\" w:cs=\"Tahoma\"/><w:sz w:val=\"20\"/><w:szCs w:val=\"20\"/><w:rtl/></w:rPr>")
+                rowsSb.append("<w:t>${esc(valText)}</w:t></w:r></w:p></w:tc>")
+            }
+            rowsSb.append("</w:tr>")
+        }
+
+        val tblXml = """<w:tbl>
+  <w:tblPr>
+    <w:tblW w:w="0" w:type="auto"/>
+    <w:jc w:val="center"/>
+    <w:bidiVisual/>
+    <w:tblBorders>
+      <w:top w:val="single" w:sz="6" w:space="0" w:color="CBD5E0"/>
+      <w:left w:val="single" w:sz="6" w:space="0" w:color="CBD5E0"/>
+      <w:bottom w:val="single" w:sz="6" w:space="0" w:color="CBD5E0"/>
+      <w:right w:val="single" w:sz="6" w:space="0" w:color="CBD5E0"/>
+      <w:insideH w:val="single" w:sz="4" w:space="0" w:color="E2E8F0"/>
+      <w:insideV w:val="single" w:sz="4" w:space="0" w:color="E2E8F0"/>
+    </w:tblBorders>
+  </w:tblPr>
+  $rowsSb
+</w:tbl>"""
+
+        val titleText = esc("لیست شبکه‌ها و مشخصات فرکانس رسیور ${stbModel.ifBlank { "متصل" }}".trim())
+        val summaryText = esc("تعداد کل شبکه‌ها: ${channels.size}")
+
+        val docXml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p><w:pPr><w:jc w:val="center"/><w:bidi/></w:pPr>
+      <w:r><w:rPr><w:rFonts w:ascii="Tahoma" w:cs="Tahoma"/><w:b/><w:sz w:val="34"/><w:szCs w:val="34"/><w:color w:val="1A365D"/><w:rtl/></w:rPr>
+        <w:t>$titleText</w:t></w:r></w:p>
+    <w:p><w:pPr><w:jc w:val="center"/><w:bidi/></w:pPr>
+      <w:r><w:rPr><w:rFonts w:ascii="Tahoma" w:cs="Tahoma"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="4A5568"/><w:rtl/></w:rPr>
+        <w:t>$summaryText</w:t></w:r></w:p>
+    <w:p/>
+    $tblXml
+    <w:sectPr><w:bidi/></w:sectPr>
+  </w:body>
+</w:document>"""
+
+        destFile.parentFile?.mkdirs()
+        val zos = java.util.zip.ZipOutputStream(java.io.FileOutputStream(destFile))
+        fun addZipEntry(name: String, content: String) {
+            val entry = java.util.zip.ZipEntry(name)
+            zos.putNextEntry(entry)
+            val bytes = content.toByteArray(Charsets.UTF_8)
+            zos.write(bytes, 0, bytes.size)
+            zos.closeEntry()
+        }
+        addZipEntry("[Content_Types].xml", contentTypes)
+        addZipEntry("_rels/.rels", rels)
+        addZipEntry("word/document.xml", docXml)
+        zos.finish()
+        zos.close()
+
+        return destFile
     }
 
     private val RECORDED_EXTENSIONS = listOf(".ts", ".mp4", ".mkv", ".mp3", ".m4a", ".wav", ".aac", ".ogg")
@@ -241,7 +423,16 @@ object StorageManager {
 
     fun listBackupFiles(context: Context): List<File> {
         val dir = getBackupsDir(context)
-        return dir.listFiles { f -> f.isFile && (f.name.endsWith(".json") || f.name.endsWith(".sdx")) }
+        return dir.listFiles { f ->
+            f.isFile && (f.name.endsWith(".json", ignoreCase = true) ||
+                         f.name.endsWith(".sdx", ignoreCase = true) ||
+                         f.name.endsWith(".docx", ignoreCase = true))
+        }?.sortedByDescending { it.lastModified() } ?: emptyList()
+    }
+
+    fun listPlaylistFiles(context: Context): List<File> {
+        val dir = getPlaylistsDir(context)
+        return dir.listFiles { f -> f.isFile && f.name.endsWith(".m3u", ignoreCase = true) }
             ?.sortedByDescending { it.lastModified() } ?: emptyList()
     }
 }
