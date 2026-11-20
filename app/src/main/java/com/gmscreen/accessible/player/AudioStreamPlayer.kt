@@ -55,7 +55,7 @@ object AudioStreamPlayer {
                 .build().apply {
                     addListener(object : Player.Listener {
                         override fun onIsPlayingChanged(playing: Boolean) {
-                            isPlaying = playing
+                            this@AudioStreamPlayer.isPlaying = playing
                             AppLogger.i(TAG, "Audio player isPlaying changed to $playing for ${currentChannel?.serviceName}")
                             notifyListeners(playing, currentChannel)
                             GMScreenBackgroundService.updateAudioPlaybackState(playing, currentChannel)

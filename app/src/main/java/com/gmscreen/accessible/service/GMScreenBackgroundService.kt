@@ -503,11 +503,11 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
                 }
             }
             "vol_up" -> {
-                serviceScope.launch(Dispatchers.IO) { repository.sendRcuKey(RcuKey.VOLUME_UP) }
+                serviceScope.launch(Dispatchers.IO) { repository.sendRcuKey(RcuKey.VOL_UP) }
                 TtsHelper.speak("صدا زیاد شد", interrupt = true)
             }
             "vol_down" -> {
-                serviceScope.launch(Dispatchers.IO) { repository.sendRcuKey(RcuKey.VOLUME_DOWN) }
+                serviceScope.launch(Dispatchers.IO) { repository.sendRcuKey(RcuKey.VOL_DOWN) }
                 TtsHelper.speak("صدا کم شد", interrupt = true)
             }
             "mute" -> {
