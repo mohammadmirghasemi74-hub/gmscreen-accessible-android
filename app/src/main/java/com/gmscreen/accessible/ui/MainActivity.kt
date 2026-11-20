@@ -64,7 +64,6 @@ class MainActivity : AppCompatActivity() {
         observeReconnectEvents()
 
         checkAndRequestNotificationPermission()
-        checkAndRequestBatteryOptimization()
     }
 
     private val requestNotificationPermission = registerForActivityResult(
@@ -81,25 +80,6 @@ class MainActivity : AppCompatActivity() {
                 ) != android.content.pm.PackageManager.PERMISSION_GRANTED
             ) {
                 requestNotificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-    }
-
-    private fun checkAndRequestBatteryOptimization() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            try {
-                val pm = getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
-                if (pm != null && !pm.isIgnoringBatteryOptimizations(packageName)) {
-                    val intent = Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                        data = android.net.Uri.parse("package:$packageName")
-                    }
-                    startActivity(intent)
-                }
-            } catch (_: Exception) {
-                try {
-                    val intent = Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                    startActivity(intent)
-                } catch (_: Exception) {}
             }
         }
     }

@@ -37,7 +37,6 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var lastObservedPid: String? = null
-    private var wakeLock: PowerManager.WakeLock? = null
     private var bgVoiceController: VoiceController? = null
 
     companion object {
@@ -108,7 +107,6 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
         isServiceRunning = true
         activeServiceInstance = this
 
-        acquireWakeLock()
         TtsHelper.init(applicationContext)
         createNotificationChannels()
         startForegroundWithNotification()
@@ -144,25 +142,6 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
             }
         }
         return START_STICKY
-    }
-
-    private fun acquireWakeLock() {
-        try {
-            val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
-            wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "GMScreen::BgServiceWakeLock")?.apply {
-                setReferenceCounted(false)
-                acquire(12 * 60 * 60 * 1000L) // 12 hours max safety
-            }
-        } catch (_: Exception) {}
-    }
-
-    private fun releaseWakeLock() {
-        try {
-            if (wakeLock?.isHeld == true) {
-                wakeLock?.release()
-            }
-        } catch (_: Exception) {}
-        wakeLock = null
     }
 
     private fun createNotificationChannels() {
@@ -528,7 +507,6 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
         super.onDestroy()
         isServiceRunning = false
         activeServiceInstance = null
-        releaseWakeLock()
 
         StreamRecorderManager.removeListener(this)
         bgVoiceController?.stopListening()

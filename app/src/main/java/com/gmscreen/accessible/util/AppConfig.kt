@@ -39,7 +39,6 @@ class AppConfig(context: Context) {
         private const val KEY_AGE_RATING = "age_rating"
         private const val KEY_SEPARATE_AUDIO_BLUETOOTH = "separate_audio_bluetooth"
         private const val KEY_REC_COUNTER = "recording_counter"
-        private const val KEY_PREFERRED_TTS_ENGINE = "preferred_tts_engine"
         private const val KEY_LOG_ONLY_ERRORS = "log_only_errors"
     }
 
@@ -166,10 +165,6 @@ class AppConfig(context: Context) {
     var recordingCounter: Int
         get() = prefs.getInt(KEY_REC_COUNTER, 0)
         set(value) = prefs.edit().putInt(KEY_REC_COUNTER, value).apply()
-
-    var preferredTtsEngine: String
-        get() = prefs.getString(KEY_PREFERRED_TTS_ENGINE, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_PREFERRED_TTS_ENGINE, value).apply()
 
     var logOnlyErrors: Boolean
         get() = prefs.getBoolean(KEY_LOG_ONLY_ERRORS, true)

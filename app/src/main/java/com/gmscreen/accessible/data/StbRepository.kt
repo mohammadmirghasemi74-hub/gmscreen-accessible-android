@@ -88,10 +88,6 @@ class StbRepository(private val context: Context) {
                 appConfig.lastConnectedIp = ip
                 _deviceModel.value = client.formattedModel
 
-                try {
-                    com.gmscreen.accessible.service.GMScreenBackgroundService.startService(context)
-                } catch (_: Exception) {}
-
                 // Launch initial data fetch in background cleanly without monitor thread interference
                 repoScope.launch {
                     refreshData()
@@ -210,9 +206,6 @@ class StbRepository(private val context: Context) {
                 _deviceModel.value = client.formattedModel
                 AppLogger.i("StbRepository", "Smart reconnect SUCCEEDED to $activeIp")
                 _reconnectEvent.tryEmit(ReconnectEvent.Reconnected(activeIp))
-                try {
-                    com.gmscreen.accessible.service.GMScreenBackgroundService.startService(context)
-                } catch (_: Exception) {}
                 refreshData()
             } else {
                 _isConnected.value = false

@@ -162,17 +162,27 @@ class StbClient {
     private fun readExact(n: Int, timeoutMs: Int = 6000): ByteArray? {
         val stream = inputStream ?: return null
         val sock = socket ?: return null
-        sock.soTimeout = timeoutMs
         val buf = ByteArray(n)
         var total = 0
         val start = System.currentTimeMillis()
-        while (total < n) {
-            if (System.currentTimeMillis() - start > timeoutMs) return null
-            val r = stream.read(buf, total, n - total)
-            if (r == -1) return null
-            total += r
+        return try {
+            sock.soTimeout = timeoutMs
+            while (total < n) {
+                if (System.currentTimeMillis() - start > timeoutMs) return null
+                val r = stream.read(buf, total, n - total)
+                if (r == -1) {
+                    disconnectLocked()
+                    return null
+                }
+                total += r
+            }
+            buf
+        } catch (_: java.net.SocketTimeoutException) {
+            null
+        } catch (_: Exception) {
+            disconnectLocked()
+            null
         }
-        return buf
     }
 
     private fun decompressZlib(raw: ByteArray): String {
@@ -301,6 +311,9 @@ class StbClient {
                         }
                     }
                 } catch (e: Exception) {
+                    if (e is java.net.SocketTimeoutException) {
+                        return null
+                    }
                     disconnectLocked()
                     if (attempt == 0 && currentIp.isNotBlank()) {
                         continue
@@ -348,6 +361,9 @@ class StbClient {
         if (!res.isNullOrEmpty()) {
             val d = res[0]
             val dataVal = d["Data"]?.toString()
+                ?: d["ServiceID"]?.toString()
+                ?: d["ProgramId"]?.toString()
+                ?: d["program_id"]?.toString()
             if (!dataVal.isNullOrBlank()) {
                 return@withContext dataVal
             }

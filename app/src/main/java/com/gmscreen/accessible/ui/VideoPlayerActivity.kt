@@ -76,10 +76,21 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
         channelName = intent.getStringExtra("EXTRA_CHANNEL_NAME") ?: "شبکه"
         serviceId = intent.getStringExtra("EXTRA_SERVICE_ID") ?: ""
 
-        AccessibilityHelper.announce(playerView, "پخش ویدیویی تمام‌صفحه $channelName آغاز شد. برای بازگشت کلید برگشت را بزنید.")
+        AccessibilityHelper.announce(playerView, "پخش ویدیویی تمام‌صفحه $channelName. برای بستن صفحه، دکمه خروج در گوشه بالای صفحه را بزنید یا دوبار روی صفحه ضربه بزنید.")
 
         btnExitPlayer.setOnClickListener {
             finish()
+        }
+
+        val gestureDetector = androidx.core.view.GestureDetectorCompat(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: android.view.MotionEvent): Boolean {
+                finish()
+                return true
+            }
+        })
+        playerView.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            false
         }
 
         setupRecordButton()

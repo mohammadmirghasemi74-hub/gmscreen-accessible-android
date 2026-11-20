@@ -1394,38 +1394,6 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
-        // 7. Preferred TTS Engine
-        val installedEngines = com.gmscreen.accessible.util.TtsHelper.getInstalledEngines(requireContext())
-        var draftEngine = appConfig.preferredTtsEngine
-        val currentEngineLabel = if (draftEngine.isBlank()) {
-            "تشخیص خودکار / eSpeak (پیش‌فرض)"
-        } else {
-            installedEngines.find { it.first == draftEngine }?.second ?: draftEngine
-        }
-        addSettingRow(contentLayout, "۷. موتور تبدیل متن به گفتار (TTS Engine)", currentEngineLabel) { txtVal, row ->
-            val engineOptions = mutableListOf<String>()
-            engineOptions.add("تشخیص خودکار و ترجیح eSpeak (پیش‌فرض)")
-            for (eng in installedEngines) {
-                engineOptions.add("${eng.second} (${eng.first})")
-            }
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("انتخاب موتور صوتی TTS")
-                .setItems(engineOptions.toTypedArray()) { _, which ->
-                    if (which == 0) {
-                        draftEngine = ""
-                        txtVal.text = "تشخیص خودکار / eSpeak (پیش‌فرض)"
-                    } else {
-                        val chosen = installedEngines[which - 1]
-                        draftEngine = chosen.first
-                        txtVal.text = chosen.second
-                    }
-                    row.contentDescription = "موتور صوتی: ${txtVal.text}"
-                    AccessibilityHelper.announce(row, txtVal.text.toString())
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("تنظیمات دسترس‌پذیری و خروجی صدا")
             .setView(scrollView)
@@ -1436,8 +1404,6 @@ class SettingsFragment : Fragment() {
                 appConfig.showJumpToFirstChannel = draftJumpFirst
                 appConfig.showJumpToLastChannel = draftJumpLast
                 appConfig.separateAudioToBluetooth = draftSeparateAudio
-                appConfig.preferredTtsEngine = draftEngine
-                com.gmscreen.accessible.util.TtsHelper.init(requireContext())
 
                 val msg = "تنظیمات دسترس‌پذیری ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
