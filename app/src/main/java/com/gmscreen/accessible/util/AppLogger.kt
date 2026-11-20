@@ -45,7 +45,7 @@ object AppLogger {
 
             try {
                 val app = com.gmscreen.accessible.GMScreenApplication.instance
-                val logOnlyErrors = try { app.appConfig.logOnlyErrors } catch (_: Exception) { true }
+                val logOnlyErrors = try { app.appConfig.logOnlyErrors } catch (e: Exception) { true }
 
                 if (logOnlyErrors) {
                     // Smart Error-Only logging: only create/write to file when an actual error occurs!
@@ -76,6 +76,8 @@ object AppLogger {
                         FileWriter(errorFile, true).use { fw ->
                             fw.append(errorReport)
                         }
+                    } else {
+                        // In error-only mode, non-error logs are kept in memory breadcrumbs only
                     }
                 } else {
                     // Full logging mode
@@ -88,7 +90,9 @@ object AppLogger {
                         fw.appendLine(entry)
                     }
                 }
-            } catch (_: Exception) {}
+                Unit
+            } catch (e: Exception) {
+            }
         }
     }
 

@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class StbRepository(context: Context) {
+class StbRepository(private val context: Context) {
 
     private val appConfig = AppConfig(context)
     private val discovery = StbDiscovery(context)
