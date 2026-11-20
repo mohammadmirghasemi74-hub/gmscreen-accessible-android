@@ -27,7 +27,8 @@ class GMScreenApplication : Application() {
 
         appConfig = AppConfig(this)
         repository = StbRepository(this)
-        AppLogger.i("App", "GMScreen Application started (v2.3.25)")
+        com.gmscreen.accessible.util.TtsHelper.init(this)
+        AppLogger.i("App", "GMScreen Application started (v2.3.30)")
     }
 
     companion object {

@@ -57,9 +57,27 @@ class ChannelsFragment : Fragment() {
     private lateinit var btnJumpToFirstChannel: MaterialButton
     private lateinit var btnJumpToLastChannel: MaterialButton
 
-    private var audioExoPlayer: androidx.media3.exoplayer.ExoPlayer? = null
     private var isAudioStreaming = false
     private var currentAudioChannel: Channel? = null
+
+    private val audioPlayerListener = object : com.gmscreen.accessible.player.AudioStreamPlayer.AudioPlayerListener {
+        override fun onPlaybackStateChanged(isPlaying: Boolean, channel: Channel?) {
+            if (!isAdded) return
+            activity?.runOnUiThread {
+                if (channel != null) {
+                    currentAudioChannel = channel
+                    isAudioStreaming = isPlaying
+                    layoutAudioPlayingBar.visibility = View.VISIBLE
+                    txtAudioPlayingChannel.text = if (isPlaying) "در حال پخش صوتی: ${channel.serviceName}" else "پخش متوقف موقت: ${channel.serviceName}"
+                    updateAudioBarRecordBtn(com.gmscreen.accessible.player.StreamRecorderManager.isRecording)
+                } else {
+                    currentAudioChannel = null
+                    isAudioStreaming = false
+                    layoutAudioPlayingBar.visibility = View.GONE
+                }
+            }
+        }
+    }
     private var channelsAdapter: ChannelsAdapter? = null
 
     private var isRadioMode = false
@@ -107,6 +125,14 @@ class ChannelsFragment : Fragment() {
 
     private fun setupAudioPlayerBar() {
         updateAudioBarRecordBtn(com.gmscreen.accessible.player.StreamRecorderManager.isRecording)
+        com.gmscreen.accessible.player.AudioStreamPlayer.addListener(audioPlayerListener)
+        val activeAudioCh = com.gmscreen.accessible.player.AudioStreamPlayer.currentChannel
+        if (activeAudioCh != null) {
+            currentAudioChannel = activeAudioCh
+            isAudioStreaming = com.gmscreen.accessible.player.AudioStreamPlayer.isPlaying
+            layoutAudioPlayingBar.visibility = View.VISIBLE
+            txtAudioPlayingChannel.text = if (isAudioStreaming) "در حال پخش صوتی: ${activeAudioCh.serviceName}" else "پخش متوقف موقت: ${activeAudioCh.serviceName}"
+        }
 
         btnToggleRecordAudioInBar.setOnClickListener {
             val ch = currentAudioChannel ?: repository.currentChannel.value
@@ -614,13 +640,7 @@ class ChannelsFragment : Fragment() {
 
             withContext(Dispatchers.Main) {
                 if (httpUrl != null) {
-                    initAudioPlayer()
-                    val mediaItem = androidx.media3.common.MediaItem.fromUri(Uri.parse(httpUrl))
-                    audioExoPlayer?.apply {
-                        setMediaItem(mediaItem)
-                        prepare()
-                        play()
-                    }
+                    com.gmscreen.accessible.player.AudioStreamPlayer.play(requireContext(), httpUrl, channel)
                     isAudioStreaming = true
                     updateAudioBarRecordBtn(com.gmscreen.accessible.player.StreamRecorderManager.isRecording)
                     txtAudioPlayingChannel.text = "در حال پخش صوتی: ${channel.serviceName}"
@@ -636,30 +656,11 @@ class ChannelsFragment : Fragment() {
         }
     }
 
-    private fun initAudioPlayer() {
-        if (audioExoPlayer == null) {
-            val audioAttributes = androidx.media3.common.AudioAttributes.Builder()
-                .setUsage(androidx.media3.common.C.USAGE_MEDIA)
-                .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC)
-                .build()
-
-            audioExoPlayer = androidx.media3.exoplayer.ExoPlayer.Builder(requireContext())
-                .setAudioAttributes(audioAttributes, true)
-                .build().apply {
-                    playWhenReady = true
-                }
-        }
-    }
-
     private fun stopAudioPlayback() {
-        audioExoPlayer?.stop()
-        audioExoPlayer?.clearMediaItems()
-        audioExoPlayer?.release()
-        audioExoPlayer = null
+        com.gmscreen.accessible.player.AudioStreamPlayer.stop()
         isAudioStreaming = false
         currentAudioChannel = null
         layoutAudioPlayingBar.visibility = View.GONE
-        com.gmscreen.accessible.player.StreamRecorderManager.stopPlayback()
     }
 
     private fun openStreamInExternalPlayer(channel: Channel) {
@@ -1059,6 +1060,6 @@ class ChannelsFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         announceJob?.cancel()
-        stopAudioPlayback()
+        com.gmscreen.accessible.player.AudioStreamPlayer.removeListener(audioPlayerListener)
     }
 }

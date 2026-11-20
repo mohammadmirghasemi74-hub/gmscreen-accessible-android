@@ -88,6 +88,10 @@ class StbRepository(private val context: Context) {
                 appConfig.lastConnectedIp = ip
                 _deviceModel.value = client.formattedModel
 
+                try {
+                    com.gmscreen.accessible.service.GMScreenBackgroundService.startService(context)
+                } catch (_: Exception) {}
+
                 // Launch initial data fetch in background cleanly without monitor thread interference
                 repoScope.launch {
                     refreshData()
@@ -110,15 +114,21 @@ class StbRepository(private val context: Context) {
                 delay(800)
                 if (!client.isConnected) break
                 // Avoid socket conflicts if user sent a command recently (matching Windows architecture)
-                if (System.currentTimeMillis() - client.lastUserCmdTime < 1500L) {
+                if (System.currentTimeMillis() - client.lastUserCmdTime < 1200L) {
                     continue
                 }
                 try {
                     val pid = client.getPlayingChannel()
                     if (pid != null) {
                         consecutiveErrors = 0
-                        if (pid.isNotBlank() && pid != _currentChannel.value?.serviceId) {
-                            val ch = _channels.value.find { it.serviceId == pid || it.serviceId.endsWith(pid) }
+                        val cleanPid = pid.trim()
+                        if (cleanPid.isNotBlank() && cleanPid != _currentChannel.value?.serviceId) {
+                            val ch = _channels.value.find { c ->
+                                c.serviceId == cleanPid ||
+                                c.serviceId.endsWith(cleanPid) ||
+                                cleanPid.endsWith(c.serviceId) ||
+                                c.serviceId.trimStart('0') == cleanPid.trimStart('0')
+                            }
                             if (ch != null) {
                                 AppLogger.i("StbRepository", "Channel monitor: playing channel changed to ${ch.serviceName} (${ch.serviceId})")
                                 _currentChannel.value = ch
@@ -130,11 +140,13 @@ class StbRepository(private val context: Context) {
                 } catch (e: Exception) {
                     consecutiveErrors++
                     if (e is java.net.SocketTimeoutException || e is java.io.IOException) {
-                        delay(2500)
+                        delay(1200)
                     }
                 }
 
-                if (!client.isConnected || consecutiveErrors >= 3) {
+                // Never terminate monitor loop mid-zap on transient timeouts.
+                // Only disconnect if client socket is truly closed or after 30 consecutive failures (>45s of total silence).
+                if (!client.isConnected || consecutiveErrors >= 30) {
                     break
                 }
             }
@@ -198,6 +210,9 @@ class StbRepository(private val context: Context) {
                 _deviceModel.value = client.formattedModel
                 AppLogger.i("StbRepository", "Smart reconnect SUCCEEDED to $activeIp")
                 _reconnectEvent.tryEmit(ReconnectEvent.Reconnected(activeIp))
+                try {
+                    com.gmscreen.accessible.service.GMScreenBackgroundService.startService(context)
+                } catch (_: Exception) {}
                 refreshData()
             } else {
                 _isConnected.value = false

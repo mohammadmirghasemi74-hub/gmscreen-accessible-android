@@ -27,7 +27,33 @@ class VoiceController(
     private var speechRecognizer: SpeechRecognizer? = null
     private var isListening: Boolean = false
     private var isWakeWordActive: Boolean = false
+    private var isPausedDueToExternalAudio: Boolean = false
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+
+    private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_LOSS,
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT,
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                Log.d(TAG, "Audio focus lost ($focusChange). Yielding microphone to external app.")
+                isPausedDueToExternalAudio = true
+                stopRecognizerOnly()
+            }
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                Log.d(TAG, "Audio focus gained. Resuming microphone listening.")
+                if (isWakeWordActive && isPausedDueToExternalAudio) {
+                    isPausedDueToExternalAudio = false
+                    mainHandler.postDelayed({
+                        if (isWakeWordActive && !isPausedDueToExternalAudio) {
+                            muteSystemSounds(true)
+                            startListening()
+                        }
+                    }, 1200)
+                }
+            }
+        }
+    }
 
     companion object {
         private const val TAG = "VoiceController"
@@ -52,10 +78,21 @@ class VoiceController(
 
     fun setWakeWordMode(enabled: Boolean) {
         isWakeWordActive = enabled
+        isPausedDueToExternalAudio = false
         if (enabled) {
+            try {
+                audioManager?.requestAudioFocus(
+                    audioFocusChangeListener,
+                    AudioManager.STREAM_VOICE_CALL,
+                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
+                )
+            } catch (_: Exception) {}
             muteSystemSounds(true)
             startListening()
         } else {
+            try {
+                audioManager?.abandonAudioFocus(audioFocusChangeListener)
+            } catch (_: Exception) {}
             muteSystemSounds(false)
             stopListening()
         }
@@ -64,6 +101,7 @@ class VoiceController(
     fun isWakeWordEnabled(): Boolean = isWakeWordActive
 
     fun startListening() {
+        if (isPausedDueToExternalAudio) return
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
             listener.onError("سرویس تشخیص گفتار گوگل در این دستگاه در دسترس نیست")
             return
@@ -109,6 +147,10 @@ class VoiceController(
 
     fun stopListening() {
         isWakeWordActive = false
+        isPausedDueToExternalAudio = false
+        try {
+            audioManager?.abandonAudioFocus(audioFocusChangeListener)
+        } catch (_: Exception) {}
         muteSystemSounds(false)
         stopRecognizerOnly()
     }
@@ -151,13 +193,18 @@ class VoiceController(
         }
 
         if (isWakeWordActive) {
-            // Auto restart listening after brief delay in wake word mode
+            val backoffMs = when (error) {
+                SpeechRecognizer.ERROR_AUDIO,
+                SpeechRecognizer.ERROR_RECOGNIZER_BUSY,
+                SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> 5000L // Yield cleanly to other apps using microphone
+                else -> 1000L
+            }
             mainHandler.postDelayed({
-                if (isWakeWordActive) {
+                if (isWakeWordActive && !isPausedDueToExternalAudio) {
                     muteSystemSounds(true)
                     startListening()
                 }
-            }, 800)
+            }, backoffMs)
         } else {
             listener.onError(msg)
         }

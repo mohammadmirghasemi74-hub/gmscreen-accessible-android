@@ -277,6 +277,7 @@ class RecordFragment : Fragment() {
                     repository.sendRcuKey(RcuKey.RECORD)
                     withContext(Dispatchers.Main) {
                         isStbRecording = true
+                        com.gmscreen.accessible.service.GMScreenBackgroundService.notifyStbRecordingState(true, repository.currentChannel.value?.serviceName ?: "شبکه")
                         updateStbRecordButtonUi()
                         val msg = "دستور شروع ضبط روی فلش مموری رسیور ارسال شد"
                         AccessibilityHelper.announce(btnStbToggleRecord, msg)
@@ -291,6 +292,7 @@ class RecordFragment : Fragment() {
                     withContext(Dispatchers.Main) {
                         isStbRecording = false
                         stbRecSeconds = 0
+                        com.gmscreen.accessible.service.GMScreenBackgroundService.notifyStbRecordingState(false, "")
                         updateStbRecordButtonUi()
                         val msg = "دستور توقف ضبط به رسیور ارسال شد"
                         AccessibilityHelper.announce(btnStbToggleRecord, msg)
@@ -318,6 +320,7 @@ class RecordFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     isStbRecording = false
                     stbRecSeconds = 0
+                    com.gmscreen.accessible.service.GMScreenBackgroundService.notifyStbRecordingState(false, "")
                     updateStbRecordButtonUi()
                     val msg = "دستور توقف ضبط به رسیور ارسال شد"
                     AccessibilityHelper.announce(btnStopStbScheduledRec, msg)
@@ -1015,6 +1018,7 @@ class RecordFragment : Fragment() {
                                     withContext(Dispatchers.Main) {
                                         val startMsg = "ضبط زمان‌بندی‌شده شبکه ${t.channelName} بر روی حافظه فلش رسیور آغاز شد."
                                         TtsHelper.speak(startMsg)
+                                        com.gmscreen.accessible.service.GMScreenBackgroundService.notifyStbRecordingState(true, t.channelName)
                                         if (isAdded) {
                                             isStbRecording = true
                                             updateStbRecordButtonUi()
@@ -1046,6 +1050,7 @@ class RecordFragment : Fragment() {
                                     withContext(Dispatchers.Main) {
                                         val endMsg = "ضبط زمان‌بندی‌شده شبکه ${t.channelName} بر روی حافظه فلش به پایان رسید."
                                         TtsHelper.speak(endMsg)
+                                        com.gmscreen.accessible.service.GMScreenBackgroundService.notifyStbRecordingState(false, "")
                                         if (isAdded) {
                                             isStbRecording = false
                                             stbRecSeconds = 0

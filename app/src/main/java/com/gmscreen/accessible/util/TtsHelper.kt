@@ -9,6 +9,7 @@ object TtsHelper {
     private var tts: TextToSpeech? = null
     private var isInitialized = false
     private var currentEngine: String? = null
+    private val pendingSpeeches = mutableListOf<Pair<String, Boolean>>()
 
     fun init(context: Context) {
         val app = context.applicationContext
@@ -29,6 +30,12 @@ object TtsHelper {
                     }
                 } catch (_: Exception) {}
                 AppLogger.i("TtsHelper", "TTS initialized successfully with engine: ${currentEngine ?: "system_default"}")
+                synchronized(pendingSpeeches) {
+                    for (item in pendingSpeeches) {
+                        speak(item.first, item.second)
+                    }
+                    pendingSpeeches.clear()
+                }
             } else {
                 AppLogger.e("TtsHelper", "TTS initialization failed with status: $status")
             }
@@ -101,7 +108,14 @@ object TtsHelper {
     }
 
     fun speak(text: String, interrupt: Boolean = true) {
-        if (!isInitialized || text.isBlank()) return
+        if (text.isBlank()) return
+        if (!isInitialized) {
+            synchronized(pendingSpeeches) {
+                if (interrupt) pendingSpeeches.clear()
+                pendingSpeeches.add(Pair(text, interrupt))
+            }
+            return
+        }
         try {
             val queueMode = if (interrupt) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
             tts?.speak(text, queueMode, null, "gmscreen_${System.currentTimeMillis()}")

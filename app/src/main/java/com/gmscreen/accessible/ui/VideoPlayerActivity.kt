@@ -50,6 +50,16 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        // Make true immersive edge-to-edge fullscreen
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+        val windowInsetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+
         // Set orientation based on user configuration
         requestedOrientation = if (appConfig.videoLandscapeOrientation) {
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -82,6 +92,14 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
         initExoPlayer()
         startPlayback()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            val windowInsetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+            windowInsetsController.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        }
     }
 
     private fun setupRecordButton() {
