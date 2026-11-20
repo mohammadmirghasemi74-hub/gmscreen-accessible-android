@@ -210,7 +210,7 @@ object VoiceCustomizationDialogHelper {
                         "عبارت صوتی: $phrase (غیرفعال، زیرا این قابلیت خاموش است)"
                     }
                     textSize = 14f
-                    isEnabled = isEnabled
+                    this.isEnabled = isEnabled
                     alpha = if (isEnabled) 1.0f else 0.45f
                     setBackgroundColor(context.resources.getColor(R.color.card_bg, null))
                     setTextColor(context.resources.getColor(R.color.text_primary, null))
@@ -238,7 +238,7 @@ object VoiceCustomizationDialogHelper {
             } else {
                 "افزودن عبارت صوتی جدید (غیرفعال، زیرا این قابلیت خاموش است)"
             }
-            isEnabled = isEnabled
+            this.isEnabled = isEnabled
             alpha = if (isEnabled) 1.0f else 0.45f
             setBackgroundColor(context.resources.getColor(R.color.primary, null))
             setTextColor(context.resources.getColor(android.R.color.white, null))
@@ -265,7 +265,7 @@ object VoiceCustomizationDialogHelper {
                 } else {
                     "خالی کردن کلیه عبارات (غیرفعال، زیرا این قابلیت خاموش است)"
                 }
-                isEnabled = isEnabled
+                this.isEnabled = isEnabled
                 alpha = if (isEnabled) 1.0f else 0.45f
                 setBackgroundColor(context.resources.getColor(R.color.card_bg, null))
                 setTextColor(context.resources.getColor(R.color.text_primary, null))
