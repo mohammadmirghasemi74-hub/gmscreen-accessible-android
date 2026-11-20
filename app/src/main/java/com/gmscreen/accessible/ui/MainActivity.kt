@@ -36,16 +36,61 @@ class MainActivity : AppCompatActivity() {
         "بکاپ و پشتیبان‌گیری"
     )
 
+    companion object {
+        var activeInstance: MainActivity? = null
+            private set
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        activeInstance = this
         setContentView(R.layout.activity_main)
+
+        com.gmscreen.accessible.util.TtsHelper.init(this)
+        com.gmscreen.accessible.voice.VoiceCustomizationManager.init(this)
 
         btnActiveTab = findViewById(R.id.btnActiveTab)
         viewPager = findViewById(R.id.viewPager)
 
         setupViewPager()
         setupTabSelectorDialog()
+        setupBackPressedHandler()
         observeReconnectEvents()
+    }
+
+    private fun setupBackPressedHandler() {
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                showExitConfirmationDialog()
+            }
+        })
+    }
+
+    private fun showExitConfirmationDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("خروج از برنامه یا اجرا در پس‌زمینه")
+            .setMessage("آیا می‌خواهید برنامه برای اجرای زمان‌بندی‌های ضبط و اعلام صوتی تغییر کانال‌ها در پس‌زمینه فعال بماند، یا به طور کامل بسته شود؟")
+            .setPositiveButton("اجرا در پس‌زمینه (فعال ماندن)") { _, _ ->
+                com.gmscreen.accessible.service.GMScreenBackgroundService.startService(this)
+                val msg = "برنامه در پس‌زمینه فعال باقی ماند"
+                AccessibilityHelper.announce(btnActiveTab, msg)
+                android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
+                moveTaskToBack(true)
+            }
+            .setNegativeButton("خروج کامل از برنامه") { _, _ ->
+                com.gmscreen.accessible.service.GMScreenBackgroundService.stopService(this)
+                GMScreenApplication.instance.repository.disconnect()
+                finishAffinity()
+            }
+            .setNeutralButton("انصراف", null)
+            .show()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (activeInstance == this) {
+            activeInstance = null
+        }
     }
 
     private fun observeReconnectEvents() {

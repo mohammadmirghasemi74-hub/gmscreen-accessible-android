@@ -260,18 +260,77 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
     }
 
     private fun handleRcuAction(action: String) {
+        when (action) {
+            "reset_counter" -> {
+                appConfig.resetRecordingCounter()
+                val msg = "شمارنده فایل‌های ضبط با موفقیت صفر شد"
+                txtExecutionResult.visibility = View.VISIBLE
+                txtExecutionResult.text = msg
+                AccessibilityHelper.announce(txtExecutionResult, msg)
+                return
+            }
+            "wake_enable" -> {
+                switchWakeWord.isChecked = true
+                return
+            }
+            "wake_disable" -> {
+                switchWakeWord.isChecked = false
+                return
+            }
+            "open_manual" -> {
+                InternalBrowserActivity.open(requireContext(), "help.htm", "راهنمای کاربری نرم‌افزار")
+                return
+            }
+            "open_voice_help" -> {
+                InternalBrowserActivity.open(requireContext(), "voice_help.htm", "راهنمای کامل دستورات صوتی")
+                return
+            }
+            "minimize_app" -> {
+                com.gmscreen.accessible.service.GMScreenBackgroundService.startService(requireContext())
+                val msg = "برنامه در پس‌زمینه فعال باقی ماند"
+                AccessibilityHelper.announce(txtExecutionResult, msg)
+                requireActivity().moveTaskToBack(true)
+                return
+            }
+            "close_app" -> {
+                com.gmscreen.accessible.service.GMScreenBackgroundService.stopService(requireContext())
+                repository.disconnect()
+                requireActivity().finishAffinity()
+                return
+            }
+            "refresh_channels" -> {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    repository.refreshData()
+                    val msg = "لیست شبکه‌ها با موفقیت به‌روزرسانی شد"
+                    txtExecutionResult.visibility = View.VISIBLE
+                    txtExecutionResult.text = msg
+                    AccessibilityHelper.announce(txtExecutionResult, msg)
+                }
+                return
+            }
+        }
+
         val (keyCode, desc) = when (action) {
             "power" -> Pair(RcuKey.POWER_TOGGLE, "پاور رسیور ارسال شد")
             "ch_next" -> Pair(RcuKey.CH_NEXT, "کانال بعدی زده شد")
             "ch_prev" -> Pair(RcuKey.CH_PREV, "کانال قبلی زده شد")
+            "recall" -> Pair(RcuKey.RECALL, "بازگشت به کانال قبلی زده شد")
+            "tv_mode", "radio_mode" -> Pair(RcuKey.TV_RADIO, "تغییر حالت بین تلویزیون و رادیو ارسال شد")
             "vol_up" -> Pair(RcuKey.VOL_UP, "صدا افزایش یافت")
             "vol_down" -> Pair(RcuKey.VOL_DOWN, "صدا کاهش یافت")
             "mute" -> Pair(RcuKey.MUTE, "حالت بی‌صدا تغییر کرد")
+            "audio_track" -> Pair(RcuKey.AUDIO, "تغییر باند صدا ارسال شد")
+            "subtitle" -> Pair(RcuKey.SUBTITLE, "زیرنویس تغییر کرد")
             "menu" -> Pair(RcuKey.MENU, "منوی رسیور باز شد")
-            "exit" -> Pair(RcuKey.EXIT, "خروج ارسال شد")
+            "exit", "rcu_exit" -> Pair(RcuKey.EXIT, "خروج ارسال شد")
             "ok" -> Pair(RcuKey.OK, "تأیید زده شد")
             "epg" -> Pair(RcuKey.EPG, "جدول EPG باز شد")
             "info" -> Pair(RcuKey.INFO, "اطلاعات شبکه باز شد")
+            "red_btn" -> Pair(RcuKey.RED, "دکمه قرمز ارسال شد")
+            "green_btn" -> Pair(RcuKey.GREEN, "دکمه سبز ارسال شد")
+            "yellow_btn" -> Pair(RcuKey.YELLOW, "دکمه زرد ارسال شد")
+            "blue_btn" -> Pair(RcuKey.BLUE, "دکمه آبی ارسال شد")
+            "rec_stb" -> Pair(RcuKey.RECORD, "دستور ضبط روی فلش رسیور ارسال شد")
             else -> Pair(null, "")
         }
 

@@ -35,6 +35,7 @@ import com.gmscreen.accessible.data.model.Channel
 import com.gmscreen.accessible.protocol.RcuKey
 import com.gmscreen.accessible.util.AccessibilityHelper
 import com.gmscreen.accessible.util.StorageManager
+import com.gmscreen.accessible.util.TtsHelper
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
@@ -975,7 +976,7 @@ class RecordFragment : Fragment() {
         if (isStbWatcherRunning) return
         isStbWatcherRunning = true
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        lifecycleScope.launch {
             while (true) {
                 try {
                     val cal = Calendar.getInstance()
@@ -995,7 +996,7 @@ class RecordFragment : Fragment() {
                             t.lastTriggeredDate = todayStr
                             saveStbTimers()
 
-                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                            lifecycleScope.launch(Dispatchers.IO) {
                                 try {
                                     // 1. Auto wake if STB standby
                                     if (t.autoWake && repository.isConnected.value) {
@@ -1016,10 +1017,11 @@ class RecordFragment : Fragment() {
                                     repository.sendRcuKey(RcuKey.RECORD)
 
                                     withContext(Dispatchers.Main) {
+                                        val startMsg = "ضبط زمان‌بندی‌شده شبکه ${t.channelName} بر روی حافظه فلش رسیور آغاز شد."
+                                        TtsHelper.speak(startMsg)
                                         if (isAdded) {
                                             isStbRecording = true
                                             updateStbRecordButtonUi()
-                                            val startMsg = "ضبط زمان‌بندی‌شده شبکه ${t.channelName} بر روی حافظه فلش رسیور آغاز شد."
                                             Toast.makeText(requireContext(), startMsg, Toast.LENGTH_LONG).show()
                                             AccessibilityHelper.announce(txtStbRecordStatus, startMsg)
                                         }
@@ -1036,7 +1038,7 @@ class RecordFragment : Fragment() {
                             t.isRecordingActive = false
                             saveStbTimers()
 
-                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                            lifecycleScope.launch(Dispatchers.IO) {
                                 try {
                                     // 1. Send STOP -> 800ms -> OK -> 500ms -> EXIT
                                     repository.sendRcuKey(RcuKey.STOP)
@@ -1046,11 +1048,12 @@ class RecordFragment : Fragment() {
                                     repository.sendRcuKey(RcuKey.EXIT)
 
                                     withContext(Dispatchers.Main) {
+                                        val endMsg = "ضبط زمان‌بندی‌شده شبکه ${t.channelName} بر روی حافظه فلش به پایان رسید."
+                                        TtsHelper.speak(endMsg)
                                         if (isAdded) {
                                             isStbRecording = false
                                             stbRecSeconds = 0
                                             updateStbRecordButtonUi()
-                                            val endMsg = "ضبط زمان‌بندی‌شده شبکه ${t.channelName} بر روی حافظه فلش به پایان رسید."
                                             Toast.makeText(requireContext(), endMsg, Toast.LENGTH_LONG).show()
                                             AccessibilityHelper.announce(txtStbRecordStatus, endMsg)
                                         }
@@ -1061,8 +1064,10 @@ class RecordFragment : Fragment() {
                                         kotlinx.coroutines.delay(3000)
                                         repository.sendRcuKey(RcuKey.POWER)
                                         withContext(Dispatchers.Main) {
+                                            val pMsg = "رسیور پس از اتمام ضبط به حالت آماده‌به‌کار خاموش شد."
+                                            TtsHelper.speak(pMsg)
                                             if (isAdded) {
-                                                AccessibilityHelper.announce(txtStbRecordStatus, "رسیور پس از اتمام ضبط به حالت آماده‌به‌کار خاموش شد.")
+                                                AccessibilityHelper.announce(txtStbRecordStatus, pMsg)
                                             }
                                         }
                                     }
@@ -1441,7 +1446,7 @@ class RecordFragment : Fragment() {
     private fun startPhoneTimerWatcher() {
         if (isPhoneWatcherRunning) return
         isPhoneWatcherRunning = true
-        viewLifecycleOwner.lifecycleScope.launch {
+        lifecycleScope.launch {
             while (true) {
                 val cal = Calendar.getInstance()
                 val curH = cal.get(Calendar.HOUR_OF_DAY)
@@ -1464,15 +1469,21 @@ class RecordFragment : Fragment() {
                         }
                         isScheduledPhoneRecordingActive = true
                         startPhoneRecording(t.isAudioOnly)
-                        AccessibilityHelper.announce(txtInstantRecStatus, "زمان‌بندی ضبط ${t.channelName} در گوشی آغاز شد")
+                        val startMsg = "زمان‌بندی ضبط ${t.channelName} در گوشی آغاز شد"
+                        TtsHelper.speak(startMsg)
+                        if (isAdded) {
+                            AccessibilityHelper.announce(txtInstantRecStatus, startMsg)
+                        }
 
                         // Auto stop after duration
                         Handler(Looper.getMainLooper()).postDelayed({
                             stopPhoneRecording()
+                            val endMsg = "ضبط زمان‌بندی‌شده ${t.channelName} در گوشی به پایان رسید"
+                            TtsHelper.speak(endMsg)
 
                             // Auto power off STB if requested
                             if (t.autoPowerOff && repository.isConnected.value) {
-                                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                                lifecycleScope.launch(Dispatchers.IO) {
                                     repository.sendRcuKey(RcuKey.POWER)
                                 }
                             }
@@ -1481,7 +1492,9 @@ class RecordFragment : Fragment() {
                             if (t.autoDelete) {
                                 phoneTimers.remove(t)
                                 savePhoneTimers()
-                                renderPhoneTimers()
+                                if (isAdded) {
+                                    renderPhoneTimers()
+                                }
                             }
                         }, t.durationMinutes * 60 * 1000L)
                     }

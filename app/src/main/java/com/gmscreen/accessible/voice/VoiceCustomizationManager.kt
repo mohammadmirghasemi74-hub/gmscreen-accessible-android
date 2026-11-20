@@ -1,0 +1,432 @@
+package com.gmscreen.accessible.voice
+
+import android.content.Context
+import com.gmscreen.accessible.data.model.Channel
+import com.gmscreen.accessible.util.AppLogger
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import java.io.File
+
+data class VoiceAction(
+    val id: String,
+    val category: String,
+    val title: String,
+    val defaultPhrases: List<String>
+)
+
+object VoiceCustomizationManager {
+
+    private const val TAG = "VoiceCustomization"
+    private const val FILE_ACTIONS = "custom_voice_commands.json"
+    private const val FILE_CHANNEL_ALIASES = "custom_channel_aliases.json"
+
+    val DEFAULT_ACTIONS = listOf(
+        // ۱. پاور و استندبای
+        VoiceAction(
+            "power", "مدیریت پاور و استندبای", "روشن یا خاموش کردن رسیور (پاور)",
+            listOf("خاموش کردن رسیور", "روشن کردن رسیور", "خاموش کردن", "روشن کردن", "پاور رسیور", "دکمه پاور", "پاور", "سابر", "صابر", "هابر", "استندبای")
+        ),
+        // ۲. جابجایی کانال‌ها
+        VoiceAction(
+            "ch_next", "جابجایی و انتخاب کانال‌ها", "رفتن به کانال بعدی",
+            listOf("کانال بعد", "کانال بعدی", "شبکه بعد", "شبکه بعدی", "برو کانال بعد")
+        ),
+        VoiceAction(
+            "ch_prev", "جابجایی و انتخاب کانال‌ها", "رفتن به کانال قبلی",
+            listOf("کانال قبل", "کانال قبلی", "شبکه قبل", "شبکه قبلی", "برو کانال قبل")
+        ),
+        VoiceAction(
+            "recall", "جابجایی و انتخاب کانال‌ها", "بازگشت به کانال قبلی رسیور (Recall)",
+            listOf("کانال قبل تر", "شبکه قبلی رسیور", "برگشت کانال", "شبکه قبلی")
+        ),
+        VoiceAction(
+            "tv_mode", "جابجایی و انتخاب کانال‌ها", "تغییر حالت به تلویزیون",
+            listOf("حالت تلویزیون", "شبکه تلویزیونی", "حالت تلویزیونی", "برو به تلویزیون", "کانال های تلویزیونی")
+        ),
+        VoiceAction(
+            "radio_mode", "جابجایی و انتخاب کانال‌ها", "تغییر حالت به رادیو",
+            listOf("حالت رادیو", "شبکه رادیویی", "حالت رادیویی", "برو به رادیو", "کانال های رادیویی")
+        ),
+        VoiceAction(
+            "refresh_channels", "جابجایی و انتخاب کانال‌ها", "به‌روزرسانی و دریافت مجدد کانال‌ها",
+            listOf("به روزرسانی شبکه ها", "تازه سازی کانال ها", "بروزرسانی لیست کانال ها", "دریافت مجدد کانال ها")
+        ),
+        VoiceAction(
+            "search_channels", "جابجایی و انتخاب کانال‌ها", "رفتن به کادر جستجوی کانال",
+            listOf("جستجوی کانال", "یافتن کانال", "جستجوی شبکه", "کادر جستجو")
+        ),
+        // ۳. کنترل صدا و تصویر
+        VoiceAction(
+            "vol_up", "کنترل صدا و تصویر", "افزایش صدای رسیور",
+            listOf("صدا زیاد", "صدای بیشتر", "افزایش صدا", "صدا بالا", "بلندتر", "صدا رو زیاد کن")
+        ),
+        VoiceAction(
+            "vol_down", "کنترل صدا و تصویر", "کاهش صدای رسیور",
+            listOf("صدا کم", "صدای کمتر", "کاهش صدا", "صدا پایین", "آهسته تر", "صدا رو کم کن")
+        ),
+        VoiceAction(
+            "mute", "کنترل صدا و تصویر", "قطع یا وصل صدای رسیور (میوت)",
+            listOf("قطع صدا", "وصل صدا", "بی صدا", "میوت", "حالت بی صدا")
+        ),
+        VoiceAction(
+            "audio_track", "کنترل صدا و تصویر", "تغییر باند صدا و زبان فیلم",
+            listOf("تغییر صدا", "باند صدا", "زبان فیلم", "تراک صوتی")
+        ),
+        VoiceAction(
+            "subtitle", "کنترل صدا و تصویر", "روشن یا خاموش کردن زیرنویس شبکه",
+            listOf("زیرنویس", "نمایش زیرنویس", "قطع زیرنویس")
+        ),
+        // ۴. منوها و ریموت
+        VoiceAction(
+            "menu", "منوها و ابزارهای ریموت", "باز کردن منوی اصلی رسیور",
+            listOf("منو", "منوی رسیور", "منوی اصلی")
+        ),
+        VoiceAction(
+            "ok", "منوها و ابزارهای ریموت", "دکمه تأیید ریموت کنترل (OK)",
+            listOf("دکمه تایید", "اوکی", "دکمه اوکی", "تایید")
+        ),
+        VoiceAction(
+            "rcu_exit", "منوها و ابزارهای ریموت", "خروج و بستن پنجره‌ها (Exit)",
+            listOf("خروج", "بستن پنجره", "برگشت")
+        ),
+        VoiceAction(
+            "epg", "منوها و ابزارهای ریموت", "جدول و راهنمای برنامه‌ها (EPG)",
+            listOf("ای پی جی", "جدول برنامه", "راهنمای برنامه", "epg")
+        ),
+        VoiceAction(
+            "info", "منوها و ابزارهای ریموت", "اطلاعات و مشخصات برنامه در حال پخش (Info)",
+            listOf("اینفو", "اطلاعات شبکه", "مشخصات برنامه", "اطلاعات کانال")
+        ),
+        // ۵. دکمه‌های رنگی
+        VoiceAction(
+            "red_btn", "دکمه‌های رنگی ریموت", "دکمه قرمز ریموت کنترل",
+            listOf("دکمه قرمز", "کلید قرمز")
+        ),
+        VoiceAction(
+            "green_btn", "دکمه‌های رنگی ریموت", "دکمه سبز ریموت کنترل",
+            listOf("دکمه سبز", "کلید سبز")
+        ),
+        VoiceAction(
+            "yellow_btn", "دکمه‌های رنگی ریموت", "دکمه زرد ریموت کنترل",
+            listOf("دکمه زرد", "کلید زرد")
+        ),
+        VoiceAction(
+            "blue_btn", "دکمه‌های رنگی ریموت", "دکمه آبی ریموت کنترل",
+            listOf("دکمه آبی", "کلید آبی")
+        ),
+        // ۶. ضبط و رسانه
+        VoiceAction(
+            "rec_stb", "ضبط و پخش رسانه", "شروع یا توقف ضبط روی فلش رسیور",
+            listOf("ضبط رسیور", "ضبط روی فلش", "شروع ضبط رسیور", "توقف ضبط رسیور")
+        ),
+        VoiceAction(
+            "rec_phone", "ضبط و پخش رسانه", "شروع یا توقف ضبط در گوشی",
+            listOf("ضبط گوشی", "شروع ضبط گوشی", "توقف ضبط گوشی", "ضبط کانال")
+        ),
+        VoiceAction(
+            "stream", "ضبط و پخش رسانه", "پخش زنده تصویر در گوشی",
+            listOf("پخش زنده", "شروع پخش", "پخش تصویر", "استریم", "پخش زنده تصویر")
+        ),
+        VoiceAction(
+            "stop_stream", "ضبط و پخش رسانه", "توقف و بستن پخش زنده",
+            listOf("توقف پخش", "قطع پخش", "بستن پخش", "استپ پخش")
+        ),
+        VoiceAction(
+            "open_rec", "ضبط و پخش رسانه", "باز کردن لیست فایل‌های ضبط شده",
+            listOf("فایل های ضبط شده", "آرشیو ضبط", "لیست ضبط", "پوشه ضبط")
+        ),
+        VoiceAction(
+            "add_timer", "ضبط و پخش رسانه", "تعریف زمان‌بندی جدید برای ضبط خودکار",
+            listOf("زمان بندی جدید", "تایمر ضبط", "زمان بندی ضبط", "تعریف زمان بندی")
+        ),
+        VoiceAction(
+            "reset_counter", "ضبط و پخش رسانه", "صفر کردن شمارنده فایل‌های ضبط",
+            listOf("صفر کردن شمارنده", "ریست شمارنده ضبط", "شمارنده ضبط صفر")
+        ),
+        // ۷. ابزارهای هوشمند و برنامه
+        VoiceAction(
+            "wake_enable", "ابزارهای هوشمند", "روشن کردن بیدارباش و شنیدن پیوسته",
+            listOf("روشن کردن بیدارباش", "فعال کردن شنیدن پیوسته", "بیدارباش روشن")
+        ),
+        VoiceAction(
+            "wake_disable", "ابزارهای هوشمند", "خاموش کردن بیدارباش و شنیدن پیوسته",
+            listOf("خاموش کردن بیدارباش", "غیرفعال کردن شنیدن پیوسته", "بیدارباش خاموش")
+        ),
+        VoiceAction(
+            "minimize_app", "ابزارهای هوشمند", "اجرا در پس‌زمینه (فعال ماندن)",
+            listOf("اجرا در پس زمینه", "برو به پس زمینه", "پس زمینه")
+        ),
+        VoiceAction(
+            "close_app", "ابزارهای هوشمند", "بستن و خروج کامل از برنامه",
+            listOf("بستن برنامه", "خروج از برنامه", "خروج کامل")
+        ),
+        VoiceAction(
+            "open_settings", "ابزارهای هوشمند", "ورود به بخش تنظیمات",
+            listOf("تنظیمات", "تنظیمات برنامه", "بخش تنظیمات")
+        ),
+        VoiceAction(
+            "open_manual", "ابزارهای هوشمند", "کتابچه راهنمای جامع کاربری",
+            listOf("کتابچه راهنما", "راهنمای نرم افزار", "راهنمای کاربری")
+        ),
+        VoiceAction(
+            "open_voice_help", "ابزارهای هوشمند", "راهنمای فرامین صوتی",
+            listOf("راهنمای صوتی", "فرامین صوتی", "دستورات صوتی")
+        ),
+        VoiceAction(
+            "open_stb_info", "ابزارهای هوشمند", "مشخصات سخت‌افزاری و مدل رسیور",
+            listOf("مشخصات رسیور", "اطلاعات دستگاه", "مدل رسیور")
+        )
+    )
+
+    private var customActionsMap = mutableMapOf<String, List<String>>()
+    private var customChannelAliasesMap = mutableMapOf<String, MutableList<String>>() // serviceId -> list of aliases
+    private var isLoaded = false
+
+    fun init(context: Context) {
+        if (!isLoaded) {
+            loadCustomActions(context)
+            loadChannelAliases(context)
+            isLoaded = true
+        }
+    }
+
+    private fun loadCustomActions(context: Context) {
+        try {
+            val file = File(context.filesDir, FILE_ACTIONS)
+            if (file.exists()) {
+                val json = file.readText()
+                val type = object : TypeToken<Map<String, List<String>>>() {}.type
+                val map: Map<String, List<String>> = Gson().fromJson(json, type)
+                customActionsMap.clear()
+                customActionsMap.putAll(map)
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Error loading custom voice actions: ${e.message}")
+        }
+    }
+
+    fun saveCustomActions(context: Context) {
+        try {
+            val file = File(context.filesDir, FILE_ACTIONS)
+            val json = Gson().toJson(customActionsMap)
+            file.writeText(json)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Error saving custom voice actions: ${e.message}")
+        }
+    }
+
+    private fun loadChannelAliases(context: Context) {
+        try {
+            val file = File(context.filesDir, FILE_CHANNEL_ALIASES)
+            if (file.exists()) {
+                val json = file.readText()
+                val type = object : TypeToken<Map<String, List<String>>>() {}.type
+                val map: Map<String, List<String>> = Gson().fromJson(json, type)
+                customChannelAliasesMap.clear()
+                for ((k, v) in map) {
+                    customChannelAliasesMap[k] = v.toMutableList()
+                }
+            }
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Error loading custom channel aliases: ${e.message}")
+        }
+    }
+
+    fun saveChannelAliases(context: Context) {
+        try {
+            val file = File(context.filesDir, FILE_CHANNEL_ALIASES)
+            val json = Gson().toJson(customChannelAliasesMap)
+            file.writeText(json)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Error saving custom channel aliases: ${e.message}")
+        }
+    }
+
+    fun getEffectivePhrases(actionId: String): List<String> {
+        val custom = customActionsMap[actionId]
+        if (custom != null) {
+            return custom
+        }
+        val defaultAction = DEFAULT_ACTIONS.find { it.id == actionId }
+        return defaultAction?.defaultPhrases ?: emptyList()
+    }
+
+    fun setPhrases(context: Context, actionId: String, phrases: List<String>) {
+        customActionsMap[actionId] = phrases.map { it.trim() }.filter { it.isNotBlank() }
+        saveCustomActions(context)
+    }
+
+    fun addPhrase(context: Context, actionId: String, phrase: String) {
+        val current = getEffectivePhrases(actionId).toMutableList()
+        val clean = phrase.trim()
+        if (clean.isNotBlank() && !current.contains(clean)) {
+            current.add(clean)
+            setPhrases(context, actionId, current)
+        }
+    }
+
+    fun removePhrase(context: Context, actionId: String, phrase: String) {
+        val current = getEffectivePhrases(actionId).toMutableList()
+        current.remove(phrase.trim())
+        setPhrases(context, actionId, current)
+    }
+
+    fun resetAction(context: Context, actionId: String) {
+        customActionsMap.remove(actionId)
+        saveCustomActions(context)
+    }
+
+    fun resetAllActions(context: Context) {
+        customActionsMap.clear()
+        saveCustomActions(context)
+    }
+
+    fun getChannelAliasesMap(): Map<String, List<String>> = customChannelAliasesMap
+
+    fun addChannelAlias(context: Context, serviceId: String, alias: String) {
+        val list = customChannelAliasesMap.getOrPut(serviceId) { mutableListOf() }
+        val clean = alias.trim()
+        if (clean.isNotBlank() && !list.contains(clean)) {
+            list.add(clean)
+            saveChannelAliases(context)
+        }
+    }
+
+    fun removeChannelAlias(context: Context, serviceId: String, alias: String) {
+        val list = customChannelAliasesMap[serviceId]
+        if (list != null) {
+            list.remove(alias.trim())
+            if (list.isEmpty()) {
+                customChannelAliasesMap.remove(serviceId)
+            }
+            saveChannelAliases(context)
+        }
+    }
+
+    fun resetAllChannelAliases(context: Context) {
+        customChannelAliasesMap.clear()
+        saveChannelAliases(context)
+    }
+
+    /**
+     * Automatically extracts aliases from channels and registers them for voice recognition.
+     * Returns Pair(addedChannelsCount, totalAliasesCount)
+     */
+    fun syncChannelsWithVoice(context: Context, channels: List<Channel>): Pair<Int, Int> {
+        var addedCount = 0
+        var totalAliases = 0
+
+        for (channel in channels) {
+            val list = customChannelAliasesMap.getOrPut(channel.serviceId) { mutableListOf() }
+            val generated = generateDefaultAliases(channel)
+            var channelHasNew = false
+
+            for (a in generated) {
+                if (!list.contains(a)) {
+                    list.add(a)
+                    channelHasNew = true
+                }
+            }
+
+            if (channelHasNew) {
+                addedCount++
+            }
+            totalAliases += list.size
+        }
+
+        saveChannelAliases(context)
+        AppLogger.i(TAG, "Synced voice aliases: $addedCount channels updated, total aliases: $totalAliases")
+        return Pair(addedCount, totalAliases)
+    }
+
+    private fun generateDefaultAliases(channel: Channel): List<String> {
+        val aliases = mutableListOf<String>()
+        val raw = channel.serviceName.trim()
+        if (raw.isBlank()) return aliases
+
+        // 1. Raw name & prefix variants
+        aliases.add(raw)
+        val type = if (channel.isRadio) "رادیو" else "شبکه"
+        aliases.add("$type $raw")
+        aliases.add("کانال $raw")
+
+        // 2. Cleaned name without HD/SD/4K/FHD
+        val cleaned = raw.replace(Regex("(?i)\\b(hd|sd|4k|fhd|hevc|uhd)\\b"), "").trim()
+        if (cleaned.isNotBlank() && cleaned != raw) {
+            aliases.add(cleaned)
+            aliases.add("$type $cleaned")
+            aliases.add("کانال $cleaned")
+        }
+
+        // 3. Channel number aliases
+        if (channel.realChannelNum > 0) {
+            aliases.add("کانال ${channel.realChannelNum}")
+            aliases.add("شبکه ${channel.realChannelNum}")
+        }
+
+        // 4. Common Persian transliterations & subbrands
+        val lower = cleaned.lowercase()
+        if (lower.contains("gem")) {
+            val sub = lower.replace("gem", "").trim()
+            if (sub.isNotBlank()) {
+                aliases.add("جم $sub")
+                aliases.add("شبکه جم $sub")
+            } else {
+                aliases.add("جم")
+                aliases.add("شبکه جم")
+                aliases.add("جم تیوی")
+            }
+        } else if (lower.contains("persiana")) {
+            val sub = lower.replace("persiana", "").trim()
+            if (sub.isNotBlank()) {
+                aliases.add("پرشیانا $sub")
+                aliases.add("شبکه پرشیانا $sub")
+            } else {
+                aliases.add("پرشیانا")
+                aliases.add("شبکه پرشیانا")
+            }
+        }
+
+        return aliases.distinct()
+    }
+
+    /**
+     * Checks if a spoken query matches any customizable voice action.
+     */
+    fun matchVoiceAction(query: String): String? {
+        val norm = ChannelMatcher.normalizePersian(query)
+        if (norm.isBlank()) return null
+
+        for (action in DEFAULT_ACTIONS) {
+            val phrases = getEffectivePhrases(action.id)
+            for (p in phrases) {
+                val pNorm = ChannelMatcher.normalizePersian(p)
+                if (pNorm.isNotBlank()) {
+                    if (norm == pNorm || norm.contains(pNorm) || pNorm.contains(norm)) {
+                        return action.id
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    /**
+     * Checks if a query directly matches custom channel aliases.
+     */
+    fun matchChannelAlias(query: String, channels: List<Channel>): Channel? {
+        val norm = ChannelMatcher.normalizePersian(query)
+        if (norm.isBlank() || channels.isEmpty()) return null
+
+        for ((serviceId, aliases) in customChannelAliasesMap) {
+            for (alias in aliases) {
+                val aNorm = ChannelMatcher.normalizePersian(alias)
+                if (aNorm.isNotBlank() && (norm == aNorm || norm.contains(aNorm) || aNorm.contains(norm))) {
+                    val found = channels.find { it.serviceId == serviceId }
+                    if (found != null) return found
+                }
+            }
+        }
+        return null
+    }
+}

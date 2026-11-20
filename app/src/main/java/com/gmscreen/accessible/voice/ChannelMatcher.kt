@@ -133,6 +133,9 @@ object ChannelMatcher {
      * Checks if the voice command matches a direct RCU/System action.
      */
     fun matchVoiceAction(query: String): String? {
+        val customMatch = VoiceCustomizationManager.matchVoiceAction(query)
+        if (customMatch != null) return customMatch
+
         val norm = normalizePersian(query)
         if (norm.isBlank()) return null
 
@@ -200,6 +203,9 @@ object ChannelMatcher {
      */
     fun findBestChannel(query: String, channels: List<Channel>): Channel? {
         if (query.isBlank() || channels.isEmpty()) return null
+
+        val aliasMatch = VoiceCustomizationManager.matchChannelAlias(query, channels)
+        if (aliasMatch != null) return aliasMatch
 
         var qClean = normalizePersian(query)
             .replace(Regex("^(?:برو\\s*به\\s*|بزن\\s*روی\\s*|کانال\\s+|شبکه\\s+)"), "")

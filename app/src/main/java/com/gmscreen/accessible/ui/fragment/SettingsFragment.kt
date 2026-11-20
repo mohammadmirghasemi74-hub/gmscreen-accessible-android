@@ -30,6 +30,7 @@ import com.gmscreen.accessible.ui.InternalBrowserActivity
 import com.gmscreen.accessible.util.AccessibilityHelper
 import com.gmscreen.accessible.util.AppLogger
 import com.gmscreen.accessible.util.StorageManager
+import com.gmscreen.accessible.util.VoiceCustomizationDialogHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -1228,6 +1229,16 @@ class SettingsFragment : Fragment() {
                 }
                 .setNegativeButton("انصراف", null)
                 .show()
+        }
+
+        // 4. Voice Commands Customization & Management
+        addSettingRow(contentLayout, "۴. مدیریت و شخصی‌سازی فرامین صوتی رسیور", "مشاهده، ویرایش، افزودن و بازنشانی فرامین") { _, _ ->
+            VoiceCustomizationDialogHelper.showVoiceCustomizationMenu(requireContext(), repository)
+        }
+
+        // 5. Automatic Channel Sync to Voice
+        addSettingRow(contentLayout, "۵. همگام‌سازی و افزودن خودکار کانال‌های رسیور به فرامین صوتی", "تشخیص و ثبت هوشمند شبکه‌های جدید") { _, row ->
+            VoiceCustomizationDialogHelper.syncChannels(requireContext(), repository, row)
         }
 
         MaterialAlertDialogBuilder(requireContext())
