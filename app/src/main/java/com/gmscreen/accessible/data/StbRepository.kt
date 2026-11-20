@@ -392,4 +392,9 @@ class StbRepository(context: Context) {
         if (ok) refreshTimers()
         return ok
     }
+
+    suspend fun changePassword(oldPwd: String, newPwd: String): Boolean {
+        if (!client.isConnected) return false
+        return client.changePassword(oldPwd, newPwd)
+    }
 }

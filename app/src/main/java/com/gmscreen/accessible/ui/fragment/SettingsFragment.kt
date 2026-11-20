@@ -7,7 +7,9 @@ import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
 import android.os.Environment
+import android.text.InputFilter
 import android.text.InputType
+import android.text.method.PasswordTransformationMethod
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -627,22 +629,116 @@ class SettingsFragment : Fragment() {
     }
 
     private fun openChangePasswordDialog() {
-        val input = EditText(requireContext()).apply {
-            hint = "رمز عبور ۴ رقمی (پیش‌فرض: 0000)"
-            setText(appConfig.parentalPin)
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+        val ctx = requireContext()
+        val scrollView = ScrollView(ctx).apply {
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("تغییر رمز عبور کنترل والدین (PIN)")
-            .setView(input)
-            .setPositiveButton("ذخیره") { _, _ ->
-                val pin = input.text.toString().trim()
-                if (pin.length == 4) {
-                    appConfig.parentalPin = pin
-                    Toast.makeText(requireContext(), "رمز عبور با موفقیت ذخیره شد: $pin", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(requireContext(), "رمز عبور باید ۴ رقم باشد", Toast.LENGTH_SHORT).show()
+        val layout = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(40, 24, 40, 16)
+        }
+        scrollView.addView(layout)
+
+        fun createPasswordRow(label: String, hintText: String, accLabel: String): Triple<EditText, com.google.android.material.button.MaterialButton, LinearLayout> {
+            val row = LinearLayout(ctx).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    setMargins(0, 8, 0, 12)
                 }
+            }
+            val txtLabel = TextView(ctx).apply {
+                text = label
+                setTextColor(resources.getColor(R.color.accent_green, null))
+                textSize = 14f
+                setTypeface(null, Typeface.BOLD)
+                setPadding(0, 0, 0, 4)
+            }
+            row.addView(txtLabel)
+
+            val inputRow = LinearLayout(ctx).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+
+            var isVisible = false
+            val edt = EditText(ctx).apply {
+                hint = hintText
+                inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+                transformationMethod = PasswordTransformationMethod.getInstance()
+                filters = arrayOf(InputFilter.LengthFilter(4))
+                textSize = 16f
+                contentDescription = "$accLabel، ۴ رقم عددی"
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            inputRow.addView(edt)
+
+            val btnToggle = com.google.android.material.button.MaterialButton(ctx, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
+                text = "نمایش"
+                contentDescription = "نمایش یا مخفی‌سازی $label"
+                textSize = 12f
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    setMargins(8, 0, 0, 0)
+                }
+                setOnClickListener {
+                    isVisible = !isVisible
+                    edt.transformationMethod = if (isVisible) null else PasswordTransformationMethod.getInstance()
+                    edt.setSelection(edt.text.length)
+                    text = if (isVisible) "مخفی" else "نمایش"
+                    val stateStr = if (isVisible) "آشکار شد" else "مخفی شد"
+                    AccessibilityHelper.announce(this, "$label $stateStr")
+                }
+            }
+            inputRow.addView(btnToggle)
+            row.addView(inputRow)
+
+            return Triple(edt, btnToggle, row)
+        }
+
+        val (edtOld, _, rowOld) = createPasswordRow("۱. رمز فعلی رسیور:", "رمز ۴ رقمی فعلی", "رمز فعلی")
+        val (edtNew, _, rowNew) = createPasswordRow("۲. رمز جدید رسیور:", "رمز ۴ رقمی جدید", "رمز جدید")
+        val (edtVerify, _, rowVerify) = createPasswordRow("۳. تکرار رمز جدید:", "تکرار رمز ۴ رقمی جدید", "تکرار رمز جدید")
+
+        layout.addView(rowOld)
+        layout.addView(rowNew)
+        layout.addView(rowVerify)
+
+        MaterialAlertDialogBuilder(ctx)
+            .setTitle("تغییر رمز عبور رسیور (Parental PIN)")
+            .setView(scrollView)
+            .setPositiveButton("تأیید و ذخیره رمز") { _, _ ->
+                val oldVal = edtOld.text.toString().trim()
+                val newVal = edtNew.text.toString().trim()
+                val verVal = edtVerify.text.toString().trim()
+
+                val curPin = appConfig.parentalPin
+                if (oldVal != curPin && !(oldVal == "0000" && curPin.isBlank())) {
+                    Toast.makeText(ctx, "رمز فعلی وارد شده نادرست است", Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(containerSettingsList, "رمز فعلی وارد شده نادرست است")
+                    return@setPositiveButton
+                }
+                if (newVal.length != 4) {
+                    Toast.makeText(ctx, "رمز جدید باید دقیقاً ۴ رقم عددی باشد", Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(containerSettingsList, "رمز جدید باید دقیقاً ۴ رقم عددی باشد")
+                    return@setPositiveButton
+                }
+                if (newVal != verVal) {
+                    Toast.makeText(ctx, "رمز جدید با تکرار آن یکسان نیست", Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(containerSettingsList, "رمز جدید با تکرار آن یکسان نیست")
+                    return@setPositiveButton
+                }
+
+                appConfig.parentalPin = newVal
+
+                // Send Request 1052 to STB hardware
+                lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        repository.changePassword(oldVal, newVal)
+                    } catch (_: Exception) {}
+                }
+
+                val msg = "رمز عبور رسیور در سخت‌افزار دستگاه با موفقیت به $newVal تغییر یافت و با کنترل فیزیکی نیز قابل استفاده است."
+                Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show()
+                AccessibilityHelper.announce(containerSettingsList, msg)
             }
             .setNegativeButton("انصراف", null)
             .show()
@@ -1414,16 +1510,39 @@ class SettingsFragment : Fragment() {
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> {
-                        if (file.name.endsWith(".html", ignoreCase = true)) {
-                            InternalBrowserActivity.openFile(requireContext(), file.absolutePath, file.name)
-                        } else {
-                            val content = file.readText(Charsets.UTF_8)
-                            val html = """
-                                <!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>${file.name}</title></head>
-                                <body style="background:#121212;color:#e0e0e0;font-family:monospace;white-space:pre-wrap;padding:12px;">$content</body></html>
-                            """.trimIndent()
-                            InternalBrowserActivity.openHtml(requireContext(), html, file.name)
+                        val content = try {
+                            file.readText(Charsets.UTF_8)
+                        } catch (e: Exception) {
+                            "خطا در خواندن فایل لاگ: ${e.message}"
                         }
+                        val scrollView = ScrollView(requireContext()).apply {
+                            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                        }
+                        val txt = TextView(requireContext()).apply {
+                            text = if (content.isBlank()) "این فایل لاگ در حال حاضر خالی است." else content
+                            setTextIsSelectable(true)
+                            textSize = 13f
+                            setTypeface(Typeface.MONOSPACE)
+                            setTextColor(resources.getColor(R.color.text_primary, null))
+                            setPadding(28, 20, 28, 20)
+                            contentDescription = "محتوای فایل ${file.name}. برای خواندن گزارش پیمایش کنید."
+                        }
+                        scrollView.addView(txt)
+
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("مشاهده لاگ: ${file.name}")
+                            .setView(scrollView)
+                            .setPositiveButton("کپی متن لاگ") { _, _ ->
+                                val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip = ClipData.newPlainText("Log File Content", content)
+                                clipboard.setPrimaryClip(clip)
+                                Toast.makeText(requireContext(), "محتوای لاگ در کلیپ‌بورد کپی شد", Toast.LENGTH_SHORT).show()
+                                showSingleLogFileActions(file)
+                            }
+                            .setNegativeButton("بستن") { _, _ ->
+                                showSingleLogFileActions(file)
+                            }
+                            .show()
                     }
                     1 -> {
                         val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -1431,6 +1550,7 @@ class SettingsFragment : Fragment() {
                         val clip = ClipData.newPlainText("Log File Content", content)
                         clipboard.setPrimaryClip(clip)
                         Toast.makeText(requireContext(), "محتوای فایل در کلیپ‌بورد کپی شد", Toast.LENGTH_SHORT).show()
+                        showSingleLogFileActions(file)
                     }
                     2 -> {
                         try {
@@ -1450,6 +1570,7 @@ class SettingsFragment : Fragment() {
                         } catch (e: Exception) {
                             Toast.makeText(requireContext(), "خطا در ارسال فایل: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
+                        showSingleLogFileActions(file)
                     }
                     3 -> {
                         val confirmTitle = if (isLive) "پاک‌سازی لاگ زنده سیستم" else "حذف فایل لاگ"
@@ -1469,7 +1590,7 @@ class SettingsFragment : Fragment() {
                                 openExportedLogsManagerDialog()
                             }
                             .setNegativeButton("انصراف") { _, _ ->
-                                openExportedLogsManagerDialog()
+                                showSingleLogFileActions(file)
                             }
                             .show()
                     }

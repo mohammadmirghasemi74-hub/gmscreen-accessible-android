@@ -726,17 +726,17 @@ class ChannelsFragment : Fragment() {
         val options = arrayOf(
             "۱. پخش تصویری زنده در گوشی",
             "۲. پخش صوتی زنده در گوشی (Audio Only)",
-            "۳. جدول پخش برنامه‌های این شبکه (EPG)",
-            "۴. اعلام صوتی برنامه در حال پخش (EPG)",
-            "۵. پخش در برنامه خارجی (مانند VLC یا MX Player)",
-            "۶. شروع ضبط زنده روی گوشی (MP4/MP3)",
-            "۷. $lockTitle",
-            "۸. مشخصات و اطلاعات فنی کانال",
-            "۹. کپی آدرس استریم زنده (RTSP URL)",
-            "۱۰. افزودن به زمان‌بندی ضبط روی فلش رسیور",
-            "۱۱. افزودن به زمان‌بندی ضبط روی حافظه گوشی",
-            "۱۲. حرکت دادن کانال به شماره دلخواه (Move Channel)",
-            "۱۳. حذف این کانال از حافظه رسیور (Delete Channel)"
+            "۳. حذف این کانال از حافظه رسیور (Delete Channel)",
+            "۴. حرکت دادن کانال به شماره دلخواه (Move Channel)",
+            "۵. مشخصات و اطلاعات فنی کانال",
+            "۶. جدول پخش برنامه‌های این شبکه (لیست EPG)",
+            "۷. اعلام صوتی برنامه در حال پخش فعلی (EPG)",
+            "۸. شروع ضبط زنده روی گوشی (MP4/MP3)",
+            "۹. افزودن به زمان‌بندی ضبط روی فلش رسیور",
+            "۱۰. افزودن به زمان‌بندی ضبط روی حافظه گوشی",
+            "۱۱. پخش در برنامه خارجی (مانند VLC یا MX Player)",
+            "۱۲. کپی آدرس استریم زنده (RTSP URL)",
+            "۱۳. $lockTitle"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -745,15 +745,28 @@ class ChannelsFragment : Fragment() {
                 when (which) {
                     0 -> playVideoOnPhone(channel)
                     1 -> playAudioOnPhone(channel)
-                    2 -> showChannelEpgDialog(channel)
-                    3 -> announceCurrentEpg(channel)
-                    4 -> openStreamInExternalPlayer(channel)
-                    5 -> startPhoneRecordingFromChannel(channel)
-                    6 -> {
-                        Toast.makeText(requireContext(), "دستور قفل/بازگشایی با پین 0000 ارسال شد", Toast.LENGTH_SHORT).show()
-                    }
-                    7 -> showChannelInfoDialog(channel)
+                    2 -> promptDeleteChannel(channel)
+                    3 -> promptMoveChannel(channel)
+                    4 -> showChannelInfoDialog(channel)
+                    5 -> showChannelEpgDialog(channel)
+                    6 -> announceCurrentEpg(channel)
+                    7 -> startPhoneRecordingFromChannel(channel)
                     8 -> {
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            repository.switchChannel(channel)
+                        }
+                        (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
+                        Toast.makeText(requireContext(), "شبکه ${channel.serviceName} انتخاب شد؛ در سربرگ ضبط دکمه افزودن زمان‌بندی را بزنید", Toast.LENGTH_LONG).show()
+                    }
+                    9 -> {
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            repository.switchChannel(channel)
+                        }
+                        (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
+                        Toast.makeText(requireContext(), "شبکه ${channel.serviceName} انتخاب شد؛ در سربرگ ضبط دکمه افزودن زمان‌بندی گوشی را بزنید", Toast.LENGTH_LONG).show()
+                    }
+                    10 -> openStreamInExternalPlayer(channel)
+                    11 -> {
                         val ip = repository.connectedIp.value
                         val url = channel.toSatIpUrl(ip)
                         val clip = ClipData.newPlainText("Stream URL", url)
@@ -763,22 +776,9 @@ class ChannelsFragment : Fragment() {
                         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                         AccessibilityHelper.announce(txtChannelCount, msg)
                     }
-                    9 -> {
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            repository.switchChannel(channel)
-                        }
-                        (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
-                        Toast.makeText(requireContext(), "شبکه ${channel.serviceName} انتخاب شد؛ در سربرگ ضبط دکمه افزودن زمان‌بندی را بزنید", Toast.LENGTH_LONG).show()
+                    12 -> {
+                        Toast.makeText(requireContext(), "دستور قفل/بازگشایی با پین 0000 ارسال شد", Toast.LENGTH_SHORT).show()
                     }
-                    10 -> {
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            repository.switchChannel(channel)
-                        }
-                        (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(3)
-                        Toast.makeText(requireContext(), "شبکه ${channel.serviceName} انتخاب شد؛ در سربرگ ضبط دکمه افزودن زمان‌بندی گوشی را بزنید", Toast.LENGTH_LONG).show()
-                    }
-                    11 -> promptMoveChannel(channel)
-                    12 -> promptDeleteChannel(channel)
                 }
             }
             .setNegativeButton("بستن", null)

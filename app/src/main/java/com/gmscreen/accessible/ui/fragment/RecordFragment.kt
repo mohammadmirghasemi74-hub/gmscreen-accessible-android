@@ -3,6 +3,7 @@ package com.gmscreen.accessible.ui.fragment
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -18,6 +19,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.FileProvider
@@ -129,6 +131,7 @@ class RecordFragment : Fragment() {
     private val stbTimers = mutableListOf<StbScheduledTimer>()
     private var isStbWatcherRunning = false
     private var isPhoneWatcherRunning = false
+    private var isScheduledPhoneRecordingActive = false
 
     // Local Phone Timers list
     data class PhoneScheduledTimer(
@@ -205,11 +208,17 @@ class RecordFragment : Fragment() {
             isRecordingOnPhone = true
             val chName = com.gmscreen.accessible.player.StreamRecorderManager.currentChannel?.serviceName ?: "شبکه"
             txtInstantRecStatus.text = "در حال ضبط روی گوشی ($chName)..."
-            btnStopPhoneRec.visibility = View.VISIBLE
-            btnStopPhoneScheduledRec.visibility = View.VISIBLE
+            if (isScheduledPhoneRecordingActive) {
+                btnStopPhoneScheduledRec.visibility = View.VISIBLE
+                btnStopPhoneRec.visibility = View.GONE
+            } else {
+                btnStopPhoneRec.visibility = View.VISIBLE
+                btnStopPhoneScheduledRec.visibility = View.GONE
+            }
             timerHandler.post(timerRunnable)
         } else if (!isRec && isRecordingOnPhone) {
             isRecordingOnPhone = false
+            isScheduledPhoneRecordingActive = false
             timerHandler.removeCallbacks(timerRunnable)
             btnStopPhoneRec.visibility = View.GONE
             btnStopPhoneScheduledRec.visibility = View.GONE
@@ -234,6 +243,7 @@ class RecordFragment : Fragment() {
             if (isRecordingOnPhone) {
                 stopPhoneRecording()
             } else {
+                isScheduledPhoneRecordingActive = false
                 startPhoneRecording(isAudioOnly = false)
             }
         }
@@ -242,6 +252,7 @@ class RecordFragment : Fragment() {
             if (isRecordingOnPhone) {
                 stopPhoneRecording()
             } else {
+                isScheduledPhoneRecordingActive = false
                 startPhoneRecording(isAudioOnly = true)
             }
         }
@@ -289,11 +300,11 @@ class RecordFragment : Fragment() {
         }
 
         btnAddStbTimer.setOnClickListener {
-            showAddStbTimerDialog()
+            showAddOrEditStbTimerDialog()
         }
 
         btnAddPhoneTimer.setOnClickListener {
-            showAddPhoneTimerDialog()
+            showAddOrEditPhoneTimerDialog()
         }
 
         btnStopStbScheduledRec.setOnClickListener {
@@ -427,94 +438,231 @@ class RecordFragment : Fragment() {
             .show()
     }
 
-    private fun showAddStbTimerDialog(preselectedChannel: Channel? = null) {
+    private fun showAddOrEditStbTimerDialog(existingTimer: StbScheduledTimer? = null) {
         val channels = repository.channels.value
         if (channels.isEmpty()) {
             Toast.makeText(requireContext(), "ابتدا باید به رسیور متصل شوید تا کانال‌ها دریافت شوند", Toast.LENGTH_SHORT).show()
             return
         }
 
-        var targetChannel = preselectedChannel ?: repository.currentChannel.value ?: channels.first()
-
         val cal = Calendar.getInstance()
-        var startH = (cal.get(Calendar.HOUR_OF_DAY) + if (cal.get(Calendar.MINUTE) >= 55) 1 else 0) % 24
-        var startM = ((cal.get(Calendar.MINUTE) / 5) * 5 + 5) % 60
-        var endH = (startH + 1) % 24
-        var endM = startM
-        var repeatMode = 0 // 0: یکبار, 1: روزانه, 2: هفتگی
-        var autoWake = false
-        var autoPowerOff = false
-        var autoDelete = false
+        var targetChannel = if (existingTimer != null) {
+            channels.find { it.serviceId == existingTimer.channelId }
+                ?: Channel(
+                    serviceId = existingTimer.channelId,
+                    serviceName = existingTimer.channelName,
+                    isRadio = existingTimer.isRadio
+                )
+        } else {
+            repository.currentChannel.value ?: channels.first()
+        }
+
+        var startH = existingTimer?.startHour ?: ((cal.get(Calendar.HOUR_OF_DAY) + if (cal.get(Calendar.MINUTE) >= 55) 1 else 0) % 24)
+        var startM = existingTimer?.startMinute ?: (((cal.get(Calendar.MINUTE) / 5) * 5 + 5) % 60)
+        var endH = existingTimer?.endHour ?: ((startH + 1) % 24)
+        var endM = existingTimer?.endMinute ?: startM
+        var repeatMode = existingTimer?.repeatMode ?: 0
+        var autoWake = existingTimer?.autoWake ?: false
+        var autoPowerOff = existingTimer?.autoPowerOff ?: false
+        var autoDelete = existingTimer?.autoDelete ?: false
 
         val repeatTitles = arrayOf("یک‌بار (پیش‌فرض)", "روزانه (هر روز)", "هفتگی (همین روز هر هفته)")
 
-        fun openDialog() {
-            val items = arrayOf(
-                "۱. شبکه انتخابی: ${targetChannel.serviceName} (برای تغییر کلیک کنید)",
-                "۲. ساعت شروع ضبط: %02d (کلیک برای انتخاب ساعت)".format(startH),
-                "۳. دقیقه شروع ضبط: %02d (کلیک برای انتخاب دقیقه)".format(startM),
-                "۴. ساعت پایان ضبط: %02d (کلیک برای انتخاب ساعت)".format(endH),
-                "۵. دقیقه پایان ضبط: %02d (کلیک برای انتخاب دقیقه)".format(endM),
-                "۶. تکرار زمان‌بندی: ${repeatTitles[repeatMode]}",
-                "۷. روشن شدن خودکار رسیور از حالت آماده‌به‌کار: ${if (autoWake) "فعال" else "غیرفعال"}",
-                "۸. خاموش شدن خودکار رسیور پس از اتمام ضبط: ${if (autoPowerOff) "فعال" else "غیرفعال"}",
-                "۹. حذف خودکار زمان‌بندی از رسیور پس از اتمام: ${if (autoDelete) "فعال" else "غیرفعال"}"
-            )
+        val context = requireContext()
+        val scrollView = ScrollView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 20, 32, 20)
+        }
+        scrollView.addView(container)
 
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("افزودن زمان‌بندی ضبط روی فلش رسیور")
-                .setItems(items) { _, which ->
-                    when (which) {
-                        0 -> showChannelPicker("انتخاب شبکه برای ضبط رسیور", targetChannel) { chosen ->
-                            targetChannel = chosen
-                            openDialog()
-                        }
-                        1 -> showAccessibleHourPicker("ساعت شروع ضبط رسیور") { h ->
-                            startH = h
-                            endH = (startH + 1) % 24
-                            openDialog()
-                        }
-                        2 -> showAccessibleMinutePicker("دقیقه شروع ضبط رسیور") { m ->
-                            startM = m
-                            endM = startM
-                            openDialog()
-                        }
-                        3 -> showAccessibleHourPicker("ساعت پایان ضبط رسیور") { h ->
-                            endH = h
-                            openDialog()
-                        }
-                        4 -> showAccessibleMinutePicker("دقیقه پایان ضبط رسیور") { m ->
-                            endM = m
-                            openDialog()
-                        }
-                        5 -> {
-                            MaterialAlertDialogBuilder(requireContext())
-                                .setTitle("انتخاب نحوه تکرار زمان‌بندی")
-                                .setItems(repeatTitles) { _, rIdx ->
-                                    repeatMode = rIdx
-                                    openDialog()
-                                }
-                                .setNegativeButton("انصراف") { _, _ -> openDialog() }
-                                .show()
-                        }
-                        6 -> {
-                            autoWake = !autoWake
-                            openDialog()
-                        }
-                        7 -> {
-                            autoPowerOff = !autoPowerOff
-                            openDialog()
-                        }
-                        8 -> {
-                            autoDelete = !autoDelete
-                            openDialog()
-                        }
-                    }
+        fun addRow(title: String, initialVal: String, onClick: (TextView, View) -> Unit): Pair<TextView, View> {
+            val row = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                isFocusable = true
+                isClickable = true
+                setBackgroundResource(R.drawable.card_channel_bg)
+                setPadding(28, 20, 28, 20)
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    setMargins(0, 6, 0, 8)
                 }
-                .setPositiveButton("ثبت زمان‌بندی در رسیور") { _, _ ->
-                    var dur = (endH * 60 + endM) - (startH * 60 + startM)
-                    if (dur <= 0) dur += 24 * 60
+            }
+            val txtTitle = TextView(context).apply {
+                text = title
+                textSize = 14f
+                setTypeface(null, Typeface.BOLD)
+                setTextColor(resources.getColor(R.color.accent_green, null))
+            }
+            val txtVal = TextView(context).apply {
+                text = initialVal
+                textSize = 13f
+                setTextColor(resources.getColor(R.color.text_primary, null))
+                setPadding(0, 4, 0, 0)
+            }
+            row.addView(txtTitle)
+            row.addView(txtVal)
+            row.contentDescription = "$title: $initialVal. برای تغییر ضربه بزنید."
+            row.setOnClickListener { onClick(txtVal, row) }
+            container.addView(row)
+            return Pair(txtVal, row)
+        }
 
+        lateinit var txtCh: TextView; lateinit var rowCh: View
+        lateinit var txtStartH: TextView; lateinit var rowStartH: View
+        lateinit var txtStartM: TextView; lateinit var rowStartM: View
+        lateinit var txtEndH: TextView; lateinit var rowEndH: View
+        lateinit var txtEndM: TextView; lateinit var rowEndM: View
+        lateinit var txtRepeat: TextView; lateinit var rowRepeat: View
+        lateinit var txtWake: TextView; lateinit var rowWake: View
+        lateinit var txtPowerOff: TextView; lateinit var rowPowerOff: View
+        lateinit var txtDelete: TextView; lateinit var rowDelete: View
+
+        val p0 = addRow("۱. شبکه انتخابی", targetChannel.serviceName) { txt, row ->
+            showChannelPicker("انتخاب شبکه برای ضبط رسیور", targetChannel) { chosen ->
+                targetChannel = chosen
+                txt.text = targetChannel.serviceName
+                row.contentDescription = "۱. شبکه انتخابی: ${targetChannel.serviceName}. برای تغییر ضربه بزنید."
+                AccessibilityHelper.announce(row, "شبکه ${targetChannel.serviceName} انتخاب شد")
+                row.requestFocus()
+            }
+        }
+        txtCh = p0.first; rowCh = p0.second
+
+        val p1 = addRow("۲. ساعت شروع ضبط", "%02d:00".format(startH)) { txt, row ->
+            showAccessibleHourPicker("ساعت شروع ضبط رسیور") { h ->
+                startH = h
+                if (existingTimer == null) endH = (startH + 1) % 24
+                txt.text = "%02d:00".format(startH)
+                row.contentDescription = "۲. ساعت شروع ضبط: %02d. برای تغییر ضربه بزنید.".format(startH)
+                txtEndH.text = "%02d:00".format(endH)
+                rowEndH.contentDescription = "۴. ساعت پایان ضبط: %02d. برای تغییر ضربه بزنید.".format(endH)
+                AccessibilityHelper.announce(row, "ساعت شروع ضبط: $startH تنظیم شد")
+                row.requestFocus()
+            }
+        }
+        txtStartH = p1.first; rowStartH = p1.second
+
+        val p2 = addRow("۳. دقیقه شروع ضبط", "%02d دقیقه".format(startM)) { txt, row ->
+            showAccessibleMinutePicker("دقیقه شروع ضبط رسیور") { m ->
+                startM = m
+                if (existingTimer == null) endM = startM
+                txt.text = "%02d دقیقه".format(startM)
+                row.contentDescription = "۳. دقیقه شروع ضبط: %02d. برای تغییر ضربه بزنید.".format(startM)
+                txtEndM.text = "%02d دقیقه".format(endM)
+                rowEndM.contentDescription = "۵. دقیقه پایان ضبط: %02d. برای تغییر ضربه بزنید.".format(endM)
+                AccessibilityHelper.announce(row, "دقیقه شروع ضبط: $startM تنظیم شد")
+                row.requestFocus()
+            }
+        }
+        txtStartM = p2.first; rowStartM = p2.second
+
+        val p3 = addRow("۴. ساعت پایان ضبط", "%02d:00".format(endH)) { txt, row ->
+            showAccessibleHourPicker("ساعت پایان ضبط رسیور") { h ->
+                endH = h
+                txt.text = "%02d:00".format(endH)
+                row.contentDescription = "۴. ساعت پایان ضبط: %02d. برای تغییر ضربه بزنید.".format(endH)
+                AccessibilityHelper.announce(row, "ساعت پایان ضبط: $endH تنظیم شد")
+                row.requestFocus()
+            }
+        }
+        txtEndH = p3.first; rowEndH = p3.second
+
+        val p4 = addRow("۵. دقیقه پایان ضبط", "%02d دقیقه".format(endM)) { txt, row ->
+            showAccessibleMinutePicker("دقیقه پایان ضبط رسیور") { m ->
+                endM = m
+                txt.text = "%02d دقیقه".format(endM)
+                row.contentDescription = "۵. دقیقه پایان ضبط: %02d. برای تغییر ضربه بزنید.".format(endM)
+                AccessibilityHelper.announce(row, "دقیقه پایان ضبط: $endM تنظیم شد")
+                row.requestFocus()
+            }
+        }
+        txtEndM = p4.first; rowEndM = p4.second
+
+        val p5 = addRow("۶. تکرار زمان‌بندی", repeatTitles[repeatMode]) { txt, row ->
+            MaterialAlertDialogBuilder(context)
+                .setTitle("انتخاب نحوه تکرار زمان‌بندی")
+                .setItems(repeatTitles) { _, rIdx ->
+                    repeatMode = rIdx
+                    txt.text = repeatTitles[repeatMode]
+                    row.contentDescription = "۶. تکرار زمان‌بندی: ${repeatTitles[repeatMode]}. برای تغییر ضربه بزنید."
+                    AccessibilityHelper.announce(row, "تکرار: ${repeatTitles[repeatMode]} تنظیم شد")
+                    row.requestFocus()
+                }
+                .show()
+        }
+        txtRepeat = p5.first; rowRepeat = p5.second
+
+        val p6 = addRow("۷. روشن شدن خودکار رسیور از حالت آماده‌به‌کار", if (autoWake) "فعال" else "غیرفعال") { txt, row ->
+            autoWake = !autoWake
+            val st = if (autoWake) "فعال" else "غیرفعال"
+            txt.text = st
+            row.contentDescription = "۷. روشن شدن خودکار رسیور از حالت آماده‌به‌کار: $st. برای تغییر وضعیت ضربه بزنید."
+            AccessibilityHelper.announce(row, "روشن شدن خودکار رسیور: $st شد")
+            row.requestFocus()
+        }
+        txtWake = p6.first; rowWake = p6.second
+
+        val p7 = addRow("۸. خاموش شدن خودکار رسیور پس از اتمام ضبط", if (autoPowerOff) "فعال" else "غیرفعال") { txt, row ->
+            autoPowerOff = !autoPowerOff
+            val st = if (autoPowerOff) "فعال" else "غیرفعال"
+            txt.text = st
+            row.contentDescription = "۸. خاموش شدن خودکار رسیور پس از اتمام ضبط: $st. برای تغییر وضعیت ضربه بزنید."
+            AccessibilityHelper.announce(row, "خاموش شدن خودکار رسیور: $st شد")
+            row.requestFocus()
+        }
+        txtPowerOff = p7.first; rowPowerOff = p7.second
+
+        val p8 = addRow("۹. حذف خودکار زمان‌بندی از رسیور پس از اتمام", if (autoDelete) "فعال" else "غیرفعال") { txt, row ->
+            autoDelete = !autoDelete
+            val st = if (autoDelete) "فعال" else "غیرفعال"
+            txt.text = st
+            row.contentDescription = "۹. حذف خودکار زمان‌بندی از رسیور پس از اتمام: $st. برای تغییر وضعیت ضربه بزنید."
+            AccessibilityHelper.announce(row, "حذف خودکار زمان‌بندی: $st شد")
+            row.requestFocus()
+        }
+        txtDelete = p8.first; rowDelete = p8.second
+
+        val dialogTitle = if (existingTimer != null) "ویرایش زمان‌بندی ضبط روی فلش رسیور" else "افزودن زمان‌بندی ضبط روی فلش رسیور"
+        val btnConfirmText = if (existingTimer != null) "ذخیره تغییرات" else "ثبت زمان‌بندی در رسیور"
+
+        MaterialAlertDialogBuilder(context)
+            .setTitle(dialogTitle)
+            .setView(scrollView)
+            .setPositiveButton(btnConfirmText) { _, _ ->
+                var dur = (endH * 60 + endM) - (startH * 60 + startM)
+                if (dur <= 0) dur += 24 * 60
+
+                if (existingTimer != null) {
+                    val updated = existingTimer.copy(
+                        channelName = targetChannel.serviceName,
+                        channelId = targetChannel.serviceId,
+                        isRadio = targetChannel.isRadio,
+                        startHour = startH,
+                        startMinute = startM,
+                        durationMinutes = dur,
+                        endHour = endH,
+                        endMinute = endM,
+                        repeatMode = repeatMode,
+                        autoWake = autoWake,
+                        autoPowerOff = autoPowerOff,
+                        autoDelete = autoDelete,
+                        isRecordingActive = false,
+                        isFinished = false
+                    )
+                    val idx = stbTimers.indexOfFirst { it.id == existingTimer.id }
+                    if (idx != -1) {
+                        stbTimers[idx] = updated
+                    } else {
+                        stbTimers.add(updated)
+                    }
+                    saveStbTimers()
+                    renderStbTimers()
+                    val msg = "تغییرات زمان‌بندی ضبط ${targetChannel.serviceName} روی فلش ذخیره شد"
+                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(containerStbTimers, msg)
+                } else {
                     val newTimer = StbScheduledTimer(
                         id = System.currentTimeMillis().toString(),
                         channelName = targetChannel.serviceName,
@@ -537,14 +685,12 @@ class RecordFragment : Fragment() {
                     confirmAndSendStbTimer(targetChannel, startH, startM, endH, endM, repeatMode, autoWake, autoPowerOff, autoDelete)
 
                     val msg = "زمان‌بندی ضبط ${targetChannel.serviceName} روی فلش رسیور از %02d:%02d تا %02d:%02d ثبت شد".format(startH, startM, endH, endM)
-                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                     AccessibilityHelper.announce(containerStbTimers, msg)
                 }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
-        openDialog()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
     }
 
     private fun showChannelPicker(title: String, currentChannel: Channel, onChannelSelected: (Channel) -> Unit) {
@@ -714,6 +860,29 @@ class RecordFragment : Fragment() {
         }
     }
 
+    private fun showTimerOptionsDialog(
+        title: String,
+        timerSummary: String,
+        onEdit: () -> Unit,
+        onDelete: () -> Unit
+    ) {
+        val options = arrayOf(
+            "۱. ویرایش این زمان‌بندی",
+            "۲. حذف این زمان‌بندی"
+        )
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setMessage(timerSummary)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> onEdit()
+                    1 -> onDelete()
+                }
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
     private fun renderStbTimers() {
         if (!isAdded) return
         containerStbTimers.removeAllViews()
@@ -726,9 +895,33 @@ class RecordFragment : Fragment() {
                     t.startHour, t.startMinute, t.endHour, t.endMinute
                 )
 
+                fun confirmDelete() {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("حذف زمان‌بندی رسیور")
+                        .setMessage("آیا می‌خواهید $timerText را حذف کنید؟")
+                        .setPositiveButton("بله، حذف کن") { _, _ ->
+                            stbTimers.remove(t)
+                            saveStbTimers()
+                            renderStbTimers()
+                            AccessibilityHelper.announce(containerStbTimers, "زمان‌بندی رسیور حذف شد")
+                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                                try {
+                                    val dummyPayload = mapOf(
+                                        "TimerProgramId" to t.channelId,
+                                        "TimerStartHour" to t.startHour.toString(),
+                                        "TimerStartMin" to t.startMinute.toString()
+                                    )
+                                    repository.deleteStbTimer(dummyPayload)
+                                } catch (_: Exception) {}
+                            }
+                        }
+                        .setNegativeButton("انصراف", null)
+                        .show()
+                }
+
                 val btn = MaterialButton(requireContext()).apply {
                     text = timerText
-                    contentDescription = "$timerText. برای حذف تایمر کلیک کنید."
+                    contentDescription = "$timerText. برای ویرایش یا حذف کلیک کنید."
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         resources.getDimensionPixelSize(android.R.dimen.app_icon_size) + 16
@@ -737,27 +930,16 @@ class RecordFragment : Fragment() {
                     setTextColor(resources.getColor(R.color.accent_green, null))
                     textSize = 13f
                     setOnClickListener {
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("حذف زمان‌بندی رسیور")
-                            .setMessage("آیا می‌خواهید $timerText را حذف کنید؟")
-                            .setPositiveButton("بله، حذف کن") { _, _ ->
-                                stbTimers.remove(t)
-                                saveStbTimers()
-                                renderStbTimers()
-                                AccessibilityHelper.announce(containerStbTimers, "زمان‌بندی رسیور حذف شد")
-                                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                                    try {
-                                        val dummyPayload = mapOf(
-                                            "TimerProgramId" to t.channelId,
-                                            "TimerStartHour" to t.startHour.toString(),
-                                            "TimerStartMin" to t.startMinute.toString()
-                                        )
-                                        repository.deleteStbTimer(dummyPayload)
-                                    } catch (_: Exception) {}
-                                }
-                            }
-                            .setNegativeButton("انصراف", null)
-                            .show()
+                        showTimerOptionsDialog(
+                            title = "مدیریت زمان‌بندی رسیور",
+                            timerSummary = timerText,
+                            onEdit = { showAddOrEditStbTimerDialog(t) },
+                            onDelete = { confirmDelete() }
+                        )
+                    }
+                    setOnLongClickListener {
+                        confirmDelete()
+                        true
                     }
                 }
                 containerStbTimers.addView(btn)
@@ -910,105 +1092,247 @@ class RecordFragment : Fragment() {
         }
     }
 
-    private fun showAddPhoneTimerDialog(preselectedChannel: Channel? = null) {
+    private fun showAddOrEditPhoneTimerDialog(existingTimer: PhoneScheduledTimer? = null) {
         val channels = repository.channels.value
         if (channels.isEmpty()) {
             Toast.makeText(requireContext(), "ابتدا باید به رسیور متصل شوید تا کانال‌ها دریافت شوند", Toast.LENGTH_SHORT).show()
             return
         }
 
-        var targetChannel = preselectedChannel ?: repository.currentChannel.value ?: channels.first()
-
         val cal = Calendar.getInstance()
-        var startH = (cal.get(Calendar.HOUR_OF_DAY) + if (cal.get(Calendar.MINUTE) >= 55) 1 else 0) % 24
-        var startM = ((cal.get(Calendar.MINUTE) / 5) * 5 + 5) % 60
-        var endH = (startH + 1) % 24
-        var endM = startM
-        var isAudioOnly = targetChannel.isRadio
-        var repeatMode = 0 // 0: یکبار, 1: روزانه, 2: هفتگی
-        var autoWake = false
-        var autoPowerOff = false
-        var autoDelete = false
+        var targetChannel = if (existingTimer != null) {
+            channels.find { it.serviceId == existingTimer.channelId }
+                ?: Channel(
+                    serviceId = existingTimer.channelId,
+                    serviceName = existingTimer.channelName,
+                    isRadio = existingTimer.isAudioOnly
+                )
+        } else {
+            repository.currentChannel.value ?: channels.first()
+        }
+
+        var startH = existingTimer?.startHour ?: ((cal.get(Calendar.HOUR_OF_DAY) + if (cal.get(Calendar.MINUTE) >= 55) 1 else 0) % 24)
+        var startM = existingTimer?.startMinute ?: (((cal.get(Calendar.MINUTE) / 5) * 5 + 5) % 60)
+        var endH = existingTimer?.endHour ?: ((startH + 1) % 24)
+        var endM = existingTimer?.endMinute ?: startM
+        var isAudioOnly = existingTimer?.isAudioOnly ?: targetChannel.isRadio
+        var repeatMode = existingTimer?.repeatMode ?: 0
+        var autoWake = existingTimer?.autoWake ?: false
+        var autoPowerOff = existingTimer?.autoPowerOff ?: false
+        var autoDelete = existingTimer?.autoDelete ?: false
 
         val repeatTitles = arrayOf("یک‌بار (پیش‌فرض)", "روزانه (هر روز)", "هفتگی (همین روز هر هفته)")
 
-        fun openDialog() {
-            var diffMins = (endH * 60 + endM) - (startH * 60 + startM)
-            if (diffMins <= 0) diffMins += 24 * 60
+        val context = requireContext()
+        val scrollView = ScrollView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 20, 32, 20)
+        }
+        scrollView.addView(container)
 
-            val formatStr = if (isAudioOnly) "صوتی (${appConfig.audioRecFormat.uppercase()})" else "تصویری (${appConfig.videoRecFormat.uppercase()})"
-            val items = arrayOf(
-                "۱. شبکه: ${targetChannel.serviceName} (برای تغییر کلیک کنید)",
-                "۲. ساعت شروع ضبط گوشی: %02d (کلیک برای انتخاب ساعت)".format(startH),
-                "۳. دقیقه شروع ضبط گوشی: %02d (کلیک برای انتخاب دقیقه)".format(startM),
-                "۴. ساعت پایان ضبط گوشی: %02d (کلیک برای انتخاب ساعت)".format(endH),
-                "۵. دقیقه پایان ضبط گوشی: %02d (کلیک برای انتخاب دقیقه)".format(endM),
-                "۶. نوع و فرمت فایل ضبط: $formatStr (مدت: $diffMins دقیقه)",
-                "۷. تکرار زمان‌بندی: ${repeatTitles[repeatMode]}",
-                "۸. روشن شدن خودکار رسیور از حالت آماده‌به‌کار: ${if (autoWake) "فعال" else "غیرفعال"}",
-                "۹. خاموش شدن خودکار رسیور پس از اتمام ضبط: ${if (autoPowerOff) "فعال" else "غیرفعال"}",
-                "۱۰. حذف خودکار زمان‌بندی از لیست پس از اتمام: ${if (autoDelete) "فعال" else "غیرفعال"}"
-            )
-
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("افزودن زمان‌بندی ضبط در گوشی")
-                .setItems(items) { _, which ->
-                    when (which) {
-                        0 -> showChannelPicker("انتخاب شبکه برای ضبط گوشی", targetChannel) { chosen ->
-                            targetChannel = chosen
-                            if (targetChannel.isRadio) isAudioOnly = true
-                            openDialog()
-                        }
-                        1 -> showAccessibleHourPicker("ساعت شروع ضبط گوشی") { h ->
-                            startH = h
-                            endH = (startH + 1) % 24
-                            openDialog()
-                        }
-                        2 -> showAccessibleMinutePicker("دقیقه شروع ضبط گوشی") { m ->
-                            startM = m
-                            endM = startM
-                            openDialog()
-                        }
-                        3 -> showAccessibleHourPicker("ساعت پایان ضبط گوشی") { h ->
-                            endH = h
-                            openDialog()
-                        }
-                        4 -> showAccessibleMinutePicker("دقیقه پایان ضبط گوشی") { m ->
-                            endM = m
-                            openDialog()
-                        }
-                        5 -> {
-                            isAudioOnly = !isAudioOnly
-                            openDialog()
-                        }
-                        6 -> {
-                            MaterialAlertDialogBuilder(requireContext())
-                                .setTitle("انتخاب نحوه تکرار زمان‌بندی گوشی")
-                                .setItems(repeatTitles) { _, rIdx ->
-                                    repeatMode = rIdx
-                                    openDialog()
-                                }
-                                .setNegativeButton("انصراف") { _, _ -> openDialog() }
-                                .show()
-                        }
-                        7 -> {
-                            autoWake = !autoWake
-                            openDialog()
-                        }
-                        8 -> {
-                            autoPowerOff = !autoPowerOff
-                            openDialog()
-                        }
-                        9 -> {
-                            autoDelete = !autoDelete
-                            openDialog()
-                        }
-                    }
+        fun addRow(title: String, initialVal: String, onClick: (TextView, View) -> Unit): Pair<TextView, View> {
+            val row = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                isFocusable = true
+                isClickable = true
+                setBackgroundResource(R.drawable.card_channel_bg)
+                setPadding(28, 20, 28, 20)
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    setMargins(0, 6, 0, 8)
                 }
-                .setPositiveButton("ثبت زمان‌بندی در گوشی") { _, _ ->
-                    var dur = (endH * 60 + endM) - (startH * 60 + startM)
-                    if (dur <= 0) dur += 24 * 60
+            }
+            val txtTitle = TextView(context).apply {
+                text = title
+                textSize = 14f
+                setTypeface(null, Typeface.BOLD)
+                setTextColor(resources.getColor(R.color.accent_green, null))
+            }
+            val txtVal = TextView(context).apply {
+                text = initialVal
+                textSize = 13f
+                setTextColor(resources.getColor(R.color.text_primary, null))
+                setPadding(0, 4, 0, 0)
+            }
+            row.addView(txtTitle)
+            row.addView(txtVal)
+            row.contentDescription = "$title: $initialVal. برای تغییر ضربه بزنید."
+            row.setOnClickListener { onClick(txtVal, row) }
+            container.addView(row)
+            return Pair(txtVal, row)
+        }
 
+        lateinit var txtCh: TextView; lateinit var rowCh: View
+        lateinit var txtStartH: TextView; lateinit var rowStartH: View
+        lateinit var txtStartM: TextView; lateinit var rowStartM: View
+        lateinit var txtEndH: TextView; lateinit var rowEndH: View
+        lateinit var txtEndM: TextView; lateinit var rowEndM: View
+        lateinit var txtFormat: TextView; lateinit var rowFormat: View
+        lateinit var txtRepeat: TextView; lateinit var rowRepeat: View
+        lateinit var txtWake: TextView; lateinit var rowWake: View
+        lateinit var txtPowerOff: TextView; lateinit var rowPowerOff: View
+        lateinit var txtDelete: TextView; lateinit var rowDelete: View
+
+        val p0 = addRow("۱. شبکه انتخابی", targetChannel.serviceName) { txt, row ->
+            showChannelPicker("انتخاب شبکه برای ضبط گوشی", targetChannel) { chosen ->
+                targetChannel = chosen
+                if (targetChannel.isRadio) isAudioOnly = true
+                txt.text = targetChannel.serviceName
+                row.contentDescription = "۱. شبکه انتخابی: ${targetChannel.serviceName}. برای تغییر ضربه بزنید."
+                val fmtStr = if (isAudioOnly) "صوتی (${appConfig.audioRecFormat.uppercase()})" else "تصویری (${appConfig.videoRecFormat.uppercase()})"
+                txtFormat.text = fmtStr
+                rowFormat.contentDescription = "۶. نوع و فرمت فایل ضبط: $fmtStr. برای تغییر ضربه بزنید."
+                AccessibilityHelper.announce(row, "شبکه ${targetChannel.serviceName} انتخاب شد")
+                row.requestFocus()
+            }
+        }
+        txtCh = p0.first; rowCh = p0.second
+
+        val p1 = addRow("۲. ساعت شروع ضبط گوشی", "%02d:00".format(startH)) { txt, row ->
+            showAccessibleHourPicker("ساعت شروع ضبط گوشی") { h ->
+                startH = h
+                if (existingTimer == null) endH = (startH + 1) % 24
+                txt.text = "%02d:00".format(startH)
+                row.contentDescription = "۲. ساعت شروع ضبط گوشی: %02d. برای تغییر ضربه بزنید.".format(startH)
+                txtEndH.text = "%02d:00".format(endH)
+                rowEndH.contentDescription = "۴. ساعت پایان ضبط گوشی: %02d. برای تغییر ضربه بزنید.".format(endH)
+                AccessibilityHelper.announce(row, "ساعت شروع ضبط گوشی: $startH تنظیم شد")
+                row.requestFocus()
+            }
+        }
+        txtStartH = p1.first; rowStartH = p1.second
+
+        val p2 = addRow("۳. دقیقه شروع ضبط گوشی", "%02d دقیقه".format(startM)) { txt, row ->
+            showAccessibleMinutePicker("دقیقه شروع ضبط گوشی") { m ->
+                startM = m
+                if (existingTimer == null) endM = startM
+                txt.text = "%02d دقیقه".format(startM)
+                row.contentDescription = "۳. دقیقه شروع ضبط گوشی: %02d. برای تغییر ضربه بزنید.".format(startM)
+                txtEndM.text = "%02d دقیقه".format(endM)
+                rowEndM.contentDescription = "۵. دقیقه پایان ضبط گوشی: %02d. برای تغییر ضربه بزنید.".format(endM)
+                AccessibilityHelper.announce(row, "دقیقه شروع ضبط گوشی: $startM تنظیم شد")
+                row.requestFocus()
+            }
+        }
+        txtStartM = p2.first; rowStartM = p2.second
+
+        val p3 = addRow("۴. ساعت پایان ضبط گوشی", "%02d:00".format(endH)) { txt, row ->
+            showAccessibleHourPicker("ساعت پایان ضبط گوشی") { h ->
+                endH = h
+                txt.text = "%02d:00".format(endH)
+                row.contentDescription = "۴. ساعت پایان ضبط گوشی: %02d. برای تغییر ضربه بزنید.".format(endH)
+                AccessibilityHelper.announce(row, "ساعت پایان ضبط گوشی: $endH تنظیم شد")
+                row.requestFocus()
+            }
+        }
+        txtEndH = p3.first; rowEndH = p3.second
+
+        val p4 = addRow("۵. دقیقه پایان ضبط گوشی", "%02d دقیقه".format(endM)) { txt, row ->
+            showAccessibleMinutePicker("دقیقه پایان ضبط گوشی") { m ->
+                endM = m
+                txt.text = "%02d دقیقه".format(endM)
+                row.contentDescription = "۵. دقیقه پایان ضبط گوشی: %02d. برای تغییر ضربه بزنید.".format(endM)
+                AccessibilityHelper.announce(row, "دقیقه پایان ضبط گوشی: $endM تنظیم شد")
+                row.requestFocus()
+            }
+        }
+        txtEndM = p4.first; rowEndM = p4.second
+
+        val initFmt = if (isAudioOnly) "صوتی (${appConfig.audioRecFormat.uppercase()})" else "تصویری (${appConfig.videoRecFormat.uppercase()})"
+        val p5 = addRow("۶. نوع و فرمت فایل ضبط", initFmt) { txt, row ->
+            isAudioOnly = !isAudioOnly
+            val fStr = if (isAudioOnly) "صوتی (${appConfig.audioRecFormat.uppercase()})" else "تصویری (${appConfig.videoRecFormat.uppercase()})"
+            txt.text = fStr
+            row.contentDescription = "۶. نوع و فرمت فایل ضبط: $fStr. برای تغییر ضربه بزنید."
+            AccessibilityHelper.announce(row, "نوع فایل ضبط به $fStr تغییر یافت")
+            row.requestFocus()
+        }
+        txtFormat = p5.first; rowFormat = p5.second
+
+        val p6 = addRow("۷. تکرار زمان‌بندی", repeatTitles[repeatMode]) { txt, row ->
+            MaterialAlertDialogBuilder(context)
+                .setTitle("انتخاب نحوه تکرار زمان‌بندی گوشی")
+                .setItems(repeatTitles) { _, rIdx ->
+                    repeatMode = rIdx
+                    txt.text = repeatTitles[repeatMode]
+                    row.contentDescription = "۷. تکرار زمان‌بندی: ${repeatTitles[repeatMode]}. برای تغییر ضربه بزنید."
+                    AccessibilityHelper.announce(row, "تکرار: ${repeatTitles[repeatMode]} تنظیم شد")
+                    row.requestFocus()
+                }
+                .show()
+        }
+        txtRepeat = p6.first; rowRepeat = p6.second
+
+        val p7 = addRow("۸. روشن شدن خودکار رسیور از حالت آماده‌به‌کار", if (autoWake) "فعال" else "غیرفعال") { txt, row ->
+            autoWake = !autoWake
+            val st = if (autoWake) "فعال" else "غیرفعال"
+            txt.text = st
+            row.contentDescription = "۸. روشن شدن خودکار رسیور از حالت آماده‌به‌کار: $st. برای تغییر وضعیت ضربه بزنید."
+            AccessibilityHelper.announce(row, "روشن شدن خودکار رسیور: $st شد")
+            row.requestFocus()
+        }
+        txtWake = p7.first; rowWake = p7.second
+
+        val p8 = addRow("۹. خاموش شدن خودکار رسیور پس از اتمام ضبط", if (autoPowerOff) "فعال" else "غیرفعال") { txt, row ->
+            autoPowerOff = !autoPowerOff
+            val st = if (autoPowerOff) "فعال" else "غیرفعال"
+            txt.text = st
+            row.contentDescription = "۹. خاموش شدن خودکار رسیور پس از اتمام ضبط: $st. برای تغییر وضعیت ضربه بزنید."
+            AccessibilityHelper.announce(row, "خاموش شدن خودکار رسیور: $st شد")
+            row.requestFocus()
+        }
+        txtPowerOff = p8.first; rowPowerOff = p8.second
+
+        val p9 = addRow("۱۰. حذف خودکار زمان‌بندی از لیست پس از اتمام", if (autoDelete) "فعال" else "غیرفعال") { txt, row ->
+            autoDelete = !autoDelete
+            val st = if (autoDelete) "فعال" else "غیرفعال"
+            txt.text = st
+            row.contentDescription = "۱۰. حذف خودکار زمان‌بندی از لیست پس از اتمام: $st. برای تغییر وضعیت ضربه بزنید."
+            AccessibilityHelper.announce(row, "حذف خودکار زمان‌بندی: $st شد")
+            row.requestFocus()
+        }
+        txtDelete = p9.first; rowDelete = p9.second
+
+        val dialogTitle = if (existingTimer != null) "ویرایش زمان‌بندی ضبط در گوشی" else "افزودن زمان‌بندی ضبط در گوشی"
+        val btnConfirmText = if (existingTimer != null) "ذخیره تغییرات" else "ثبت زمان‌بندی در گوشی"
+
+        MaterialAlertDialogBuilder(context)
+            .setTitle(dialogTitle)
+            .setView(scrollView)
+            .setPositiveButton(btnConfirmText) { _, _ ->
+                var dur = (endH * 60 + endM) - (startH * 60 + startM)
+                if (dur <= 0) dur += 24 * 60
+
+                if (existingTimer != null) {
+                    val updated = existingTimer.copy(
+                        channelName = targetChannel.serviceName,
+                        channelId = targetChannel.serviceId,
+                        isAudioOnly = isAudioOnly,
+                        startHour = startH,
+                        startMinute = startM,
+                        durationMinutes = dur,
+                        endHour = endH,
+                        endMinute = endM,
+                        repeatMode = repeatMode,
+                        autoWake = autoWake,
+                        autoPowerOff = autoPowerOff,
+                        autoDelete = autoDelete,
+                        isTriggered = false
+                    )
+                    val idx = phoneTimers.indexOfFirst { it.id == existingTimer.id }
+                    if (idx != -1) {
+                        phoneTimers[idx] = updated
+                    } else {
+                        phoneTimers.add(updated)
+                    }
+                    savePhoneTimers()
+                    renderPhoneTimers()
+                    val msg = "تغییرات زمان‌بندی ضبط ${targetChannel.serviceName} در گوشی ذخیره شد"
+                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                    AccessibilityHelper.announce(containerPhoneTimers, msg)
+                } else {
                     val newTimer = PhoneScheduledTimer(
                         id = System.currentTimeMillis().toString(),
                         channelName = targetChannel.serviceName,
@@ -1029,29 +1353,44 @@ class RecordFragment : Fragment() {
                     renderPhoneTimers()
 
                     val msg = "زمان‌بندی ضبط ${targetChannel.serviceName} در گوشی از %02d:%02d تا %02d:%02d ثبت شد".format(startH, startM, endH, endM)
-                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                     AccessibilityHelper.announce(containerPhoneTimers, msg)
                 }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
-        openDialog()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
     }
 
     private fun renderPhoneTimers() {
+        if (!isAdded) return
         containerPhoneTimers.removeAllViews()
         if (phoneTimers.isEmpty()) {
             txtNoPhoneTimers.visibility = View.VISIBLE
         } else {
             txtNoPhoneTimers.visibility = View.GONE
-            for (t in phoneTimers) {
+            for ((index, t) in phoneTimers.withIndex()) {
                 val formatStr = if (t.isAudioOnly) "صوتی" else "تصویری"
-                val textStr = "زمان‌بندی: ${t.channelName} ($formatStr) از %02d:%02d تا %02d:%02d (مدت: ${t.durationMinutes} دقیقه)".format(t.startHour, t.startMinute, t.endHour, t.endMinute)
+                val textStr = "تایمر ${index + 1}: ${t.channelName} ($formatStr) از %02d:%02d تا %02d:%02d (مدت: ${t.durationMinutes} دقیقه)".format(
+                    t.startHour, t.startMinute, t.endHour, t.endMinute
+                )
+
+                fun confirmDelete() {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("حذف زمان‌بندی گوشی")
+                        .setMessage("آیا می‌خواهید $textStr را حذف کنید؟")
+                        .setPositiveButton("بله، حذف کن") { _, _ ->
+                            phoneTimers.remove(t)
+                            savePhoneTimers()
+                            renderPhoneTimers()
+                            AccessibilityHelper.announce(containerPhoneTimers, "زمان‌بندی گوشی حذف شد")
+                        }
+                        .setNegativeButton("انصراف", null)
+                        .show()
+                }
 
                 val btn = MaterialButton(requireContext()).apply {
                     text = textStr
-                    contentDescription = "$textStr. برای حذف ضربه بزنید."
+                    contentDescription = "$textStr. برای ویرایش یا حذف کلیک کنید."
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         resources.getDimensionPixelSize(android.R.dimen.app_icon_size) + 16
@@ -1060,10 +1399,16 @@ class RecordFragment : Fragment() {
                     setTextColor(resources.getColor(R.color.primary, null))
                     textSize = 13f
                     setOnClickListener {
-                        phoneTimers.remove(t)
-                        savePhoneTimers()
-                        renderPhoneTimers()
-                        AccessibilityHelper.announce(containerPhoneTimers, "زمان‌بندی گوشی حذف شد")
+                        showTimerOptionsDialog(
+                            title = "مدیریت زمان‌بندی گوشی",
+                            timerSummary = textStr,
+                            onEdit = { showAddOrEditPhoneTimerDialog(t) },
+                            onDelete = { confirmDelete() }
+                        )
+                    }
+                    setOnLongClickListener {
+                        confirmDelete()
+                        true
                     }
                 }
                 containerPhoneTimers.addView(btn)
@@ -1117,6 +1462,7 @@ class RecordFragment : Fragment() {
                         if (ch != null) {
                             repository.switchChannel(ch)
                         }
+                        isScheduledPhoneRecordingActive = true
                         startPhoneRecording(t.isAudioOnly)
                         AccessibilityHelper.announce(txtInstantRecStatus, "زمان‌بندی ضبط ${t.channelName} در گوشی آغاز شد")
 
@@ -1213,8 +1559,13 @@ class RecordFragment : Fragment() {
                         btnStartPhoneVideoRec.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
                     }
 
-                    btnStopPhoneRec.visibility = View.VISIBLE
-                    btnStopPhoneScheduledRec.visibility = View.VISIBLE
+                    if (isScheduledPhoneRecordingActive) {
+                        btnStopPhoneScheduledRec.visibility = View.VISIBLE
+                        btnStopPhoneRec.visibility = View.GONE
+                    } else {
+                        btnStopPhoneRec.visibility = View.VISIBLE
+                        btnStopPhoneScheduledRec.visibility = View.GONE
+                    }
                     timerHandler.post(timerRunnable)
 
                     val typeStr = if (isAudioOnly) "صوتی" else "تصویری"
@@ -1233,6 +1584,7 @@ class RecordFragment : Fragment() {
     private fun stopPhoneRecording() {
         if (!isRecordingOnPhone) return
         isRecordingOnPhone = false
+        isScheduledPhoneRecordingActive = false
         timerHandler.removeCallbacks(timerRunnable)
 
         btnStopPhoneRec.visibility = View.GONE

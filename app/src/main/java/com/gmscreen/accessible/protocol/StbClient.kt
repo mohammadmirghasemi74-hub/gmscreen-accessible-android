@@ -705,4 +705,13 @@ class StbClient {
         val payload = mapOf("array" to listOf(mapOf("Message" to msg, "Time" to "5")))
         sendCmd(1042, payload, timeoutMs = 3000) != null
     }
+
+    suspend fun changePassword(oldPwd: String, newPwd: String): Boolean = withContext(Dispatchers.IO) {
+        val payload = mapOf(
+            "OldPassword" to oldPwd,
+            "NewPassword" to newPwd
+        )
+        val res = sendCmd(1052, payload, expectReply = false, timeoutMs = 3000)
+        res != null
+    }
 }
