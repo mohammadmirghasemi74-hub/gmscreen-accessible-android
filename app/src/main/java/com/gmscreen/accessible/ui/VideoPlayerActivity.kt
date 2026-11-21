@@ -45,16 +45,30 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
     private var tapCount = 0
     private val tapHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private val tapRunnable = Runnable {
-        when (tapCount) {
-            2 -> {
-                AccessibilityHelper.announce(playerView, "بستن پخش‌کننده")
-                finish()
-            }
-            3 -> {
-                toggleRecording()
-            }
-        }
+        val closeGesture = appConfig.gestureVideoClose
+        val recordGesture = appConfig.gestureVideoRecord
+        val currentTaps = tapCount
         tapCount = 0
+
+        val shouldClose = when (closeGesture) {
+            "1_tap" -> currentTaps == 1
+            "2_taps" -> currentTaps == 2
+            "3_taps" -> currentTaps == 3
+            else -> false
+        }
+
+        val shouldRecord = when (recordGesture) {
+            "2_taps" -> currentTaps == 2
+            "3_taps" -> currentTaps == 3
+            else -> false
+        }
+
+        if (shouldClose) {
+            AccessibilityHelper.announce(playerView, "بستن پخش‌کننده")
+            finish()
+        } else if (shouldRecord) {
+            toggleRecording()
+        }
     }
 
     private val repository get() = GMScreenApplication.instance.repository
@@ -85,16 +99,26 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
         playerView = findViewById(R.id.playerViewFullscreen)
         btnToggleRecordInPlayer = findViewById(R.id.btnToggleRecordInPlayer)
+        btnToggleRecordInPlayer.visibility = if (appConfig.showVideoOnscreenButtons) android.view.View.VISIBLE else android.view.View.GONE
 
         channelName = intent.getStringExtra("EXTRA_CHANNEL_NAME") ?: "شبکه"
         serviceId = intent.getStringExtra("EXTRA_SERVICE_ID") ?: ""
 
-        AccessibilityHelper.announce(
-            playerView,
-            "پخش ویدیویی تمام‌صفحه $channelName. با دو ضربه روی صفحه، پخش‌کننده بسته می‌شود؛ و با سه ضربه، ضبط روی گوشی شروع یا متوقف می‌شود."
-        )
+        val closeDesc = when (appConfig.gestureVideoClose) {
+            "1_tap" -> "یک ضربه"
+            "2_taps" -> "دو ضربه"
+            "3_taps" -> "سه ضربه"
+            else -> "دکمه بازگشت"
+        }
+        val recordDesc = when (appConfig.gestureVideoRecord) {
+            "2_taps" -> "دو ضربه"
+            "3_taps" -> "سه ضربه"
+            else -> "دکمه ضبط"
+        }
+        val welcomeMsg = "پخش ویدیویی تمام‌صفحه $channelName. بستن پخش‌کننده با $closeDesc و شروع یا توقف ضبط با $recordDesc."
+        AccessibilityHelper.announce(playerView, welcomeMsg)
 
-        // Gestures: 2 taps to close, 3 taps to toggle recording
+        // Gestures on video player
         playerView.setOnTouchListener { _, event ->
             if (event.action == android.view.MotionEvent.ACTION_DOWN) {
                 tapCount++
@@ -111,13 +135,13 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
                 info.addAction(
                     androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat(
                         androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK,
-                        "بستن پخش‌کننده (یا دو ضربه)"
+                        "بستن پخش‌کننده (یا $closeDesc روی صفحه)"
                     )
                 )
                 info.addAction(
                     androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat(
                         R.id.action_toggle_record,
-                        "شروع یا توقف ضبط گوشی (یا سه ضربه)"
+                        "شروع یا توقف ضبط گوشی (یا $recordDesc روی صفحه)"
                     )
                 )
             }

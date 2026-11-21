@@ -347,14 +347,38 @@ class BackupFragment : Fragment() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_playlist_creator, null)
 
         val txtCount = dialogView.findViewById<TextView>(R.id.txtSelectedCount)
+        val btnPlaylistMode = dialogView.findViewById<MaterialButton>(R.id.btnPlaylistMode)
         val btnSelectAll = dialogView.findViewById<MaterialButton>(R.id.btnSelectAll)
         val btnDeselectAll = dialogView.findViewById<MaterialButton>(R.id.btnDeselectAll)
         val edtSearch = dialogView.findViewById<EditText>(R.id.edtSearchChannel)
         val recycler = dialogView.findViewById<RecyclerView>(R.id.recyclerChannels)
-        val chkIndividual = dialogView.findViewById<MaterialCheckBox>(R.id.chkIndividual)
-        val chkCombined = dialogView.findViewById<MaterialCheckBox>(R.id.chkCombined)
         val btnGenerate = dialogView.findViewById<MaterialButton>(R.id.btnGeneratePlaylists)
         val btnClose = dialogView.findViewById<MaterialButton>(R.id.btnCloseDialog)
+
+        var playlistModeIndex = 0 // 0: تک‌تک (پیش‌فرض), 1: جامع, 2: هر دو
+        val modeOptions = arrayOf(
+            "تولید فایل‌های مجزا برای هر شبکه (تک‌تک - پیش‌فرض)",
+            "تولید یک فایل جامع کلی برای تمام شبکه‌ها",
+            "تولید هر دو حالت (هم مجزا و هم فایل جامع)"
+        )
+
+        btnPlaylistMode.text = modeOptions[playlistModeIndex]
+        btnPlaylistMode.contentDescription = "حالت ساخت لیست پخش: ${modeOptions[playlistModeIndex]}. برای تغییر دو بار ضربه بزنید."
+
+        btnPlaylistMode.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("حالت ساخت فایل‌های لیست پخش")
+                .setSingleChoiceItems(modeOptions, playlistModeIndex) { dlg, which ->
+                    playlistModeIndex = which
+                    val selectedText = modeOptions[which]
+                    btnPlaylistMode.text = selectedText
+                    btnPlaylistMode.contentDescription = "حالت ساخت لیست پخش: $selectedText. برای تغییر دو بار ضربه بزنید."
+                    AccessibilityHelper.announce(btnPlaylistMode, "حالت انتخاب شد: $selectedText")
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
 
         val selectedSet = HashSet<Channel>(allChannels)
         var filteredList = allChannels.toList()
@@ -417,14 +441,8 @@ class BackupFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            val doIndiv = chkIndividual.isChecked
-            val doComb = chkCombined.isChecked
-            if (!doIndiv && !doComb) {
-                val err = "حداقل یکی از گزینه‌های فایل مجزا یا جامع را علامت بزنید."
-                AccessibilityHelper.announce(btnGenerate, err)
-                Toast.makeText(requireContext(), err, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            val doIndiv = (playlistModeIndex == 0 || playlistModeIndex == 2)
+            val doComb = (playlistModeIndex == 1 || playlistModeIndex == 2)
 
             val selectedChannelsOrdered = allChannels.filter { selectedSet.contains(it) }
             val created = StorageManager.exportPlaylists(
@@ -473,7 +491,27 @@ class BackupFragment : Fragment() {
                 val selectedFile = files[which]
                 showPlaylistFileOptions(selectedFile)
             }
+            .setNeutralButton("حذف همه فایل‌ها") { _, _ ->
+                confirmDeleteAllPlaylists(files)
+            }
             .setNegativeButton("بستن", null)
+            .show()
+    }
+
+    private fun confirmDeleteAllPlaylists(files: List<File>) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("حذف تمام فایل‌های پلی‌لیست M3U")
+            .setMessage("آیا مطمئن هستید که می‌خواهید تمام ${files.size} فایل پلی‌لیست M3U را حذف کنید؟ این عمل غیرقابل بازگشت است.")
+            .setPositiveButton("حذف همه") { _, _ ->
+                var count = 0
+                for (f in files) {
+                    if (f.delete()) count++
+                }
+                val msg = "تعداد $count فایل پلی‌لیست با موفقیت حذف شدند."
+                AccessibilityHelper.announce(btnManagePlaylists, msg)
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("انصراف", null)
             .show()
     }
 
@@ -522,7 +560,27 @@ class BackupFragment : Fragment() {
                 val selectedFile = files[which]
                 showBackupFileOptions(selectedFile)
             }
+            .setNeutralButton("حذف همه فایل‌ها") { _, _ ->
+                confirmDeleteAllBackups(files)
+            }
             .setNegativeButton("بستن", null)
+            .show()
+    }
+
+    private fun confirmDeleteAllBackups(files: List<File>) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("حذف تمام فایل‌های پشتیبان و اسناد ورد")
+            .setMessage("آیا مطمئن هستید که می‌خواهید تمام ${files.size} فایل پشتیبان و اسناد ورد را حذف کنید؟ این عمل غیرقابل بازگشت است.")
+            .setPositiveButton("حذف همه") { _, _ ->
+                var count = 0
+                for (f in files) {
+                    if (f.delete()) count++
+                }
+                val msg = "تعداد $count فایل پشتیبان با موفقیت حذف شدند."
+                AccessibilityHelper.announce(btnManageBackups, msg)
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("انصراف", null)
             .show()
     }
 

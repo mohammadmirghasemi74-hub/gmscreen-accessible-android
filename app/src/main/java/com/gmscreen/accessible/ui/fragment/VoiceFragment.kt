@@ -261,6 +261,16 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
 
     private fun handleRcuAction(action: String) {
         when (action) {
+            "status" -> {
+                com.gmscreen.accessible.util.StatusHelper.announceStatus(
+                    requireContext(),
+                    repository,
+                    txtExecutionResult
+                )
+                txtExecutionResult.visibility = View.VISIBLE
+                txtExecutionResult.text = "گزارش وضعیت رسیور و برنامه اعلام شد"
+                return
+            }
             "reset_counter" -> {
                 appConfig.resetRecordingCounter()
                 val msg = "شمارنده فایل‌های ضبط با موفقیت صفر شد"

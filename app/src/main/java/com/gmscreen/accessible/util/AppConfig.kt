@@ -42,7 +42,32 @@ class AppConfig(context: Context) {
         private const val KEY_LOG_ONLY_ERRORS = "log_only_errors"
         private const val KEY_BACKUP_METHOD = "backup_method"
         private const val KEY_BACKGROUND_ANNOUNCE_EPG = "background_announce_epg"
+        private const val KEY_GESTURE_STATUS_ENABLED = "gesture_status_enabled"
+        private const val KEY_GESTURE_STATUS_TYPE = "gesture_status_type"
+        private const val KEY_GESTURE_VIDEO_CLOSE = "gesture_video_close"
+        private const val KEY_GESTURE_VIDEO_RECORD = "gesture_video_record"
+        private const val KEY_SHOW_VIDEO_ONSCREEN_BUTTONS = "show_video_onscreen_buttons"
     }
+
+    var gestureStatusEnabled: Boolean
+        get() = prefs.getBoolean(KEY_GESTURE_STATUS_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_GESTURE_STATUS_ENABLED, value).apply()
+
+    var gestureStatusType: String
+        get() = prefs.getString(KEY_GESTURE_STATUS_TYPE, "2_fingers_1_tap") ?: "2_fingers_1_tap"
+        set(value) = prefs.edit().putString(KEY_GESTURE_STATUS_TYPE, value).apply()
+
+    var gestureVideoClose: String
+        get() = prefs.getString(KEY_GESTURE_VIDEO_CLOSE, "2_taps") ?: "2_taps"
+        set(value) = prefs.edit().putString(KEY_GESTURE_VIDEO_CLOSE, value).apply()
+
+    var gestureVideoRecord: String
+        get() = prefs.getString(KEY_GESTURE_VIDEO_RECORD, "3_taps") ?: "3_taps"
+        set(value) = prefs.edit().putString(KEY_GESTURE_VIDEO_RECORD, value).apply()
+
+    var showVideoOnscreenButtons: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_VIDEO_ONSCREEN_BUTTONS, true)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_VIDEO_ONSCREEN_BUTTONS, value).apply()
 
     var backgroundAnnounceEpg: Boolean
         get() = prefs.getBoolean(KEY_BACKGROUND_ANNOUNCE_EPG, false)

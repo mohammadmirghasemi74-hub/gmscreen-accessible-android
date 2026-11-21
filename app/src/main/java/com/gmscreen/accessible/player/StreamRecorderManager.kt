@@ -48,6 +48,13 @@ object StreamRecorderManager {
         private set
     var recordedBytes: Long = 0L
         private set
+    var recordingStartTimeMs: Long = 0L
+        private set
+
+    val recordingElapsedSeconds: Int
+        get() = if (isRecording && recordingStartTimeMs > 0L) {
+            ((System.currentTimeMillis() - recordingStartTimeMs) / 1000L).toInt()
+        } else 0
 
     private var fileOutputStream: FileOutputStream? = null
     var localHttpPort: Int = 0
@@ -277,6 +284,7 @@ object StreamRecorderManager {
             fileOutputStream = fos
             currentRecordingFile = file
             recordedBytes = 0L
+            recordingStartTimeMs = System.currentTimeMillis()
             isRecording = true
 
             notifyRecordingStarted(file)
@@ -291,6 +299,7 @@ object StreamRecorderManager {
     suspend fun stopRecording(): File? = withContext(Dispatchers.IO) {
         if (!isRecording) return@withContext null
         isRecording = false
+        recordingStartTimeMs = 0L
         val file = currentRecordingFile
         val bytes = recordedBytes
 

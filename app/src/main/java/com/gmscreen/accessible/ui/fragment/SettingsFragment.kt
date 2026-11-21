@@ -68,10 +68,11 @@ class SettingsFragment : Fragment() {
             Pair("۵. تنظیمات راهنمای برنامه‌ها و اعلام خودکار (EPG & Announcements)", ::openEpgSettingsDialog),
             Pair("۶. تنظیمات کنترل صوتی و بیدارباش (Voice & Wake-Word)", ::openVoiceSettingsDialog),
             Pair("۷. تنظیمات دسترس‌پذیری، ویبره و دکمه‌های پرش (Accessibility)", ::openAccessibilitySettingsDialog),
-            Pair("۸. مدیریت و مشاهده لاگ‌های سیستم (System Logs)", ::openSystemLogsDialog),
-            Pair("۹. کتابچه راهنمای جامع کاربری نرم‌افزار", ::openHelpBrowser),
-            Pair("۱۰. راهنمای کامل فرامین صوتی", ::openVoiceHelpBrowser),
-            Pair("۱۱. درباره نرم‌افزار و مشخصات سازنده", ::openAboutBrowser)
+            Pair("۸. تنظیمات ژست‌های حرکتی و کنترل‌های لمسی (Gestures & Touch)", ::openGesturesSettingsDialog),
+            Pair("۹. مدیریت و مشاهده لاگ‌های سیستم (System Logs)", ::openSystemLogsDialog),
+            Pair("۱۰. کتابچه راهنمای جامع کاربری نرم‌افزار", ::openHelpBrowser),
+            Pair("۱۱. راهنمای کامل فرامین صوتی", ::openVoiceHelpBrowser),
+            Pair("۱۲. درباره نرم‌افزار و مشخصات سازنده", ::openAboutBrowser)
         )
 
         for ((title, handler) in categories) {
@@ -1461,6 +1462,165 @@ class SettingsFragment : Fragment() {
                 appConfig.separateAudioToBluetooth = draftSeparateAudio
 
                 val msg = "تنظیمات دسترس‌پذیری ذخیره شد"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    private fun openGesturesSettingsDialog() {
+        var draftStatusGestureEnabled = appConfig.gestureStatusEnabled
+        var draftStatusGestureType = appConfig.gestureStatusType
+        var draftVideoClose = appConfig.gestureVideoClose
+        var draftVideoRecord = appConfig.gestureVideoRecord
+        var draftShowButtons = appConfig.showVideoOnscreenButtons
+
+        val scrollView = ScrollView(requireContext()).apply {
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        val contentLayout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 20, 32, 20)
+        }
+        scrollView.addView(contentLayout)
+
+        val getStatusTypeTitle: (String) -> String = { t ->
+            when (t) {
+                "2_fingers_1_tap" -> "ضربه تک با دو انگشت (پیش‌فرض)"
+                "2_fingers_2_taps" -> "دو ضربه با دو انگشت"
+                "3_fingers_1_tap" -> "ضربه با سه انگشت"
+                "1_finger_3_taps" -> "سه ضربه متوالی با یک انگشت"
+                else -> t
+            }
+        }
+
+        val getVideoCloseTitle: (String) -> String = { c ->
+            when (c) {
+                "2_taps" -> "دو ضربه روی صفحه (پیش‌فرض)"
+                "3_taps" -> "سه ضربه روی صفحه"
+                "1_tap" -> "یک ضربه روی صفحه"
+                "none" -> "غیرفعال (فقط دکمه بازگشت)"
+                else -> c
+            }
+        }
+
+        val getVideoRecordTitle: (String) -> String = { r ->
+            when (r) {
+                "3_taps" -> "سه ضربه روی صفحه (پیش‌فرض)"
+                "2_taps" -> "دو ضربه روی صفحه"
+                "none" -> "غیرفعال (فقط دکمه ضبط روی تصویر)"
+                else -> r
+            }
+        }
+
+        // 1. Gesture Status Readout Toggle
+        addSettingRow(contentLayout, "۱. اعلام صوتی وضعیت رسیور با لمس صفحه", if (draftStatusGestureEnabled) "فعال (پیش‌فرض)" else "غیرفعال") { txtVal, row ->
+            val opts = arrayOf("فعال (پیش‌فرض)", "غیرفعال")
+            val cur = if (draftStatusGestureEnabled) 0 else 1
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("اعلام صوتی وضعیت رسیور با لمس صفحه")
+                .setSingleChoiceItems(opts, cur) { dlg, which ->
+                    draftStatusGestureEnabled = (which == 0)
+                    val label = if (draftStatusGestureEnabled) "فعال (پیش‌فرض)" else "غیرفعال"
+                    txtVal.text = label
+                    row.contentDescription = "اعلام وضعیت با لمس: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 2. Gesture Status Type
+        addSettingRow(contentLayout, "۲. نوع ژست لمسی اعلام وضعیت رسیور", getStatusTypeTitle(draftStatusGestureType)) { txtVal, row ->
+            val keys = arrayOf("2_fingers_1_tap", "2_fingers_2_taps", "3_fingers_1_tap", "1_finger_3_taps")
+            val titles = keys.map { getStatusTypeTitle(it) }.toTypedArray()
+            val cur = keys.indexOf(draftStatusGestureType).coerceAtLeast(0)
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("نوع ژست لمسی اعلام وضعیت رسیور")
+                .setSingleChoiceItems(titles, cur) { dlg, which ->
+                    draftStatusGestureType = keys[which]
+                    val label = getStatusTypeTitle(draftStatusGestureType)
+                    txtVal.text = label
+                    row.contentDescription = "نوع ژست وضعیت: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 3. Video Close Gesture
+        addSettingRow(contentLayout, "۳. ژست لمسی بستن پلیر ویدیویی", getVideoCloseTitle(draftVideoClose)) { txtVal, row ->
+            val keys = arrayOf("2_taps", "3_taps", "1_tap", "none")
+            val titles = keys.map { getVideoCloseTitle(it) }.toTypedArray()
+            val cur = keys.indexOf(draftVideoClose).coerceAtLeast(0)
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("ژست لمسی بستن پلیر ویدیویی")
+                .setSingleChoiceItems(titles, cur) { dlg, which ->
+                    draftVideoClose = keys[which]
+                    val label = getVideoCloseTitle(draftVideoClose)
+                    txtVal.text = label
+                    row.contentDescription = "ژست بستن پلیر: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 4. Video Record Gesture
+        addSettingRow(contentLayout, "۴. ژست لمسی شروع/توقف ضبط در پلیر ویدیویی", getVideoRecordTitle(draftVideoRecord)) { txtVal, row ->
+            val keys = arrayOf("3_taps", "2_taps", "none")
+            val titles = keys.map { getVideoRecordTitle(it) }.toTypedArray()
+            val cur = keys.indexOf(draftVideoRecord).coerceAtLeast(0)
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("ژست لمسی ضبط در پلیر ویدیویی")
+                .setSingleChoiceItems(titles, cur) { dlg, which ->
+                    draftVideoRecord = keys[which]
+                    val label = getVideoRecordTitle(draftVideoRecord)
+                    txtVal.text = label
+                    row.contentDescription = "ژست ضبط در پلیر: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 5. Show Onscreen Buttons in Video Player
+        val getShowButtonsTitle: (Boolean) -> String = { show ->
+            if (show) "نمایش دکمه‌ها روی تصویر (پیش‌فرض)" else "پنهان‌سازی دکمه‌ها (فقط کنترل با لمس و ژست)"
+        }
+        addSettingRow(contentLayout, "۵. دکمه‌های کنترلی روی صفحه در پخش ویدیویی", getShowButtonsTitle(draftShowButtons)) { txtVal, row ->
+            val opts = arrayOf("نمایش دکمه‌ها روی تصویر (پیش‌فرض)", "پنهان‌سازی دکمه‌ها (فقط کنترل با لمس و ژست)")
+            val cur = if (draftShowButtons) 0 else 1
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("دکمه‌های کنترلی روی صفحه در پخش ویدیو")
+                .setSingleChoiceItems(opts, cur) { dlg, which ->
+                    draftShowButtons = (which == 0)
+                    val label = getShowButtonsTitle(draftShowButtons)
+                    txtVal.text = label
+                    row.contentDescription = "دکمه‌های پلیر: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("تنظیمات ژست‌های حرکتی و کنترل‌های لمسی")
+            .setView(scrollView)
+            .setPositiveButton("ذخیره تنظیمات") { _, _ ->
+                appConfig.gestureStatusEnabled = draftStatusGestureEnabled
+                appConfig.gestureStatusType = draftStatusGestureType
+                appConfig.gestureVideoClose = draftVideoClose
+                appConfig.gestureVideoRecord = draftVideoRecord
+                appConfig.showVideoOnscreenButtons = draftShowButtons
+
+                val msg = "تنظیمات ژست‌های حرکتی ذخیره شد."
+                AccessibilityHelper.announce(containerSettingsList, msg)
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("انصراف", null)

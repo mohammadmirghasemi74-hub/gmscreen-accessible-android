@@ -60,6 +60,7 @@ class MainActivity : AppCompatActivity() {
 
         setupViewPager()
         setupTabSelectorDialog()
+        setupStatusAnnouncer()
         setupBackPressedHandler()
         observeReconnectEvents()
 
@@ -214,10 +215,101 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupStatusAnnouncer() {
+        btnActiveTab.setOnLongClickListener {
+            com.gmscreen.accessible.util.StatusHelper.announceStatus(
+                this,
+                GMScreenApplication.instance.repository,
+                btnActiveTab
+            )
+            true
+        }
+
+        androidx.core.view.ViewCompat.addAccessibilityAction(
+            btnActiveTab,
+            "خواندن گزارش وضعیت رسیور و برنامه"
+        ) { _, _ ->
+            com.gmscreen.accessible.util.StatusHelper.announceStatus(
+                this,
+                GMScreenApplication.instance.repository,
+                btnActiveTab
+            )
+            true
+        }
+    }
+
+    private var maxPointerCount = 0
+    private var gestureStartTime = 0L
+    private var gestureStartX = 0f
+    private var gestureStartY = 0f
+    private var lastTapTime = 0L
+    private var consecutiveTapCount = 0
+    private var lastTapPointerCount = 0
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        val appConfig = GMScreenApplication.instance.appConfig
+        if (appConfig.gestureStatusEnabled) {
+            when (ev.actionMasked) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    maxPointerCount = 1
+                    gestureStartTime = System.currentTimeMillis()
+                    gestureStartX = ev.x
+                    gestureStartY = ev.y
+                }
+                android.view.MotionEvent.ACTION_POINTER_DOWN -> {
+                    val count = ev.pointerCount
+                    if (count > maxPointerCount) {
+                        maxPointerCount = count
+                    }
+                }
+                android.view.MotionEvent.ACTION_UP -> {
+                    val duration = System.currentTimeMillis() - gestureStartTime
+                    val dx = Math.abs(ev.x - gestureStartX)
+                    val dy = Math.abs(ev.y - gestureStartY)
+                    val isTap = duration < 450L && dx < 80f && dy < 80f
+
+                    if (isTap) {
+                        val currentPointerCount = maxPointerCount
+                        val now = System.currentTimeMillis()
+                        if (now - lastTapTime < 450L && lastTapPointerCount == currentPointerCount) {
+                            consecutiveTapCount++
+                        } else {
+                            consecutiveTapCount = 1
+                        }
+                        lastTapTime = now
+                        lastTapPointerCount = currentPointerCount
+
+                        val gestureType = appConfig.gestureStatusType
+                        val triggered = when (gestureType) {
+                            "2_fingers_1_tap" -> currentPointerCount == 2
+                            "2_fingers_2_taps" -> currentPointerCount == 2 && consecutiveTapCount >= 2
+                            "3_fingers_1_tap" -> currentPointerCount >= 3
+                            "1_finger_3_taps" -> currentPointerCount == 1 && consecutiveTapCount >= 3
+                            else -> currentPointerCount == 2
+                        }
+
+                        if (triggered) {
+                            consecutiveTapCount = 0
+                            com.gmscreen.accessible.util.StatusHelper.announceStatus(
+                                this,
+                                GMScreenApplication.instance.repository,
+                                btnActiveTab
+                            )
+                        }
+                    }
+                }
+                android.view.MotionEvent.ACTION_CANCEL -> {
+                    maxPointerCount = 0
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
     private fun updateActiveTabUi(position: Int) {
         val title = tabTitles.getOrElse(position) { "سربرگ" }
         val buttonText = "سربرگ فعال: $title (برای تغییر کلیک کنید)"
         btnActiveTab.text = buttonText
-        btnActiveTab.contentDescription = "سربرگ فعال: $title. برای تغییر سربرگ دو بار ضربه بزنید"
+        btnActiveTab.contentDescription = "سربرگ فعال: $title. برای تغییر سربرگ دو بار ضربه بزنید. برای شنیدن گزارش وضعیت رسیور و ضبط، لمس طولانی کنید."
     }
 }
