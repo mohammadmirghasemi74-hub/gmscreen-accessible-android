@@ -590,7 +590,7 @@ class BackupFragment : Fragment() {
 
         val options = when {
             isDocx -> arrayOf("باز کردن فایل ورد در گوشی", "اشتراک‌گذاری فایل", "حذف فایل")
-            isJson -> arrayOf("بازیابی کانال‌ها از این نسخه پشتیبان", "اشتراک‌گذاری فایل", "حذف فایل")
+            isJson -> arrayOf("مشاهده مشخصات فایل پشتیبان", "اشتراک‌گذاری فایل", "حذف فایل")
             else -> arrayOf("اشتراک‌گذاری فایل", "حذف فایل")
         }
 
@@ -603,18 +603,18 @@ class BackupFragment : Fragment() {
                         1 -> shareFile(file, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
                         2 -> {
                             file.delete()
-                            val msg = "فایل حذف شد"
+                            val msg = "فایل سند ورد با موفقیت حذف شد"
                             AccessibilityHelper.announce(btnManageBackups, msg)
                             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                         }
                     }
                 } else if (isJson) {
                     when (which) {
-                        0 -> restoreFromJson(file)
+                        0 -> showBackupFileInfo(file)
                         1 -> shareFile(file, "application/json")
                         2 -> {
                             file.delete()
-                            val msg = "فایل پشتیبان حذف شد"
+                            val msg = "فایل پشتیبان با موفقیت حذف شد"
                             AccessibilityHelper.announce(btnManageBackups, msg)
                             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                         }
@@ -624,7 +624,7 @@ class BackupFragment : Fragment() {
                         0 -> shareFile(file, "application/octet-stream")
                         1 -> {
                             file.delete()
-                            val msg = "فایل حذف شد"
+                            val msg = "فایل با موفقیت حذف شد"
                             AccessibilityHelper.announce(btnManageBackups, msg)
                             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                         }
@@ -635,18 +635,17 @@ class BackupFragment : Fragment() {
             .show()
     }
 
-    private fun restoreFromJson(file: File) {
+    private fun showBackupFileInfo(file: File) {
         val channels = StorageManager.loadBackupChannels(file)
-        if (!channels.isNullOrEmpty()) {
-            val msg = "${channels.size} کانال از فایل پشتیبان با موفقیت بازیابی شد."
-            txtStatus.text = msg
-            AccessibilityHelper.announce(txtStatus, msg)
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-        } else {
-            val err = "خطا در خواندن فایل پشتیبان"
-            AccessibilityHelper.announce(txtStatus, err)
-            Toast.makeText(requireContext(), err, Toast.LENGTH_SHORT).show()
-        }
+        val count = channels?.size ?: 0
+        val sizeKb = file.length() / 1024
+        val msg = "این فایل پشتیبان شامل اطلاعات $count شبکه است (حجم: $sizeKb کیلوبایت). توجه داشته باشید برای بازگردانی کانال‌ها روی رسیور، باید فایل بکاپ فلش (SDX) مستقیماً از طریق منوی USB رسیور اجرا شود."
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("اطلاعات فایل پشتیبان")
+            .setMessage(msg)
+            .setPositiveButton("متوجه شدم", null)
+            .show()
+        AccessibilityHelper.announce(btnManageBackups, msg)
     }
 
     private fun openFileWithExternalApp(file: File, mimeType: String) {

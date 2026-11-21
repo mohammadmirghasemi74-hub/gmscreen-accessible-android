@@ -5,10 +5,12 @@ import android.content.pm.ActivityInfo
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.net.Uri
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
-import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
@@ -36,40 +38,13 @@ import kotlinx.coroutines.withContext
 class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
     private lateinit var playerView: PlayerView
+    private lateinit var btnClosePlayer: MaterialButton
+    private lateinit var txtChannelBadge: TextView
     private lateinit var btnToggleRecordInPlayer: MaterialButton
 
     private var exoPlayer: ExoPlayer? = null
     private var channelName: String = "شبکه"
     private var serviceId: String = ""
-
-    private var tapCount = 0
-    private val tapHandler = android.os.Handler(android.os.Looper.getMainLooper())
-    private val tapRunnable = Runnable {
-        val closeGesture = appConfig.gestureVideoClose
-        val recordGesture = appConfig.gestureVideoRecord
-        val currentTaps = tapCount
-        tapCount = 0
-
-        val shouldClose = when (closeGesture) {
-            "1_tap" -> currentTaps == 1
-            "2_taps" -> currentTaps == 2
-            "3_taps" -> currentTaps == 3
-            else -> false
-        }
-
-        val shouldRecord = when (recordGesture) {
-            "2_taps" -> currentTaps == 2
-            "3_taps" -> currentTaps == 3
-            else -> false
-        }
-
-        if (shouldClose) {
-            AccessibilityHelper.announce(playerView, "بستن پخش‌کننده")
-            finish()
-        } else if (shouldRecord) {
-            toggleRecording()
-        }
-    }
 
     private val repository get() = GMScreenApplication.instance.repository
     private val appConfig get() = GMScreenApplication.instance.appConfig
@@ -98,35 +73,22 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
         setContentView(R.layout.activity_video_player)
 
         playerView = findViewById(R.id.playerViewFullscreen)
+        btnClosePlayer = findViewById(R.id.btnClosePlayer)
+        txtChannelBadge = findViewById(R.id.txtChannelBadge)
         btnToggleRecordInPlayer = findViewById(R.id.btnToggleRecordInPlayer)
-        btnToggleRecordInPlayer.visibility = if (appConfig.showVideoOnscreenButtons) android.view.View.VISIBLE else android.view.View.GONE
 
         channelName = intent.getStringExtra("EXTRA_CHANNEL_NAME") ?: "شبکه"
         serviceId = intent.getStringExtra("EXTRA_SERVICE_ID") ?: ""
 
-        val closeDesc = when (appConfig.gestureVideoClose) {
-            "1_tap" -> "یک ضربه"
-            "2_taps" -> "دو ضربه"
-            "3_taps" -> "سه ضربه"
-            else -> "دکمه بازگشت"
-        }
-        val recordDesc = when (appConfig.gestureVideoRecord) {
-            "2_taps" -> "دو ضربه"
-            "3_taps" -> "سه ضربه"
-            else -> "دکمه ضبط"
-        }
-        val welcomeMsg = "پخش ویدیویی تمام‌صفحه $channelName. بستن پخش‌کننده با $closeDesc و شروع یا توقف ضبط با $recordDesc."
-        AccessibilityHelper.announce(playerView, welcomeMsg)
+        txtChannelBadge.text = "🔴 $channelName"
 
-        // Gestures on video player
-        playerView.setOnTouchListener { _, event ->
-            if (event.action == android.view.MotionEvent.ACTION_DOWN) {
-                tapCount++
-                tapHandler.removeCallbacks(tapRunnable)
-                tapHandler.postDelayed(tapRunnable, 400L)
-            }
-            false
+        btnClosePlayer.setOnClickListener {
+            AccessibilityHelper.announce(playerView, "بستن پخش‌کننده")
+            finish()
         }
+
+        val welcomeMsg = "پخش ویدیویی تمام‌صفحه شبکه $channelName فعال شد. دکمه بستن و دکمه ضبط در بالای صفحه در دسترس است."
+        AccessibilityHelper.announce(playerView, welcomeMsg)
 
         // Accessibility actions for TalkBack
         androidx.core.view.ViewCompat.setAccessibilityDelegate(playerView, object : androidx.core.view.AccessibilityDelegateCompat() {
@@ -135,13 +97,13 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
                 info.addAction(
                     androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat(
                         androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK,
-                        "بستن پخش‌کننده (یا $closeDesc روی صفحه)"
+                        "بستن پخش‌کننده و بازگشت"
                     )
                 )
                 info.addAction(
                     androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat(
                         R.id.action_toggle_record,
-                        "شروع یا توقف ضبط گوشی (یا $recordDesc روی صفحه)"
+                        "شروع یا توقف ضبط گوشی"
                     )
                 )
             }
@@ -231,14 +193,16 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
     private fun updateRecordButtonUi(isRecording: Boolean) {
         if (isRecording) {
-            btnToggleRecordInPlayer.text = "■ توقف ضبط روی گوشی"
-            btnToggleRecordInPlayer.contentDescription = "در حال ضبط ویدیویی روی گوشی. کلیک برای توقف و ذخیره"
-            btnToggleRecordInPlayer.setBackgroundColor(ContextCompat.getColor(this, R.color.primary))
+            btnToggleRecordInPlayer.text = "■ توقف ضبط"
+            btnToggleRecordInPlayer.contentDescription = "در حال ضبط مستقیم روی گوشی. کلیک برای توقف و ذخیره"
+            btnToggleRecordInPlayer.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#CCB71C1C"))
+            btnToggleRecordInPlayer.alpha = 0.9f
         } else {
             val vidFmt = appConfig.videoRecFormat.uppercase()
-            btnToggleRecordInPlayer.text = "● ضبط روی گوشی ($vidFmt)"
+            btnToggleRecordInPlayer.text = "● ضبط ($vidFmt)"
             btnToggleRecordInPlayer.contentDescription = "شروع ضبط ویدیویی با فرمت $vidFmt بر روی حافظه گوشی"
-            btnToggleRecordInPlayer.setBackgroundColor(ContextCompat.getColor(this, R.color.card_bg))
+            btnToggleRecordInPlayer.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#66000000"))
+            btnToggleRecordInPlayer.alpha = 0.65f
         }
     }
 

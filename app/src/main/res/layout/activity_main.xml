@@ -6,32 +6,32 @@
     android:orientation="vertical"
     android:background="@color/dark_bg">
 
-    <!-- Top Accessible Navigation Bar -->
+    <!-- Top Accessible Navigation & Status Bar -->
     <LinearLayout
         android:id="@+id/headerContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@color/card_bg"
+        android:background="#0F1420"
         android:paddingHorizontal="12dp"
         android:paddingVertical="8dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnActiveTab"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="سربرگ فعال: اتصال (برای تغییر کلیک کنید)"
-            android:contentDescription="سربرگ فعال: اتصال. برای تغییر سربرگ دو بار ضربه بزنید"
+            android:layout_height="52dp"
+            android:text="سربرگ فعال: اتصال به رسیور (کلیک برای تغییر)"
+            android:contentDescription="سربرگ فعال: اتصال به رسیور. برای تغییر سربرگ دو بار ضربه بزنید. برای شنیدن گزارش وضعیت رسیور، لمس طولانی کنید."
             android:textColor="@color/white"
-            android:textSize="15sp"
+            android:textSize="14sp"
             android:textStyle="bold"
             app:icon="@android:drawable/ic_menu_sort_by_size"
             app:iconGravity="textStart"
             app:iconTint="@color/accent_yellow"
-            app:backgroundTint="@color/primary"
-            app:strokeColor="@color/primary_light"
-            app:strokeWidth="1dp"
-            app:cornerRadius="14dp" />
+            app:backgroundTint="#192438"
+            app:strokeColor="#38517A"
+            app:strokeWidth="1.5dp"
+            app:cornerRadius="16dp" />
 
     </LinearLayout>
 

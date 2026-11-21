@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@color/card_bg"
-    android:padding="12dp">
+    android:padding="16dp">
 
     <!-- Title -->
     <TextView
@@ -14,33 +14,33 @@
         android:layout_height="wrap_content"
         android:text="ساخت و تولید لیست پخش (M3U)"
         android:textColor="@color/text_primary"
-        android:textSize="17sp"
+        android:textSize="18sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="12dp" />
 
-    <!-- 1. Mode Selector (At Top as requested) -->
+    <!-- 1. Mode Selector (At Top) -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="حالت ساخت فایل‌های لیست پخش:"
         android:textColor="@color/text_secondary"
-        android:textSize="12sp"
-        android:layout_marginBottom="4dp" />
+        android:textSize="13sp"
+        android:layout_marginBottom="6dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnPlaylistMode"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
+        android:layout_height="48dp"
         android:text="تولید فایل‌های مجزا برای هر شبکه (تک‌تک - پیش‌فرض)"
         android:textColor="@color/white"
-        android:textSize="12sp"
+        android:textSize="13sp"
         android:gravity="center_vertical|start"
-        android:paddingHorizontal="12dp"
-        android:layout_marginBottom="8dp"
-        app:backgroundTint="#243447"
-        app:cornerRadius="8dp"
-        app:strokeColor="@color/card_border"
+        android:paddingHorizontal="14dp"
+        android:layout_marginBottom="10dp"
+        app:backgroundTint="#1F2A3E"
+        app:cornerRadius="12dp"
+        app:strokeColor="#364765"
         app:strokeWidth="1dp" />
 
     <!-- 2. Select All, Deselect All, and Count Row -->
@@ -49,66 +49,68 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="6dp">
+        android:layout_marginBottom="8dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSelectAll"
             android:layout_width="0dp"
-            android:layout_height="38dp"
+            android:layout_height="42dp"
             android:layout_weight="1"
             android:text="انتخاب همه"
             android:textColor="@color/white"
-            android:textSize="12sp"
-            android:layout_marginEnd="4dp"
-            app:backgroundTint="@color/accent_blue"
-            app:cornerRadius="6dp" />
+            android:textSize="13sp"
+            android:layout_marginEnd="6dp"
+            app:backgroundTint="@color/primary"
+            app:cornerRadius="10dp" />
 
         <TextView
             android:id="@+id/txtSelectedCount"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/badge_pill_bg"
             android:text="۰ از ۰"
             android:textColor="@color/accent_yellow"
             android:textSize="13sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:paddingHorizontal="6dp" />
+            android:paddingHorizontal="12dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDeselectAll"
             android:layout_width="0dp"
-            android:layout_height="38dp"
+            android:layout_height="42dp"
             android:layout_weight="1"
             android:text="لغو انتخاب"
             android:textColor="@color/white"
-            android:textSize="12sp"
-            android:layout_marginStart="4dp"
-            app:backgroundTint="@color/card_border"
-            app:cornerRadius="6dp" />
+            android:textSize="13sp"
+            android:layout_marginStart="6dp"
+            app:backgroundTint="#2C374D"
+            app:cornerRadius="10dp" />
     </LinearLayout>
 
     <!-- 3. Search Bar -->
     <EditText
         android:id="@+id/edtSearchChannel"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="44dp"
         android:background="@drawable/search_box_bg"
-        android:hint="جست‌وجوی کانال..."
+        android:hint="جست‌وجوی شبکه..."
         android:textColorHint="@color/text_muted"
         android:textColor="@color/text_primary"
-        android:paddingHorizontal="10dp"
-        android:textSize="13sp"
+        android:paddingHorizontal="12dp"
+        android:textSize="14sp"
         android:singleLine="true"
-        android:layout_marginBottom="6dp" />
+        android:layout_marginBottom="8dp" />
 
     <!-- 4. Channels List (Middle) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerChannels"
         android:layout_width="match_parent"
         android:layout_height="220dp"
-        android:background="#151d26"
+        android:background="#121824"
         android:scrollbars="vertical"
-        android:layout_marginBottom="10dp" />
+        android:padding="4dp"
+        android:layout_marginBottom="12dp" />
 
     <!-- 5. Bottom Action Bar -->
     <LinearLayout
@@ -119,27 +121,27 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnGeneratePlaylists"
             android:layout_width="0dp"
-            android:layout_height="46dp"
+            android:layout_height="50dp"
             android:layout_weight="2"
             android:text="ساخت پلی‌لیست"
             android:textColor="@color/white"
-            android:textSize="14sp"
+            android:textSize="15sp"
             android:textStyle="bold"
             android:layout_marginEnd="6dp"
             app:backgroundTint="@color/primary"
-            app:cornerRadius="8dp" />
+            app:cornerRadius="12dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCloseDialog"
             android:layout_width="0dp"
-            android:layout_height="46dp"
+            android:layout_height="50dp"
             android:layout_weight="1"
             android:text="بستن"
             android:textColor="@color/text_secondary"
-            android:textSize="13sp"
+            android:textSize="14sp"
             android:layout_marginStart="6dp"
-            app:backgroundTint="@color/card_border"
-            app:cornerRadius="8dp" />
+            app:backgroundTint="#243044"
+            app:cornerRadius="12dp" />
     </LinearLayout>
 
 </LinearLayout>
