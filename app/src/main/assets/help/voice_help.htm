@@ -5,113 +5,228 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>راهنمای فرامین صوتی هوشمند GM Screen ویژه اندروید</title>
     <style>
+        :root {
+            --bg-base: #0B0F19;
+            --surface-card: #131B2C;
+            --surface-elevated: #1A243B;
+            --border-subtle: rgba(56, 189, 248, 0.16);
+            --border-highlight: #38BDF8;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+            --accent-blue: #38BDF8;
+            --accent-green: #34D399;
+            --accent-amber: #FBBF24;
+            --accent-purple: #C084FC;
+            --accent-rose: #FB7185;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Tahoma, Arial, sans-serif;
-            line-height: 1.8;
-            color: #e0e0e0;
-            background-color: #121212;
-            margin: 16px;
-            padding: 0;
-            font-size: 14px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Vazirmatn", Tahoma, Arial, sans-serif;
+            line-height: 1.9;
+            color: var(--text-primary);
+            background: linear-gradient(180deg, #090D16 0%, #0F172A 100%);
+            background-attachment: fixed;
+            margin: 0;
+            padding: 16px 14px 32px 14px;
+            font-size: 14.5px;
         }
-        h1 {
-            color: #64b5f6;
-            border-bottom: 2px solid #1976d2;
-            padding-bottom: 8px;
-            font-size: 20px;
+
+        .header-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 18px;
+            padding: 22px 16px;
             text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(10px);
         }
-        h2 {
-            color: #90caf9;
-            margin-top: 20px;
-            border-bottom: 1px dashed #424242;
-            padding-bottom: 6px;
-            font-size: 16px;
-        }
-        .box {
-            background-color: #1a2733;
-            border-right: 4px solid #1e88e5;
-            padding: 12px 16px;
-            margin: 14px 0;
-            border-radius: 6px;
-        }
-        .box-smart {
-            background-color: #1b3022;
-            border-right: 4px solid #43a047;
-            padding: 12px 16px;
-            margin: 14px 0;
-            border-radius: 6px;
-        }
-        .cmd-item {
-            background: #1e1e1e;
-            border: 1px solid #333333;
-            padding: 12px 14px;
-            margin: 10px 0;
-            border-radius: 6px;
-        }
-        .cmd-title {
-            font-weight: bold;
-            color: #81c784;
-            margin-bottom: 4px;
-        }
-        .cmd-phrases {
-            color: #e0e0e0;
-        }
-        .phrase {
+
+        .header-badge {
             display: inline-block;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 4px;
-            padding: 2px 8px;
-            margin: 3px 4px;
-            color: #ffcc80;
-            font-weight: bold;
-        }
-        ul {
-            padding-right: 20px;
-        }
-        li {
-            margin-bottom: 6px;
-        }
-        .footer {
-            margin-top: 24px;
-            text-align: center;
+            background: linear-gradient(135deg, #059669, #2563EB);
+            color: #FFFFFF;
+            padding: 4px 14px;
+            border-radius: 9999px;
             font-size: 12px;
-            color: #888888;
-            border-top: 1px solid #333333;
-            padding-top: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            color: #FFFFFF;
+            font-size: 21px;
+            margin: 6px 0;
+            font-weight: 900;
+            line-height: 1.5;
+            background: linear-gradient(135deg, #F8FAFC 0%, #34D399 50%, #38BDF8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-sub {
+            color: var(--text-secondary);
+            font-size: 13.5px;
+            margin: 4px 0 0 0;
+        }
+
+        .card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 18px 16px;
+            margin-bottom: 18px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        .box-info {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(15, 23, 42, 0.4) 100%);
+            border-right: 4px solid var(--accent-blue);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin: 16px 0;
+            color: #E2E8F0;
+        }
+
+        .box-smart {
+            background: linear-gradient(135deg, rgba(5, 150, 105, 0.12) 0%, rgba(15, 23, 42, 0.4) 100%);
+            border-right: 4px solid var(--accent-green);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin: 16px 0;
+            color: #E2E8F0;
+        }
+
+        .box-title {
+            display: flex;
+            align-items: center;
+            font-weight: 800;
+            font-size: 15px;
+            margin-bottom: 6px;
+            color: var(--accent-blue);
+        }
+
+        .box-smart .box-title {
+            color: var(--accent-green);
+        }
+
+        h2 {
+            display: flex;
+            align-items: center;
+            color: var(--accent-blue);
+            font-size: 16.5px;
+            font-weight: 800;
+            margin: 24px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        h2 .h2-badge {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-blue);
+            padding: 2px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-left: 8px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .cmd-item {
+            background: rgba(26, 36, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .cmd-title {
+            font-weight: 800;
+            color: var(--accent-green);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .cmd-phrases {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .phrase {
+            display: inline-flex;
+            align-items: center;
+            background: #1E293B;
+            border: 1px solid #334155;
+            color: var(--accent-amber);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        }
+
+        ul {
+            padding-right: 18px;
+            margin: 6px 0;
+        }
+
+        li {
+            margin-bottom: 8px;
+            color: #CBD5E1;
+        }
+
+        .footer {
+            margin-top: 32px;
+            text-align: center;
+            font-size: 12.5px;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 18px;
+            line-height: 1.8;
         }
     </style>
 </head>
 <body>
 
-    <h1>راهنمای فرامین صوتی هوشمند (دستیار صوتی اندروید)</h1>
+    <div class="header-card">
+        <span class="header-badge">هوش مصنوعی و پردازش زبان فارسی</span>
+        <h1>راهنمای فرامین صوتی هوشمند (Voice Assistant)</h1>
+        <p class="header-sub">فهرست جامع دستورات صوتی فارسی، عبارات بیدارباش و شخصی‌سازی</p>
+    </div>
 
-    <div class="box">
-        <strong>نحوه فعال‌سازی دستیار صوتی و کلمه بیدارباش:</strong><br>
-        شما می‌توانید با لمس دکمه شناور میکروفون یا سربرگ «فرمان صوتی»، دستیار را فعال کنید. همچنین با فعال بودن بیدارباش صوتی پیوسته در تنظیمات، برنامه در پس‌زمینه با ادای عبارت بیدارباش (مانند «های رسیور»، «های دیوایس»، «جی ام اسکرین»، «رسیور»، «دستگاه»، «دستیار صوتی» یا عبارت سفارشی دلخواهی که خودتان تایپ کرده‌اید) بلافاصله فعال شده و آماده شنیدن دستورات شما خواهد بود.
+    <div class="box-info">
+        <div class="box-title">🎤 نحوه فعال‌سازی دستیار و کلمه بیدارباش:</div>
+        شما می‌توانید با لمس دکمه شناور میکروفون یا باز کردن سربرگ «فرمان صوتی»، دستیار را فعال کنید. همچنین با فعال بودن بیدارباش صوتی پیوسته در تنظیمات، برنامه در پس‌زمینه با ادای عبارت بیدارباش (مانند <span class="phrase">های رسیور</span>، <span class="phrase">جی ام اسکرین</span>، یا عبارت سفارشی دلخواهی که در تنظیمات نوشته‌اید) بیدار شده و آماده دریافت فرمان خواهد بود.
     </div>
 
     <div class="box-smart">
-        <strong>مدیریت و شخصی‌سازی کامل فرامین صوتی:</strong><br>
-        شما می‌توانید در بخش «تنظیمات -> تنظیمات کنترل صوتی -> مدیریت و شخصی‌سازی فرامین صوتی»:
+        <div class="box-title">⚙️ مدیریت و شخصی‌سازی فرامین صوتی:</div>
+        در بخش <strong>«تنظیمات -> ۶. تنظیمات کنترل صوتی و بیدارباش -> مدیریت و شخصی‌سازی فرامین»</strong>:
         <ul>
             <li>هر قابلیت صوتی را با یک کلیک <strong>روشن یا خاموش</strong> کنید.</li>
-            <li>برای هر قابلیت صوتی عبارات جدید اضافه کنید یا عبارات فعلی را ویرایش و حذف کنید.</li>
-            <li>برای هر کانال به طور اختصاصی نام‌های مستعار صوتی ثبت کنید.</li>
-            <li>با زدن دکمه <strong>همگام‌سازی خودکار</strong>، تمامی کانال‌های جدید رسیور را بلافاصله به دایره لغات فرامین اضافه کنید.</li>
+            <li>برای هر قابلیت عبارات صوتی جدید اضافه نمایید یا عبارات فعلی را ویرایش و حذف فرمایید.</li>
+            <li>برای هر کانال به طور مجزا <strong>نام مستعار صوتی</strong> تعیین کنید.</li>
+            <li>با زدن دکمه <strong>همگام‌سازی</strong>، کلیه کانال‌های جدید رسیور به صورت خودکار به دیکشنری فرامین اضافه می‌شوند.</li>
         </ul>
     </div>
 
-    <h2>۱. فرامین تعویض و جستجوی کانال</h2>
+    <h2><span class="h2-badge">۱</span> فرامین تعویض و جستجوی کانال</h2>
 
     <div class="cmd-item">
-        <div class="cmd-title">رفتن به یک کانال خاص بر اساس نام:</div>
+        <div class="cmd-title">رفتن به یک کانال بر اساس نام:</div>
         <div class="cmd-phrases">
-            <span class="phrase">برو به امید دانا</span>
-            <span class="phrase">شبکه سه رو بیار</span>
-            <span class="phrase">کانال مستند</span>
-            <span class="phrase">بزن کانال ورزش</span>
+            <span class="phrase">شبکه سه</span>
+            <span class="phrase">برو به ورزش</span>
+            <span class="phrase">کانال مستند رو بیار</span>
+            <span class="phrase">بزن کانال پویا</span>
             <span class="phrase">منوتو رو پخش کن</span>
         </div>
     </div>
@@ -122,6 +237,7 @@
             <span class="phrase">برو کانال ۱۲</span>
             <span class="phrase">کانال شماره ۲۵</span>
             <span class="phrase">شماره پنج</span>
+            <span class="phrase">شبکه ۱</span>
         </div>
     </div>
 
@@ -133,12 +249,12 @@
             <span class="phrase">کانال قبل</span>
             <span class="phrase">کانال اول</span>
             <span class="phrase">کانال آخر</span>
-            <span class="phrase">شبکه قبلی (Recall)</span>
+            <span class="phrase">شبکه قبلی</span>
         </div>
     </div>
 
     <div class="cmd-item">
-        <div class="cmd-title">سوئیچ بین تلویزیون، رادیو و فیلتر ماهواره:</div>
+        <div class="cmd-title">سوئیچ بین تلویزیون، رادیو و ماهواره:</div>
         <div class="cmd-phrases">
             <span class="phrase">برو روی تلویزیون</span>
             <span class="phrase">حالت تیوی</span>
@@ -148,10 +264,10 @@
         </div>
     </div>
 
-    <h2>۲. پیمایش میان سربرگ‌های برنامه</h2>
+    <h2><span class="h2-badge">۲</span> پیمایش میان سربرگ‌های برنامه</h2>
 
     <div class="cmd-item">
-        <div class="cmd-title">انتقال صوتی به بخش‌های مختلف برنامه:</div>
+        <div class="cmd-title">جابجایی صوتی سریع میان بخش‌ها:</div>
         <div class="cmd-phrases">
             <span class="phrase">سربرگ اتصال</span>
             <span class="phrase">سربرگ کانال ها</span>
@@ -163,7 +279,7 @@
         </div>
     </div>
 
-    <h2>۳. فرامین کنترل صدا و تصویر</h2>
+    <h2><span class="h2-badge">۳</span> فرامین کنترل صدا و تصویر</h2>
 
     <div class="cmd-item">
         <div class="cmd-title">تنظیم میزان صدای رسیور:</div>
@@ -172,28 +288,29 @@
             <span class="phrase">صدا رو کم کن</span>
             <span class="phrase">بلندتر</span>
             <span class="phrase">آهسته‌تر</span>
-            <span class="phrase">بی‌صدا کن (Mute)</span>
+            <span class="phrase">بی‌صدا کن</span>
             <span class="phrase">تغییر باند صدا</span>
             <span class="phrase">زیرنویس</span>
         </div>
     </div>
 
-    <h2>۴. فرامین ریموت کنترل و منوها</h2>
+    <h2><span class="h2-badge">۴</span> فرامین ریموت کنترل و منوهای رسیور</h2>
 
     <div class="cmd-item">
-        <div class="cmd-title">کلیدهای اصلی کنترل:</div>
+        <div class="cmd-title">کلیدهای اصلی و عملکردی ریموت:</div>
         <div class="cmd-phrases">
             <span class="phrase">منو</span>
             <span class="phrase">خروج</span>
             <span class="phrase">اینفو</span>
-            <span class="phrase">تأیید / اوکی</span>
+            <span class="phrase">تأیید</span>
+            <span class="phrase">اوکی</span>
             <span class="phrase">جدول EPG</span>
             <span class="phrase">تایمر خواب</span>
         </div>
     </div>
 
     <div class="cmd-item">
-        <div class="cmd-title">کلیدهای رنگی ریموت:</div>
+        <div class="cmd-title">کلیدهای چهارگانه رنگی ریموت:</div>
         <div class="cmd-phrases">
             <span class="phrase">دکمه قرمز</span>
             <span class="phrase">دکمه سبز</span>
@@ -202,10 +319,10 @@
         </div>
     </div>
 
-    <h2>۵. فرامین ضبط و مدیریت رسانه</h2>
+    <h2><span class="h2-badge">۵</span> فرامین ضبط و مدیریت رسانه</h2>
 
     <div class="cmd-item">
-        <div class="cmd-title">ضبط رسیور و گوشی:</div>
+        <div class="cmd-title">کنترل عملیات ضبط PVR:</div>
         <div class="cmd-phrases">
             <span class="phrase">شروع ضبط رسیور</span>
             <span class="phrase">توقف ضبط رسیور</span>
@@ -217,10 +334,10 @@
         </div>
     </div>
 
-    <h2>۶. فرامین هوشمند و مدیریت برنامه</h2>
+    <h2><span class="h2-badge">۶</span> استعلام وضعیت زنده و مدیریت برنامه</h2>
 
     <div class="cmd-item">
-        <div class="cmd-title">استعلام وضعیت زنده رسیور، ضبط و برنامه:</div>
+        <div class="cmd-title">گزارش وضعیت کامل رسیور، شبکه و ضبط:</div>
         <div class="cmd-phrases">
             <span class="phrase">وضعیت رسیور</span>
             <span class="phrase">وضعیت دستگاه</span>
@@ -230,7 +347,7 @@
     </div>
 
     <div class="cmd-item">
-        <div class="cmd-title">پاور، اجرا در پس‌زمینه و خروج:</div>
+        <div class="cmd-title">کنترل پاور و پس‌زمینه:</div>
         <div class="cmd-phrases">
             <span class="phrase">رسیور رو خاموش کن</span>
             <span class="phrase">رسیور رو روشن کن</span>
@@ -243,7 +360,8 @@
     </div>
 
     <div class="footer">
-        طراحی شده به صورت اختصاصی برای نسخه اندروید GM Screen ویژه نابینایان
+        سیستم تشخیص گفتار فارسی هوشمند GM Screen ویژه اندروید<br>
+        طراحی‌شده برای نهایت سرعت، دقت و دسترسی نابینایان
     </div>
 
 </body>
