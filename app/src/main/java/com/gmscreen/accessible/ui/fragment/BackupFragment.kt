@@ -408,11 +408,12 @@ class BackupFragment : Fragment() {
             AccessibilityHelper.announce(btnSelectAll, msg)
         }
 
+        btnDeselectAll.contentDescription = "لغو انتخاب همه شبکه‌ها"
         btnDeselectAll.setOnClickListener {
             selectedSet.clear()
             adapter.notifyDataSetChanged()
             updateCountText()
-            val msg = "انتخاب تمام شبکه‌ها لغو شد."
+            val msg = "لغو انتخاب تمام شبکه‌ها انجام شد."
             AccessibilityHelper.announce(btnDeselectAll, msg)
         }
 
@@ -445,19 +446,65 @@ class BackupFragment : Fragment() {
             val doComb = (playlistModeIndex == 1 || playlistModeIndex == 2)
 
             val selectedChannelsOrdered = allChannels.filter { selectedSet.contains(it) }
-            val created = StorageManager.exportPlaylists(
-                context = requireContext(),
-                channels = selectedChannelsOrdered,
-                hostIp = hostIp,
-                doIndividual = doIndiv,
-                doCombined = doComb
-            )
 
-            val successMsg = "تعداد $created فایل لیست پخش ام تری یو با موفقیت ساخته شد."
-            txtStatus.text = successMsg
-            AccessibilityHelper.announce(btnGenerate, successMsg)
-            Toast.makeText(requireContext(), successMsg, Toast.LENGTH_LONG).show()
-            dialog.dismiss()
+            btnGenerate.isEnabled = false
+            btnGenerate.text = "در حال ساخت پلی‌لیست..."
+            val progressMsg = "در حال تولید فایل‌های پلی‌لیست M3U و استعلام فرکانس‌ها..."
+            AccessibilityHelper.announce(btnGenerate, progressMsg)
+
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    // 1. Wake STB RTSP daemon if receiver is connected
+                    if (repository.isConnected.value && hostIp.isNotBlank()) {
+                        repository.client.sendCmd(1009, expectReply = false)
+                        if (repository.client.transponders.isEmpty()) {
+                            repository.client.fetchTransponders()
+                        }
+                    }
+
+                    // 2. Pre-generate proper SAT>IP URL for each selected channel
+                    val urlMap = mutableMapOf<String, String>()
+                    for (ch in selectedChannelsOrdered) {
+                        var satipQuery: String? = null
+                        if (repository.isConnected.value) {
+                            satipQuery = repository.client.buildSatIpQuery(ch)
+                        }
+                        val streamUrl = if (!satipQuery.isNullOrBlank()) {
+                            val cleanQ = if (satipQuery.startsWith("?")) satipQuery else "?$satipQuery"
+                            "rtsp://$hostIp:554/$cleanQ"
+                        } else {
+                            val prog = if (ch.serviceId.length >= 4) ch.serviceId.takeLast(4) else "0001"
+                            "rtsp://$hostIp:554/?pids=0&prognumber=$prog"
+                        }
+                        urlMap[ch.serviceId] = streamUrl
+                    }
+
+                    val created = StorageManager.exportPlaylists(
+                        context = requireContext(),
+                        channels = selectedChannelsOrdered,
+                        hostIp = hostIp,
+                        doIndividual = doIndiv,
+                        doCombined = doComb,
+                        channelUrls = urlMap
+                    )
+
+                    withContext(Dispatchers.Main) {
+                        val successMsg = "تعداد $created فایل لیست پخش ام تری یو با موفقیت ساخته شد."
+                        txtStatus.text = successMsg
+                        AccessibilityHelper.announce(txtStatus, successMsg)
+                        Toast.makeText(requireContext(), successMsg, Toast.LENGTH_LONG).show()
+                        dialog.dismiss()
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        btnGenerate.isEnabled = true
+                        btnGenerate.text = "ساخت پلی‌لیست"
+                        val errMsg = "خطا در ساخت پلی‌لیست: ${e.message}"
+                        Toast.makeText(requireContext(), errMsg, Toast.LENGTH_SHORT).show()
+                        AccessibilityHelper.announce(btnGenerate, errMsg)
+                    }
+                }
+            }
         }
 
         dialog = MaterialAlertDialogBuilder(requireContext())

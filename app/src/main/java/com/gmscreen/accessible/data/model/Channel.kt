@@ -20,9 +20,13 @@ data class Channel(
     val isScrambled: Boolean get() = isLocked
     val serviceType: Int get() = if (isRadio) 2 else 1
 
-    fun toSatIpUrl(stbIp: String): String {
-        val pids = listOf(0, pmtPid, videoPid, audioPid).filter { it > 0 }.joinToString(",")
-        return "rtsp://$stbIp:554/?src=1&pids=$pids"
+    fun toSatIpUrl(stbIp: String, customQuery: String? = null): String {
+        if (!customQuery.isNullOrBlank()) {
+            val q = if (customQuery.startsWith("?")) customQuery else "?$customQuery"
+            return "rtsp://$stbIp:554/$q"
+        }
+        val prog = if (serviceId.length >= 4) serviceId.takeLast(4) else "0001"
+        return "rtsp://$stbIp:554/?pids=0&prognumber=$prog"
     }
 
     fun getDisplayName(indexInFiltered: Int, keepGlobalNum: Boolean): String {

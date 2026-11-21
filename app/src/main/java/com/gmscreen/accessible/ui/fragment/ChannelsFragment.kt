@@ -769,13 +769,18 @@ class ChannelsFragment : Fragment() {
                     10 -> openStreamInExternalPlayer(channel)
                     11 -> {
                         val ip = repository.connectedIp.value
-                        val url = channel.toSatIpUrl(ip)
-                        val clip = ClipData.newPlainText("Stream URL", url)
-                        val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        cm.setPrimaryClip(clip)
-                        val msg = "آدرس استریم زنده کپی شد: $url"
-                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                        AccessibilityHelper.announce(txtChannelCount, msg)
+                        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                            val q = if (repository.isConnected.value) repository.client.buildSatIpQuery(channel) else null
+                            val url = channel.toSatIpUrl(ip, q)
+                            withContext(Dispatchers.Main) {
+                                val clip = ClipData.newPlainText("Stream URL", url)
+                                val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                cm.setPrimaryClip(clip)
+                                val msg = "آدرس استریم زنده کپی شد: $url"
+                                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                                AccessibilityHelper.announce(txtChannelCount, msg)
+                            }
+                        }
                     }
                     12 -> {
                         Toast.makeText(requireContext(), "دستور قفل/بازگشایی با پین 0000 ارسال شد", Toast.LENGTH_SHORT).show()

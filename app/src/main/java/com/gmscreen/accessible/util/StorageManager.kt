@@ -158,13 +158,19 @@ object StorageManager {
         }
     }
 
-    fun exportM3uPlaylist(context: Context, channels: List<Channel>, hostIp: String): File {
+    fun exportM3uPlaylist(
+        context: Context,
+        channels: List<Channel>,
+        hostIp: String,
+        channelUrls: Map<String, String>? = null
+    ): File {
         val file = File(getPlaylistsDir(context), "gm_screen_channels.m3u")
         val sb = StringBuilder()
         sb.append("#EXTM3U\n")
         for (ch in channels) {
+            val url = channelUrls?.get(ch.serviceId) ?: ch.toSatIpUrl(hostIp)
             sb.append("#EXTINF:-1 tvg-id=\"${ch.serviceId}\",${ch.serviceName}\n")
-            sb.append("${ch.toSatIpUrl(hostIp)}\n")
+            sb.append("$url\n")
         }
         file.writeText(sb.toString(), Charsets.UTF_8)
         return file
@@ -175,7 +181,8 @@ object StorageManager {
         channels: List<Channel>,
         hostIp: String,
         doIndividual: Boolean,
-        doCombined: Boolean
+        doCombined: Boolean,
+        channelUrls: Map<String, String>? = null
     ): Int {
         var createdCount = 0
         val targetDir = getPlaylistsDir(context)
@@ -191,10 +198,11 @@ object StorageManager {
                 val safeName = sanitizeFilename(ch.serviceName)
                 val fileName = String.format(Locale.US, "%03d - %s.m3u", num, safeName)
                 val file = File(targetDir, fileName)
+                val url = channelUrls?.get(ch.serviceId) ?: ch.toSatIpUrl(hostIp)
                 val lines = listOf(
                     "#EXTM3U",
                     "#EXTINF:-1 tvg-id=\"${ch.serviceId}\",${ch.serviceName}",
-                    ch.toSatIpUrl(hostIp)
+                    url
                 )
                 file.writeText(lines.joinToString("\n") + "\n", Charsets.UTF_8)
                 createdCount++
@@ -207,8 +215,9 @@ object StorageManager {
             val sb = StringBuilder()
             sb.append("#EXTM3U\n")
             channels.forEach { ch ->
+                val url = channelUrls?.get(ch.serviceId) ?: ch.toSatIpUrl(hostIp)
                 sb.append("#EXTINF:-1 tvg-id=\"${ch.serviceId}\",${ch.serviceName}\n")
-                sb.append("${ch.toSatIpUrl(hostIp)}\n")
+                sb.append("$url\n")
             }
             file.writeText(sb.toString(), Charsets.UTF_8)
             createdCount++

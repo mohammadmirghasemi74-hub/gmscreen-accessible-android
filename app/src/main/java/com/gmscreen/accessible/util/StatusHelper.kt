@@ -2,6 +2,7 @@ package com.gmscreen.accessible.util
 
 import android.content.Context
 import android.view.View
+import android.view.accessibility.AccessibilityManager
 import com.gmscreen.accessible.data.StbRepository
 import com.gmscreen.accessible.player.StreamRecorderManager
 import com.google.gson.Gson
@@ -91,9 +92,15 @@ object StatusHelper {
 
     fun announceStatus(context: Context, repository: StbRepository, anchorView: View? = null) {
         val summary = getStatusSummary(context, repository)
-        if (anchorView != null) {
+        val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+        val isScreenReaderActive = am != null && am.isEnabled && am.isTouchExplorationEnabled
+
+        if (isScreenReaderActive && anchorView != null) {
+            // When TalkBack / screen reader is active, announce through accessibility service so eSpeak reads it once
             AccessibilityHelper.announce(anchorView, summary)
+        } else {
+            // Sighted user or accessibility touch exploration not active: speak via internal TTS
+            TtsHelper.speak(summary, interrupt = true)
         }
-        TtsHelper.speak(summary, interrupt = true)
     }
 }
