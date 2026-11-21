@@ -11,19 +11,21 @@
         android:id="@+id/headerContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:background="#0F1420"
-        android:paddingHorizontal="12dp"
+        android:paddingHorizontal="10dp"
         android:paddingVertical="8dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnActiveTab"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="52dp"
+            android:layout_weight="1"
             android:text="سربرگ فعال: اتصال به رسیور (کلیک برای تغییر)"
             android:contentDescription="سربرگ فعال: اتصال به رسیور. برای تغییر سربرگ دو بار ضربه بزنید. برای شنیدن گزارش وضعیت رسیور، لمس طولانی کنید."
             android:textColor="@color/white"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textStyle="bold"
             app:icon="@android:drawable/ic_menu_sort_by_size"
             app:iconGravity="textStart"
@@ -32,6 +34,22 @@
             app:strokeColor="#38517A"
             app:strokeWidth="1.5dp"
             app:cornerRadius="16dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnQuickAccess"
+            android:layout_width="wrap_content"
+            android:layout_height="52dp"
+            android:layout_marginStart="8dp"
+            android:text="⚡ دسترسی سریع"
+            android:contentDescription="پنل دسترسی سریع و کنترل فوری رسیور"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:backgroundTint="#1D4ED8"
+            app:strokeColor="#3B82F6"
+            app:strokeWidth="1.5dp"
+            app:cornerRadius="16dp"
+            android:paddingHorizontal="12dp" />
 
     </LinearLayout>
 

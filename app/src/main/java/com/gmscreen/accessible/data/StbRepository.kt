@@ -68,6 +68,27 @@ class StbRepository(private val context: Context) {
     private val _pvrFiles = MutableStateFlow<List<Map<String, Any>>>(emptyList())
     val pvrFiles: StateFlow<List<Map<String, Any>>> = _pvrFiles.asStateFlow()
 
+    private val _isStbRecording = MutableStateFlow(false)
+    val isStbRecording: StateFlow<Boolean> = _isStbRecording.asStateFlow()
+
+    private val _stbRecordingChannelName = MutableStateFlow("")
+    val stbRecordingChannelName: StateFlow<String> = _stbRecordingChannelName.asStateFlow()
+
+    private val _stbRecordingStartTime = MutableStateFlow(0L)
+    val stbRecordingStartTime: StateFlow<Long> = _stbRecordingStartTime.asStateFlow()
+
+    fun setStbRecording(recording: Boolean, channelName: String = "") {
+        _isStbRecording.value = recording
+        _stbRecordingChannelName.value = if (recording) channelName else ""
+        if (recording) {
+            if (_stbRecordingStartTime.value == 0L) {
+                _stbRecordingStartTime.value = System.currentTimeMillis()
+            }
+        } else {
+            _stbRecordingStartTime.value = 0L
+        }
+    }
+
     private var monitorJob: Job? = null
     private val repoScope = CoroutineScope(Dispatchers.IO)
 

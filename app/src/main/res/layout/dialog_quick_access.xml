@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/card_bg"
+    android:padding="14dp">
+
+    <!-- Header: Title, Customize and Close -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="10dp">
+
+        <TextView
+            android:id="@+id/txtQuickAccessTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="⚡ کنترل و دسترسی سریع رسیور"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCustomizeQuickAccess"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:text="سفارشی‌سازی"
+            android:contentDescription="انتخاب کلیدها و امکانات دسترسی سریع"
+            android:textColor="@color/accent_blue"
+            android:textSize="11sp"
+            app:strokeColor="@color/accent_blue"
+            app:strokeWidth="1dp"
+            app:backgroundTint="#162234"
+            app:cornerRadius="8dp"
+            android:paddingHorizontal="8dp"
+            android:layout_marginEnd="6dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCloseQuickAccessTop"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:text="✕"
+            android:contentDescription="بستن دسترسی سریع"
+            android:textColor="@color/text_muted"
+            android:textSize="14sp"
+            app:backgroundTint="#243044"
+            app:cornerRadius="19dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:padding="0dp" />
+    </LinearLayout>
+
+    <!-- Volume Slider Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardVolumeControl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        app:cardBackgroundColor="#131D2D"
+        app:cardCornerRadius="12dp"
+        app:strokeColor="#2C3D5A"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🔊 ولوم صدای رسیور (گام‌های ۵ تایی)"
+                    android:textColor="@color/accent_yellow"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtVolumeBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="۵۰٪"
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:background="#1E293B"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp" />
+            </LinearLayout>
+
+            <!-- SeekBar Volume Slider -->
+            <SeekBar
+                android:id="@+id/seekBarVolume"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:max="100"
+                android:progress="50"
+                android:contentDescription="لغزنده تنظیم صدای رسیور در گام‌های ۵ تایی. با بالا و پایین کشیدن انگشت یا کلیدهای ولوم، صدا را تنظیم کنید."
+                android:progressTint="@color/accent_blue"
+                android:thumbTint="@color/accent_yellow" />
+
+            <!-- Volume Quick Buttons: -5%, Mute, +5% -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="4dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnVolMinus5"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:text="➖ ۵٪ کمتر"
+                    android:contentDescription="کاهش پنج درصد صدای رسیور"
+                    android:textColor="@color/white"
+                    android:textSize="11sp"
+                    android:layout_marginEnd="4dp"
+                    app:backgroundTint="#243044"
+                    app:cornerRadius="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnQuickMute"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:text="🔇 بی‌صدا (Mute)"
+                    android:contentDescription="قطع یا وصل فوری صدای رسیور"
+                    android:textColor="@color/accent_amber"
+                    android:textSize="11sp"
+                    android:layout_marginHorizontal="4dp"
+                    app:backgroundTint="#243044"
+                    app:cornerRadius="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnVolPlus5"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:text="➕ ۵٪ بیشتر"
+                    android:contentDescription="افزایش پنج درصد صدای رسیور"
+                    android:textColor="@color/white"
+                    android:textSize="11sp"
+                    android:layout_marginStart="4dp"
+                    app:backgroundTint="#243044"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Carousel / ViewPager for Action Buttons (Swipable with 2 fingers) -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/pagerQuickActions"
+        android:layout_width="match_parent"
+        android:layout_height="230dp"
+        android:layout_marginBottom="6dp" />
+
+    <!-- Page navigation row (Prev, Indicator, Next) -->
+    <LinearLayout
+        android:id="@+id/rowPageNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="10dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPrevPage"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="◀ صفحه قبل"
+            android:contentDescription="رفتن به صفحه قبل کلیدهای دسترسی سریع"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            app:backgroundTint="#1F2937"
+            app:cornerRadius="8dp" />
+
+        <TextView
+            android:id="@+id/txtPageIndicator"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="صفحه ۱ از ۲ (کشیدن با ۲ انگشت)"
+            android:textColor="@color/text_muted"
+            android:textSize="11sp"
+            android:gravity="center" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNextPage"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="صفحه بعد ▶"
+            android:contentDescription="رفتن به صفحه بعد کلیدهای دسترسی سریع"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            app:backgroundTint="#1F2937"
+            app:cornerRadius="8dp" />
+    </LinearLayout>
+
+    <!-- Bottom Close Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCloseQuickAccessBottom"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:text="بستن پنل دسترسی سریع"
+        android:contentDescription="بستن پنجره دسترسی سریع"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        app:backgroundTint="#243044"
+        app:cornerRadius="10dp" />
+
+</LinearLayout>

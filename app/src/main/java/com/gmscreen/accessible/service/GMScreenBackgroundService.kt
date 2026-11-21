@@ -391,6 +391,7 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
     override fun onError(error: String) {}
 
     fun handleStbRecordingState(isRecording: Boolean, channelName: String) {
+        GMScreenApplication.instance.repository.setStbRecording(isRecording, channelName)
         if (isRecording) {
             val msg = "ضبط شبکه $channelName روی فلش رسیور آغاز شد"
             TtsHelper.speak(msg, interrupt = true)

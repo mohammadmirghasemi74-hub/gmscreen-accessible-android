@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="3dp"
+    android:layout_marginHorizontal="2dp"
+    app:cardBackgroundColor="#1A2333"
+    app:cardCornerRadius="8dp"
+    app:strokeColor="#2E3C54"
+    app:strokeWidth="1dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="10dp">
+
+        <ImageView
+            android:id="@+id/imgFileIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@android:drawable/ic_menu_agenda"
+            app:tint="@color/accent_blue"
+            android:contentDescription="@null"
+            android:layout_marginEnd="10dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtFileName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Channel_List.docx"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:ellipsize="middle" />
+
+            <TextView
+                android:id="@+id/txtFileInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="14 KB • 1403/08/20"
+                android:textColor="@color/text_muted"
+                android:textSize="11sp"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="گزینه‌ها ▸"
+            android:textColor="@color/accent_yellow"
+            android:textSize="11sp"
+            android:layout_marginStart="6dp" />
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

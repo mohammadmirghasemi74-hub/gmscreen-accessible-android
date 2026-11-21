@@ -47,6 +47,9 @@ class AppConfig(context: Context) {
         private const val KEY_GESTURE_VIDEO_CLOSE = "gesture_video_close"
         private const val KEY_GESTURE_VIDEO_RECORD = "gesture_video_record"
         private const val KEY_SHOW_VIDEO_ONSCREEN_BUTTONS = "show_video_onscreen_buttons"
+        private const val KEY_QUICK_ACCESS_ENABLED = "quick_access_enabled"
+        private const val KEY_QUICK_ACCESS_ITEMS = "quick_access_items"
+        private const val KEY_STB_VOLUME = "stb_volume"
     }
 
     var gestureStatusEnabled: Boolean
@@ -204,6 +207,32 @@ class AppConfig(context: Context) {
     var logOnlyErrors: Boolean
         get() = prefs.getBoolean(KEY_LOG_ONLY_ERRORS, true)
         set(value) = prefs.edit().putBoolean(KEY_LOG_ONLY_ERRORS, value).apply()
+
+    var quickAccessEnabled: Boolean
+        get() = prefs.getBoolean(KEY_QUICK_ACCESS_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_QUICK_ACCESS_ENABLED, value).apply()
+
+    val defaultQuickAccessItems: Set<String> = setOf(
+        "power",
+        "ch_up",
+        "ch_down",
+        "vol_slider",
+        "mute",
+        "rec_stb_instant",
+        "rec_stb_stop",
+        "rec_phone_instant",
+        "rec_phone_stop",
+        "status",
+        "play_stream"
+    )
+
+    var quickAccessItems: Set<String>
+        get() = prefs.getStringSet(KEY_QUICK_ACCESS_ITEMS, null) ?: defaultQuickAccessItems
+        set(value) = prefs.edit().putStringSet(KEY_QUICK_ACCESS_ITEMS, value).apply()
+
+    var stbVolume: Int
+        get() = prefs.getInt(KEY_STB_VOLUME, 50)
+        set(value) = prefs.edit().putInt(KEY_STB_VOLUME, value).apply()
 
     fun getNextRecordingNumber(): Int {
         val next = recordingCounter + 1

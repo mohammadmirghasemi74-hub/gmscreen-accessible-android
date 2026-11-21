@@ -361,6 +361,268 @@ object StorageManager {
         return destFile
     }
 
+    fun exportChannelsToTxt(
+        context: Context,
+        channels: List<Channel>,
+        stbModel: String
+    ): File {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val dateDisplay = SimpleDateFormat("yyyy/MM/dd - HH:mm:ss", Locale.getDefault()).format(Date())
+        val destFile = File(getBackupsDir(context), "Channels_List_$timeStamp.txt")
+
+        val sb = StringBuilder()
+        sb.append("========================================================================================\n")
+        sb.append("           لیست جامع شبکه‌ها و مشخصات فرکانس رسیور ${stbModel.ifBlank { "متصل" }}\n")
+        sb.append("========================================================================================\n")
+        sb.append("تاریخ خروجی: $dateDisplay\n")
+        val tvCount = channels.count { !it.isRadio }
+        val radioCount = channels.count { it.isRadio }
+        sb.append("تعداد کل شبکه‌ها: ${channels.size}  (شبکه‌های تلویزیونی: $tvCount | شبکه‌های رادیویی: $radioCount)\n")
+        sb.append("----------------------------------------------------------------------------------------\n")
+        sb.append(String.format(Locale.US, "%-6s | %-30s | %-12s | %-10s | %-8s\n", "ردیف", "نام شبکه", "نوع", "کیفیت", "وضعیت"))
+        sb.append("----------------------------------------------------------------------------------------\n")
+
+        channels.forEachIndexed { idx, ch ->
+            val num = if (ch.realChannelNum > 0) ch.realChannelNum else (idx + 1)
+            val typeStr = if (ch.isRadio) "رادیو" else "تلویزیون"
+            val hdStr = if (ch.isHd) "HD" else "SD"
+            val lockStr = if (ch.isLocked) "قفل" else "آزاد"
+            val name = ch.serviceName.take(30)
+            sb.append(String.format(Locale.US, "%-6d | %-30s | %-12s | %-10s | %-8s\n", num, name, typeStr, hdStr, lockStr))
+        }
+
+        sb.append("========================================================================================\n")
+        sb.append("تولید شده توسط نرم‌افزار دسترس‌پذیر GMScreen\n")
+
+        destFile.parentFile?.mkdirs()
+        destFile.writeText(sb.toString(), Charsets.UTF_8)
+        return destFile
+    }
+
+    fun exportChannelsToHtml(
+        context: Context,
+        channels: List<Channel>,
+        stbModel: String
+    ): File {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val dateDisplay = SimpleDateFormat("yyyy/MM/dd - HH:mm:ss", Locale.getDefault()).format(Date())
+        val destFile = File(getBackupsDir(context), "Channels_List_$timeStamp.html")
+
+        val tvCount = channels.count { !it.isRadio }
+        val radioCount = channels.count { it.isRadio }
+
+        val sb = StringBuilder()
+        sb.append("""<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لیست شبکه‌های رسیور ${stbModel.ifBlank { "متصل" }}</title>
+    <style>
+        :root {
+            --bg: #0B0F19;
+            --card-bg: #151D2A;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --accent-blue: #38BDF8;
+            --accent-green: #34D399;
+            --accent-amber: #FBBF24;
+            --border: #334155;
+            --row-even: #1E293B;
+            --row-odd: #151D2A;
+            --row-hover: #2E3E56;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Tahoma, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+            color: var(--accent-blue);
+        }
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .badge {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid var(--accent-blue);
+            color: var(--accent-blue);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .badge.green {
+            background: rgba(52, 211, 153, 0.15);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+        .badge.amber {
+            background: rgba(251, 191, 36, 0.15);
+            border-color: var(--accent-amber);
+            color: var(--accent-amber);
+        }
+        .search-box {
+            width: 100%;
+            box-sizing: border-box;
+            background: #1E293B;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: var(--accent-blue);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        th, td {
+            padding: 12px 14px;
+            text-align: center;
+        }
+        th {
+            background: #1E293B;
+            color: var(--accent-blue);
+            font-size: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+        tr:nth-child(even) { background-color: var(--row-even); }
+        tr:nth-child(odd) { background-color: var(--row-odd); }
+        tr:hover { background-color: var(--row-hover); }
+        .ch-name {
+            font-weight: bold;
+            text-align: start;
+        }
+        .tag {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .tag-tv { background: #0369A1; color: #E0F2FE; }
+        .tag-radio { background: #B45309; color: #FEF3C7; }
+        .tag-hd { background: #047857; color: #D1FAE5; }
+        .tag-free { color: var(--accent-green); }
+        .tag-locked { color: #F87171; }
+        @media print {
+            body { background: white; color: black; }
+            .header, table { border: 1px solid #ccc; box-shadow: none; background: white; }
+            th { background: #f0f0f0; color: black; }
+            tr:nth-child(even), tr:nth-child(odd) { background: white; }
+            .search-box { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>لیست شبکه‌ها و فرکانس‌های رسیور ${stbModel.ifBlank { "متصل" }}</h1>
+            <p style="color: var(--text-secondary); margin: 0;">تاریخ و زمان تهیه گزارش: $dateDisplay</p>
+            <div class="badges">
+                <span class="badge">مجموع: ${channels.size} شبکه</span>
+                <span class="badge green">تلویزیون: $tvCount</span>
+                <span class="badge amber">رادیو: $radioCount</span>
+            </div>
+        </div>
+        <input type="text" id="searchInput" class="search-box" placeholder="جستجوی سریع شبکه یا شماره..." onkeyup="filterTable()">
+        <table id="channelsTable">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">شماره</th>
+                    <th style="text-align: start;">نام شبکه</th>
+                    <th style="width: 120px;">نوع رسانه</th>
+                    <th style="width: 100px;">کیفیت</th>
+                    <th style="width: 100px;">وضعیت</th>
+                </tr>
+            </thead>
+            <tbody>
+""")
+
+        channels.forEachIndexed { idx, ch ->
+            val num = if (ch.realChannelNum > 0) ch.realChannelNum else (idx + 1)
+            val typeClass = if (ch.isRadio) "tag-radio" else "tag-tv"
+            val typeText = if (ch.isRadio) "رادیو" else "تلویزیون"
+            val hdBadge = if (ch.isHd) "<span class='tag tag-hd'>HD</span>" else "<span style='color: var(--text-secondary);'>SD</span>"
+            val lockClass = if (ch.isLocked) "tag-locked" else "tag-free"
+            val lockText = if (ch.isLocked) "قفل" else "آزاد"
+            sb.append("<tr>")
+            sb.append("<td><strong>$num</strong></td>")
+            sb.append("<td class='ch-name'>${ch.serviceName}</td>")
+            sb.append("<td><span class='tag $typeClass'>$typeText</span></td>")
+            sb.append("<td>$hdBadge</td>")
+            sb.append("<td><span class='$lockClass'>$lockText</span></td>")
+            sb.append("</tr>\n")
+        }
+
+        sb.append("""
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function filterTable() {
+            var input = document.getElementById("searchInput");
+            var filter = input.value.toLowerCase();
+            var trs = document.getElementById("channelsTable").getElementsByTagName("tr");
+            for (var i = 1; i < trs.length; i++) {
+                var text = trs[i].textContent || trs[i].innerText;
+                trs[i].style.display = text.toLowerCase().indexOf(filter) > -1 ? "" : "none";
+            }
+        }
+    </script>
+</body>
+</html>
+""")
+
+        destFile.parentFile?.mkdirs()
+        destFile.writeText(sb.toString(), Charsets.UTF_8)
+        return destFile
+    }
+
+    fun exportChannelsToJson(
+        context: Context,
+        channels: List<Channel>,
+        stbModel: String
+    ): File {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val destFile = File(getBackupsDir(context), "Channels_Backup_$timeStamp.json")
+        val gson = com.google.gson.GsonBuilder().setPrettyPrinting().create()
+        val json = gson.toJson(channels)
+        destFile.parentFile?.mkdirs()
+        destFile.writeText(json, Charsets.UTF_8)
+        return destFile
+    }
+
     private val RECORDED_EXTENSIONS = listOf(".ts", ".mp4", ".mkv", ".mp3", ".m4a", ".wav", ".aac", ".ogg")
 
     private fun collectFilesRecursively(dir: File, result: MutableList<File>) {
@@ -435,7 +697,10 @@ object StorageManager {
         return dir.listFiles { f ->
             f.isFile && (f.name.endsWith(".json", ignoreCase = true) ||
                          f.name.endsWith(".sdx", ignoreCase = true) ||
-                         f.name.endsWith(".docx", ignoreCase = true))
+                         f.name.endsWith(".docx", ignoreCase = true) ||
+                         f.name.endsWith(".txt", ignoreCase = true) ||
+                         f.name.endsWith(".html", ignoreCase = true) ||
+                         f.name.endsWith(".htm", ignoreCase = true))
         }?.sortedByDescending { it.lastModified() } ?: emptyList()
     }
 

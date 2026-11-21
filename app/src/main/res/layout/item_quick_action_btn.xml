@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.button.MaterialButton xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/btnActionItem"
+    android:layout_width="match_parent"
+    android:layout_height="62dp"
+    android:layout_margin="4dp"
+    android:text="کانال بعدی"
+    android:textColor="@color/white"
+    android:textSize="12sp"
+    android:textStyle="bold"
+    android:gravity="center"
+    android:maxLines="2"
+    android:ellipsize="end"
+    app:cornerRadius="10dp"
+    app:backgroundTint="#1F2A3C"
+    app:strokeColor="#334766"
+    app:strokeWidth="1.5dp" />

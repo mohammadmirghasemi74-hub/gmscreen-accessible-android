@@ -57,7 +57,22 @@ object StatusHelper {
             parts.add("هیچ فایلی در حال ضبط روی گوشی نیست")
         }
 
-        // 5. STB Flash Recording (if known)
+        // 5. STB Flash Recording
+        if (repository.isStbRecording.value) {
+            val recCh = repository.stbRecordingChannelName.value.ifBlank {
+                repository.currentChannel.value?.serviceName ?: "شبکه"
+            }
+            val startMs = repository.stbRecordingStartTime.value
+            val elapsedSec = if (startMs > 0L) (System.currentTimeMillis() - startMs) / 1000 else 0L
+            val m = elapsedSec / 60
+            val s = elapsedSec % 60
+            val dur = if (m > 0) "$m دقیقه و $s ثانیه" else "$s ثانیه"
+            parts.add("ضبط روی فلش رسیور فعال است برای شبکه $recCh، مدت زمان گذشته: $dur")
+        } else {
+            parts.add("هیچ برنامه‌ای در حال ضبط روی فلش رسیور نیست")
+        }
+
+        // 6. STB Scheduled Timers (if known)
         val stbTimersFile = File(StorageManager.getRecordingsDir(context), "stb_scheduled_timers.json")
         var stbTimersCount = 0
         if (stbTimersFile.exists()) {
@@ -72,7 +87,7 @@ object StatusHelper {
             parts.add("تعداد $stbTimersCount زمان‌بندی ضبط روی فلش رسیور ثبت شده است")
         }
 
-        // 6. Phone Timers
+        // 7. Phone Timers
         val phoneTimersFile = File(StorageManager.getRecordingsDir(context), "scheduled_timers.json")
         var phoneTimersCount = 0
         if (phoneTimersFile.exists()) {

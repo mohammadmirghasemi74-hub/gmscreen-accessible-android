@@ -8,8 +8,8 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -28,12 +28,13 @@ import com.gmscreen.accessible.protocol.RcuKey
 import com.gmscreen.accessible.util.AccessibilityHelper
 import com.gmscreen.accessible.util.AppConfig
 import com.gmscreen.accessible.util.StorageManager
-import com.gmscreen.accessible.util.TtsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 class BackupFragment : Fragment() {
@@ -42,11 +43,10 @@ class BackupFragment : Fragment() {
     private lateinit var btnSelectBackupMethod: MaterialButton
     private lateinit var btnBackupStbUsb: MaterialButton
     private lateinit var txtStatus: TextView
-    private lateinit var btnExportDocx: MaterialButton
+    private lateinit var btnExportChannels: MaterialButton
+    private lateinit var btnManageBackups: MaterialButton
     private lateinit var btnOpenPlaylistCreator: MaterialButton
     private lateinit var btnManagePlaylists: MaterialButton
-    private lateinit var btnManageBackups: MaterialButton
-    private lateinit var btnBackupPhone: MaterialButton
 
     private val repository get() = GMScreenApplication.instance.repository
     private val appConfig by lazy { AppConfig(requireContext()) }
@@ -71,11 +71,10 @@ class BackupFragment : Fragment() {
         btnSelectBackupMethod = view.findViewById(R.id.btnSelectBackupMethod)
         btnBackupStbUsb = view.findViewById(R.id.btnBackupStbUsb)
         txtStatus = view.findViewById(R.id.txtStatus)
-        btnExportDocx = view.findViewById(R.id.btnExportDocx)
+        btnExportChannels = view.findViewById(R.id.btnExportChannels)
+        btnManageBackups = view.findViewById(R.id.btnManageBackups)
         btnOpenPlaylistCreator = view.findViewById(R.id.btnOpenPlaylistCreator)
         btnManagePlaylists = view.findViewById(R.id.btnManagePlaylists)
-        btnManageBackups = view.findViewById(R.id.btnManageBackups)
-        btnBackupPhone = view.findViewById(R.id.btnBackupPhone)
 
         setupUI()
         observeData()
@@ -155,6 +154,7 @@ class BackupFragment : Fragment() {
             }
 
             val startingMsg = "در حال ارسال دستور هوشمند تهیه فایل پشتیبان بر روی فلش مموری رسیور..."
+            txtStatus.visibility = View.VISIBLE
             txtStatus.text = startingMsg
             AccessibilityHelper.announce(btnBackupStbUsb, startingMsg)
             Toast.makeText(requireContext(), startingMsg, Toast.LENGTH_SHORT).show()
@@ -252,42 +252,17 @@ class BackupFragment : Fragment() {
             }
         }
 
-        // 3. Export Word docx
-        btnExportDocx.setOnClickListener {
-            val channels = repository.channels.value
-            if (channels.isEmpty()) {
-                val msg = "لیست شبکه‌ها خالی است. ابتدا به رسیور متصل شده و لیست شبکه‌ها را دریافت کنید."
-                AccessibilityHelper.announce(btnExportDocx, msg)
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val waitMsg = "در حال ذخیره لیست شبکه‌ها و فرکانس‌ها در فایل ورد..."
-            txtStatus.text = waitMsg
-            AccessibilityHelper.announce(btnExportDocx, waitMsg)
-
-            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    val model = repository.deviceModel.value
-                    val docxFile = StorageManager.exportChannelsToWordDocx(requireContext(), channels, model)
-                    withContext(Dispatchers.Main) {
-                        val msg = "فایل ورد با ${channels.size} شبکه با موفقیت ایجاد و در پوشه پشتیبان ذخیره شد."
-                        txtStatus.text = msg
-                        AccessibilityHelper.announce(btnExportDocx, msg)
-                        Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        val err = "خطا در ایجاد فایل ورد شبکه‌ها: ${e.message}"
-                        txtStatus.text = err
-                        AccessibilityHelper.announce(btnExportDocx, err)
-                        Toast.makeText(requireContext(), err, Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
+        // 3. Export channel data with format chooser (Word, TXT, HTML, JSON)
+        btnExportChannels.setOnClickListener {
+            openFormatSelectionDialog()
         }
 
-        // 4. Open M3U playlist creator dialog
+        // 4. View and manage saved backup files
+        btnManageBackups.setOnClickListener {
+            showCustomFileManagerDialog(isPlaylist = false)
+        }
+
+        // 5. Open M3U playlist creator dialog
         btnOpenPlaylistCreator.setOnClickListener {
             val channels = repository.channels.value
             val ip = repository.connectedIp.value
@@ -300,32 +275,9 @@ class BackupFragment : Fragment() {
             openPlaylistCreatorDialog(channels, ip)
         }
 
-        // 5. Manage playlists
+        // 6. View and manage M3U playlists
         btnManagePlaylists.setOnClickListener {
-            showPlaylistsManagerDialog()
-        }
-
-        // 6. Manage backups and word files
-        btnManageBackups.setOnClickListener {
-            showBackupsManagerDialog()
-        }
-
-        // 7. Local JSON backup on phone
-        btnBackupPhone.setOnClickListener {
-            val channels = repository.channels.value
-            if (channels.isEmpty()) {
-                val msg = "لیست کانال‌ها خالی است. ابتدا به رسیور متصل شوید."
-                AccessibilityHelper.announce(btnBackupPhone, msg)
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val model = repository.deviceModel.value
-            val file = StorageManager.saveBackupChannels(requireContext(), channels, model)
-            val msg = "پشتیبان‌گیری از ${channels.size} کانال در فایل ${file.name} با موفقیت انجام شد."
-            txtStatus.text = msg
-            AccessibilityHelper.announce(btnBackupPhone, msg)
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+            showCustomFileManagerDialog(isPlaylist = true)
         }
     }
 
@@ -342,7 +294,300 @@ class BackupFragment : Fragment() {
         }
     }
 
-    // --- M3U Playlist Creator Dialog (Accessible Dialog mirroring Windows AccessiblePlaylistCreatorDialog) ---
+    // --- Dialog to choose export format: Word, TXT, HTML, JSON ---
+    private fun openFormatSelectionDialog() {
+        val channels = repository.channels.value
+        if (channels.isEmpty()) {
+            val msg = "لیست کانال‌ها خالی است. ابتدا به رسیور متصل شده و لیست شبکه‌ها را دریافت کنید."
+            AccessibilityHelper.announce(btnExportChannels, msg)
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val formatOptions = arrayOf(
+            "۱. سند مایکروسافت ورد (.docx) - جدول زیبا و رسمی فرکانس‌ها و مشخصات",
+            "۲. فایل متنی ساده (.txt) - جدول ستون‌بندی شده مناسب خواندن با صفحه‌خوان",
+            "۳. فایل وب شیک و واکنش‌گرا (.html) - قالب مشکی اولد با فیلتر جستجوی لحظه‌ای",
+            "۴. فایل داده ساختاریافته (.json) - مناسب برای بازگردانی و توسعه‌دهندگان"
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("انتخاب فرمت ذخیره‌سازی اطلاعات شبکه‌ها")
+            .setItems(formatOptions) { _, which ->
+                val (formatLabel, extName) = when (which) {
+                    0 -> Pair("سند مایکروسافت ورد", "docx")
+                    1 -> Pair("فایل متنی ساده", "txt")
+                    2 -> Pair("فایل وب HTML", "html")
+                    else -> Pair("فایل داده JSON", "json")
+                }
+
+                val waitMsg = "در حال ذخیره‌سازی $formatLabel از ${channels.size} شبکه..."
+                txtStatus.visibility = View.VISIBLE
+                txtStatus.text = waitMsg
+                AccessibilityHelper.announce(btnExportChannels, waitMsg)
+
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        val model = repository.deviceModel.value
+                        val createdFile = when (which) {
+                            0 -> StorageManager.exportChannelsToWordDocx(requireContext(), channels, model)
+                            1 -> StorageManager.exportChannelsToTxt(requireContext(), channels, model)
+                            2 -> StorageManager.exportChannelsToHtml(requireContext(), channels, model)
+                            else -> StorageManager.exportChannelsToJson(requireContext(), channels, model)
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            val successMsg = "$formatLabel با موفقیت ایجاد شد: ${createdFile.name}"
+                            txtStatus.text = successMsg
+                            AccessibilityHelper.announce(btnExportChannels, successMsg)
+                            Toast.makeText(requireContext(), successMsg, Toast.LENGTH_LONG).show()
+
+                            // Offer immediate open
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setTitle("ذخیره‌سازی موفق")
+                                .setMessage("فایل ${createdFile.name} با ${channels.size} شبکه ذخیره شد.\nآیا مایل به باز کردن فایل هستید؟")
+                                .setPositiveButton("باز کردن") { _, _ ->
+                                    val mime = when (extName) {
+                                        "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                        "txt" -> "text/plain"
+                                        "html" -> "text/html"
+                                        else -> "application/json"
+                                    }
+                                    openFileWithExternalApp(createdFile, mime)
+                                }
+                                .setNeutralButton("مشاهده فایل‌ها") { _, _ ->
+                                    showCustomFileManagerDialog(isPlaylist = false)
+                                }
+                                .setNegativeButton("بستن", null)
+                                .show()
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            val err = "خطا در ایجاد $formatLabel: ${e.message}"
+                            txtStatus.text = err
+                            AccessibilityHelper.announce(btnExportChannels, err)
+                            Toast.makeText(requireContext(), err, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
+    // --- Unified Accessible File Manager Dialog (Playlists or Saved Data Files) ---
+    private fun showCustomFileManagerDialog(isPlaylist: Boolean) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_file_manager, null)
+
+        val txtTitle = dialogView.findViewById<TextView>(R.id.txtDialogTitle)
+        val txtCount = dialogView.findViewById<TextView>(R.id.txtFilesCount)
+        val btnDeleteAll = dialogView.findViewById<MaterialButton>(R.id.btnDeleteAllFiles)
+        val txtEmpty = dialogView.findViewById<TextView>(R.id.txtEmptyFiles)
+        val recycler = dialogView.findViewById<RecyclerView>(R.id.recyclerFiles)
+        val btnClose = dialogView.findViewById<MaterialButton>(R.id.btnCloseDialog)
+
+        val title = if (isPlaylist) "مدیریت فایل‌های پلی‌لیست M3U" else "مدیریت فایل‌های ذخیره‌شده (Word, TXT, HTML, JSON)"
+        txtTitle.text = title
+
+        val fileList = mutableListOf<File>()
+        val refreshFilesList: () -> Unit = {
+            fileList.clear()
+            if (isPlaylist) {
+                fileList.addAll(StorageManager.listPlaylistFiles(requireContext()))
+            } else {
+                fileList.addAll(StorageManager.listBackupFiles(requireContext()))
+            }
+        }
+        refreshFilesList()
+
+        lateinit var adapter: SavedFilesAdapter
+        lateinit var dialog: AlertDialog
+
+        fun updateUiState() {
+            txtCount.text = "تعداد: ${fileList.size} فایل"
+            txtCount.contentDescription = "تعداد فایل‌های موجود: ${fileList.size} فایل"
+            if (fileList.isEmpty()) {
+                txtEmpty.visibility = View.VISIBLE
+                recycler.visibility = View.GONE
+                btnDeleteAll.isEnabled = false
+            } else {
+                txtEmpty.visibility = View.GONE
+                recycler.visibility = View.VISIBLE
+                btnDeleteAll.isEnabled = true
+            }
+        }
+
+        adapter = SavedFilesAdapter(fileList) { selectedFile, position ->
+            showSingleFileActionsDialog(selectedFile, isPlaylist) { wasDeleted ->
+                if (wasDeleted) {
+                    fileList.removeAt(position)
+                    adapter.notifyItemRemoved(position)
+                    adapter.notifyItemRangeChanged(position, fileList.size - position)
+                    updateUiState()
+                    if (fileList.isNotEmpty()) {
+                        recycler.post {
+                            recycler.scrollToPosition(0)
+                            val firstVh = recycler.findViewHolderForAdapterPosition(0)
+                            firstVh?.itemView?.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED)
+                        }
+                    }
+                }
+            }
+        }
+
+        recycler.layoutManager = LinearLayoutManager(requireContext())
+        recycler.adapter = adapter
+        updateUiState()
+
+        btnDeleteAll.setOnClickListener {
+            if (fileList.isEmpty()) return@setOnClickListener
+            val count = fileList.size
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("حذف تمام فایل‌ها")
+                .setMessage("آیا مطمئن هستید که می‌خواهید تمام $count فایل موجود در این لیست را حذف کنید؟ این عمل غیرقابل بازگشت است.")
+                .setPositiveButton("حذف همه") { _, _ ->
+                    var deletedCount = 0
+                    for (f in fileList) {
+                        if (f.delete()) deletedCount++
+                    }
+                    fileList.clear()
+                    adapter.notifyDataSetChanged()
+                    updateUiState()
+                    val delMsg = "تعداد $deletedCount فایل با موفقیت حذف شدند."
+                    AccessibilityHelper.announce(dialogView, delMsg)
+                    Toast.makeText(requireContext(), delMsg, Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+        val openMsg = "$title باز شد. ${fileList.size} فایل موجود است."
+        AccessibilityHelper.announce(dialogView, openMsg)
+    }
+
+    private fun showSingleFileActionsDialog(file: File, isPlaylist: Boolean, onResult: (Boolean) -> Unit) {
+        val ext = file.extension.lowercase()
+        val mimeType = when (ext) {
+            "m3u", "m3u8" -> "audio/x-mpegurl"
+            "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            "txt" -> "text/plain"
+            "html", "htm" -> "text/html"
+            "json" -> "application/json"
+            else -> "*/*"
+        }
+
+        val openLabel = when {
+            isPlaylist -> "۱. پخش در پلیرهای گوشی (VLC، MX Player و...)"
+            ext == "docx" -> "۱. باز کردن سند در مایکروسافت ورد"
+            ext == "txt" -> "۱. باز کردن فایل متنی در ویرایشگر"
+            ext in listOf("html", "htm") -> "۱. باز کردن و مشاهده در مرورگر گوشی"
+            ext == "json" -> "۱. مشاهده مشخصات فایل داده ساختاریافته"
+            else -> "۱. باز کردن فایل"
+        }
+
+        val options = arrayOf(
+            openLabel,
+            "۲. اشتراک‌گذاری فایل (شبکه‌های اجتماعی، ایمیل یا بلوتوث)",
+            "۳. حذف این فایل"
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(file.name)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        if (ext == "json") {
+                            showBackupFileInfo(file)
+                        } else {
+                            openFileWithExternalApp(file, mimeType)
+                        }
+                        onResult(false)
+                    }
+                    1 -> {
+                        shareFile(file, mimeType)
+                        onResult(false)
+                    }
+                    2 -> {
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("تأیید حذف فایل")
+                            .setMessage("آیا از حذف دائمی فایل \"${file.name}\" اطمینان دارید؟")
+                            .setPositiveButton("بله، حذف شود") { _, _ ->
+                                val deleted = file.delete()
+                                if (deleted) {
+                                    val delMsg = "فایل ${file.name} حذف شد."
+                                    AccessibilityHelper.announce(requireView(), delMsg)
+                                    Toast.makeText(requireContext(), delMsg, Toast.LENGTH_SHORT).show()
+                                    onResult(true)
+                                } else {
+                                    Toast.makeText(requireContext(), "خطا در حذف فایل", Toast.LENGTH_SHORT).show()
+                                    onResult(false)
+                                }
+                            }
+                            .setNegativeButton("انصراف") { _, _ ->
+                                onResult(false)
+                            }
+                            .show()
+                    }
+                }
+            }
+            .setNegativeButton("انصراف") { _, _ ->
+                onResult(false)
+            }
+            .show()
+    }
+
+    private fun showBackupFileInfo(file: File) {
+        val channels = StorageManager.loadBackupChannels(file)
+        val count = channels?.size ?: 0
+        val sizeKb = (file.length() + 1023) / 1024
+        val msg = "این فایل پشتیبان شامل اطلاعات $count شبکه است (حجم: $sizeKb کیلوبایت)."
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("اطلاعات فایل پشتیبان JSON")
+            .setMessage(msg)
+            .setPositiveButton("متوجه شدم", null)
+            .show()
+        AccessibilityHelper.announce(requireView(), msg)
+    }
+
+    private fun openFileWithExternalApp(file: File, mimeType: String) {
+        try {
+            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, mimeType)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            val err = "برنامه‌ای برای باز کردن این فایل یافت نشد: ${e.message}"
+            Toast.makeText(requireContext(), err, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun shareFile(file: File, mimeType: String) {
+        try {
+            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = mimeType
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(intent, "اشتراک‌گذاری فایل"))
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "خطا در اشتراک‌گذاری", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // --- M3U Playlist Creator Dialog ---
     private fun openPlaylistCreatorDialog(allChannels: List<Channel>, hostIp: String) {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_playlist_creator, null)
 
@@ -521,205 +766,50 @@ class BackupFragment : Fragment() {
         AccessibilityHelper.announce(dialogView, openMsg)
     }
 
-    // --- Dialog to manage generated M3U Playlists ---
-    private fun showPlaylistsManagerDialog() {
-        val files = StorageManager.listPlaylistFiles(requireContext())
-        if (files.isEmpty()) {
-            val msg = "هیچ فایل پلی‌لیست M3U ذخیره نشده است."
-            AccessibilityHelper.announce(btnManagePlaylists, msg)
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-            return
+    // --- Saved Files RecyclerView Adapter ---
+    private class SavedFilesAdapter(
+        private val files: List<File>,
+        private val onItemClick: (File, Int) -> Unit
+    ) : RecyclerView.Adapter<SavedFilesAdapter.ViewHolder>() {
+
+        class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val imgIcon: ImageView = itemView.findViewById(R.id.imgFileIcon)
+            val txtName: TextView = itemView.findViewById(R.id.txtFileName)
+            val txtInfo: TextView = itemView.findViewById(R.id.txtFileInfo)
         }
 
-        val fileNames = files.map { "${it.name} (${it.length() / 1024} KB)" }.toTypedArray()
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("فایل‌های پلی‌لیست M3U (${files.size} فایل)")
-            .setItems(fileNames) { _, which ->
-                val selectedFile = files[which]
-                showPlaylistFileOptions(selectedFile)
-            }
-            .setNeutralButton("حذف همه فایل‌ها") { _, _ ->
-                confirmDeleteAllPlaylists(files)
-            }
-            .setNegativeButton("بستن", null)
-            .show()
-    }
-
-    private fun confirmDeleteAllPlaylists(files: List<File>) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("حذف تمام فایل‌های پلی‌لیست M3U")
-            .setMessage("آیا مطمئن هستید که می‌خواهید تمام ${files.size} فایل پلی‌لیست M3U را حذف کنید؟ این عمل غیرقابل بازگشت است.")
-            .setPositiveButton("حذف همه") { _, _ ->
-                var count = 0
-                for (f in files) {
-                    if (f.delete()) count++
-                }
-                val msg = "تعداد $count فایل پلی‌لیست با موفقیت حذف شدند."
-                AccessibilityHelper.announce(btnManagePlaylists, msg)
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
-
-    private fun showPlaylistFileOptions(file: File) {
-        val options = arrayOf(
-            "پخش فایل در پلیرهای گوشی (VLC، MX Player و...)",
-            "اشتراک‌گذاری فایل پلی‌لیست",
-            "حذف فایل"
-        )
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(file.name)
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> openFileWithExternalApp(file, "audio/x-mpegurl")
-                    1 -> shareFile(file, "audio/x-mpegurl")
-                    2 -> {
-                        file.delete()
-                        val msg = "فایل ${file.name} حذف شد."
-                        AccessibilityHelper.announce(btnManagePlaylists, msg)
-                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
-
-    // --- Dialog to manage Backups and Word DOCX files ---
-    private fun showBackupsManagerDialog() {
-        val files = StorageManager.listBackupFiles(requireContext())
-        if (files.isEmpty()) {
-            val msg = "هیچ فایل پشتیبان یا سند وردی ذخیره نشده است."
-            AccessibilityHelper.announce(btnManageBackups, msg)
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-            return
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val v = LayoutInflater.from(parent.context).inflate(R.layout.item_saved_file, parent, false)
+            return ViewHolder(v)
         }
 
-        val fileNames = files.map { file ->
+        override fun getItemCount(): Int = files.size
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            val file = files[position]
+            holder.txtName.text = file.name
+
             val ext = file.extension.uppercase()
-            "${file.name} ($ext - ${file.length() / 1024} KB)"
-        }.toTypedArray()
+            val sizeKb = (file.length() + 1023) / 1024
+            val dateStr = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault()).format(Date(file.lastModified()))
+            holder.txtInfo.text = "$ext • $sizeKb KB • $dateStr"
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("فایل‌های پشتیبان و اسناد ورد (${files.size} فایل)")
-            .setItems(fileNames) { _, which ->
-                val selectedFile = files[which]
-                showBackupFileOptions(selectedFile)
+            // Set appropriate icon
+            when (ext) {
+                "M3U", "M3U8" -> holder.imgIcon.setImageResource(android.R.drawable.ic_media_play)
+                "DOCX" -> holder.imgIcon.setImageResource(android.R.drawable.ic_menu_agenda)
+                "TXT" -> holder.imgIcon.setImageResource(android.R.drawable.ic_menu_edit)
+                "HTML", "HTM" -> holder.imgIcon.setImageResource(android.R.drawable.ic_menu_view)
+                "JSON" -> holder.imgIcon.setImageResource(android.R.drawable.ic_menu_save)
+                else -> holder.imgIcon.setImageResource(android.R.drawable.ic_menu_agenda)
             }
-            .setNeutralButton("حذف همه فایل‌ها") { _, _ ->
-                confirmDeleteAllBackups(files)
+
+            val desc = "${file.name}، فرمت $ext، حجم $sizeKb کیلوبایت. برای گزینه‌های باز کردن، اشتراک‌گذاری یا حذف دو بار ضربه بزنید."
+            holder.itemView.contentDescription = desc
+
+            holder.itemView.setOnClickListener {
+                onItemClick(file, holder.adapterPosition)
             }
-            .setNegativeButton("بستن", null)
-            .show()
-    }
-
-    private fun confirmDeleteAllBackups(files: List<File>) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("حذف تمام فایل‌های پشتیبان و اسناد ورد")
-            .setMessage("آیا مطمئن هستید که می‌خواهید تمام ${files.size} فایل پشتیبان و اسناد ورد را حذف کنید؟ این عمل غیرقابل بازگشت است.")
-            .setPositiveButton("حذف همه") { _, _ ->
-                var count = 0
-                for (f in files) {
-                    if (f.delete()) count++
-                }
-                val msg = "تعداد $count فایل پشتیبان با موفقیت حذف شدند."
-                AccessibilityHelper.announce(btnManageBackups, msg)
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
-
-    private fun showBackupFileOptions(file: File) {
-        val isDocx = file.name.endsWith(".docx", ignoreCase = true)
-        val isJson = file.name.endsWith(".json", ignoreCase = true)
-
-        val options = when {
-            isDocx -> arrayOf("باز کردن فایل ورد در گوشی", "اشتراک‌گذاری فایل", "حذف فایل")
-            isJson -> arrayOf("مشاهده مشخصات فایل پشتیبان", "اشتراک‌گذاری فایل", "حذف فایل")
-            else -> arrayOf("اشتراک‌گذاری فایل", "حذف فایل")
-        }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(file.name)
-            .setItems(options) { _, which ->
-                if (isDocx) {
-                    when (which) {
-                        0 -> openFileWithExternalApp(file, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-                        1 -> shareFile(file, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-                        2 -> {
-                            file.delete()
-                            val msg = "فایل سند ورد با موفقیت حذف شد"
-                            AccessibilityHelper.announce(btnManageBackups, msg)
-                            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } else if (isJson) {
-                    when (which) {
-                        0 -> showBackupFileInfo(file)
-                        1 -> shareFile(file, "application/json")
-                        2 -> {
-                            file.delete()
-                            val msg = "فایل پشتیبان با موفقیت حذف شد"
-                            AccessibilityHelper.announce(btnManageBackups, msg)
-                            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } else {
-                    when (which) {
-                        0 -> shareFile(file, "application/octet-stream")
-                        1 -> {
-                            file.delete()
-                            val msg = "فایل با موفقیت حذف شد"
-                            AccessibilityHelper.announce(btnManageBackups, msg)
-                            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
-
-    private fun showBackupFileInfo(file: File) {
-        val channels = StorageManager.loadBackupChannels(file)
-        val count = channels?.size ?: 0
-        val sizeKb = file.length() / 1024
-        val msg = "این فایل پشتیبان شامل اطلاعات $count شبکه است (حجم: $sizeKb کیلوبایت). توجه داشته باشید برای بازگردانی کانال‌ها روی رسیور، باید فایل بکاپ فلش (SDX) مستقیماً از طریق منوی USB رسیور اجرا شود."
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("اطلاعات فایل پشتیبان")
-            .setMessage(msg)
-            .setPositiveButton("متوجه شدم", null)
-            .show()
-        AccessibilityHelper.announce(btnManageBackups, msg)
-    }
-
-    private fun openFileWithExternalApp(file: File, mimeType: String) {
-        try {
-            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, mimeType)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            startActivity(intent)
-        } catch (e: Exception) {
-            val err = "برنامه‌ای برای باز کردن این فایل یافت نشد: ${e.message}"
-            Toast.makeText(requireContext(), err, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun shareFile(file: File, mimeType: String) {
-        try {
-            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = mimeType
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            startActivity(Intent.createChooser(intent, "اشتراک‌گذاری فایل"))
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "خطا در اشتراک‌گذاری", Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private lateinit var btnActiveTab: MaterialButton
+    private lateinit var btnQuickAccess: MaterialButton
     private lateinit var viewPager: ViewPager2
 
     private val tabTitles = listOf(
@@ -56,11 +57,13 @@ class MainActivity : AppCompatActivity() {
         com.gmscreen.accessible.voice.VoiceCustomizationManager.init(this)
 
         btnActiveTab = findViewById(R.id.btnActiveTab)
+        btnQuickAccess = findViewById(R.id.btnQuickAccess)
         viewPager = findViewById(R.id.viewPager)
 
         setupViewPager()
         setupTabSelectorDialog()
         setupStatusAnnouncer()
+        setupQuickAccess()
         setupBackPressedHandler()
         observeReconnectEvents()
 
@@ -157,10 +160,23 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        updateQuickAccessVisibility()
         if (com.gmscreen.accessible.util.RecordingsDialogHelper.shouldReopenOnResume) {
             com.gmscreen.accessible.util.RecordingsDialogHelper.shouldReopenOnResume = false
             com.gmscreen.accessible.util.RecordingsDialogHelper.reopenLastPlayedFolder(this)
         }
+    }
+
+    private fun setupQuickAccess() {
+        updateQuickAccessVisibility()
+        btnQuickAccess.setOnClickListener {
+            com.gmscreen.accessible.ui.dialog.QuickAccessDialog.show(this)
+        }
+    }
+
+    fun updateQuickAccessVisibility() {
+        val enabled = GMScreenApplication.instance.appConfig.quickAccessEnabled
+        btnQuickAccess.visibility = if (enabled) android.view.View.VISIBLE else android.view.View.GONE
     }
 
     private fun setupViewPager() {

@@ -1313,6 +1313,7 @@ class SettingsFragment : Fragment() {
         var draftJumpFirst = appConfig.showJumpToFirstChannel
         var draftJumpLast = appConfig.showJumpToLastChannel
         var draftSeparateAudio = appConfig.separateAudioToBluetooth
+        var draftQuickAccess = appConfig.quickAccessEnabled
 
         val scrollView = ScrollView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -1449,6 +1450,65 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
+        // 7. Quick access button visibility
+        addSettingRow(contentLayout, "۷. نمایش کلید دسترسی سریع بالای صفحه", if (draftQuickAccess) "فعال (پیش‌فرض)" else "غیرفعال (مخفی)") { txtVal, row ->
+            val opts = arrayOf("فعال (نمایش کلید در نوار بالای برنامه)", "غیرفعال (مخفی کردن کلید)")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("نمایش کلید دسترسی سریع بالای صفحه")
+                .setItems(opts) { dlg, which ->
+                    draftQuickAccess = (which == 0)
+                    val label = if (draftQuickAccess) "فعال (پیش‌فرض)" else "غیرفعال (مخفی)"
+                    txtVal.text = label
+                    row.contentDescription = "کلید دسترسی سریع: $label"
+                    AccessibilityHelper.announce(row, label)
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 8. Customize quick access items
+        val getQuickItemsSummary: () -> String = {
+            val count = appConfig.quickAccessItems.size
+            "$count کلید انتخاب شده (کلیک برای ویرایش)"
+        }
+        addSettingRow(contentLayout, "۸. سفارشی‌سازی کلیدهای پنل دسترسی سریع", getQuickItemsSummary()) { txtVal, row ->
+            val allActions = com.gmscreen.accessible.ui.dialog.QuickAccessDialog.ALL_AVAILABLE_ACTIONS
+            val allTitles = allActions.map { it.title }.toTypedArray()
+            val currentSelected = appConfig.quickAccessItems
+            val checkedStates = BooleanArray(allActions.size) { i ->
+                currentSelected.contains(allActions[i].id)
+            }
+
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("سفارشی‌سازی کلیدهای پنل دسترسی سریع")
+                .setMultiChoiceItems(allTitles, checkedStates) { _, which, isChecked ->
+                    checkedStates[which] = isChecked
+                }
+                .setPositiveButton("ذخیره و اعمال") { _, _ ->
+                    val newSet = mutableSetOf<String>()
+                    for (i in checkedStates.indices) {
+                        if (checkedStates[i]) {
+                            newSet.add(allActions[i].id)
+                        }
+                    }
+                    if (newSet.isEmpty()) newSet.add("status")
+                    appConfig.quickAccessItems = newSet
+                    val summary = getQuickItemsSummary()
+                    txtVal.text = summary
+                    row.contentDescription = "سفارشی‌سازی دسترسی سریع: $summary"
+                    AccessibilityHelper.announce(row, "کلیدهای دسترسی سریع ذخیره شدند: $summary")
+                }
+                .setNeutralButton("بازگردانی به پیش‌فرض") { _, _ ->
+                    appConfig.quickAccessItems = appConfig.defaultQuickAccessItems
+                    val summary = getQuickItemsSummary()
+                    txtVal.text = summary
+                    row.contentDescription = "سفارشی‌سازی دسترسی سریع: $summary"
+                    AccessibilityHelper.announce(row, "تنظیمات دسترسی سریع به حالت پیش‌فرض بازگشت")
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("تنظیمات دسترس‌پذیری و خروجی صدا")
             .setView(scrollView)
@@ -1459,6 +1519,9 @@ class SettingsFragment : Fragment() {
                 appConfig.showJumpToFirstChannel = draftJumpFirst
                 appConfig.showJumpToLastChannel = draftJumpLast
                 appConfig.separateAudioToBluetooth = draftSeparateAudio
+                appConfig.quickAccessEnabled = draftQuickAccess
+
+                (activity as? com.gmscreen.accessible.ui.MainActivity)?.updateQuickAccessVisibility()
 
                 val msg = "تنظیمات دسترس‌پذیری ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
