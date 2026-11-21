@@ -115,8 +115,8 @@ object QuickAccessDialog {
                     if (repository.isConnected.value) {
                         val steps = Math.abs(delta) / 5
                         for (i in 0 until steps) {
-                            if (delta > 0) repository.sendRcuKey(RcuKey.VOLUME_UP)
-                            else repository.sendRcuKey(RcuKey.VOLUME_DOWN)
+                            if (delta > 0) repository.sendRcuKey(RcuKey.VOL_UP)
+                            else repository.sendRcuKey(RcuKey.VOL_DOWN)
                         }
                     }
                 }
@@ -136,8 +136,8 @@ object QuickAccessDialog {
                             if (repository.isConnected.value) {
                                 val steps = Math.abs(delta) / 5
                                 for (i in 0 until steps) {
-                                    if (delta > 0) repository.sendRcuKey(RcuKey.VOLUME_UP)
-                                    else repository.sendRcuKey(RcuKey.VOLUME_DOWN)
+                                    if (delta > 0) repository.sendRcuKey(RcuKey.VOL_UP)
+                                    else repository.sendRcuKey(RcuKey.VOL_DOWN)
                                 }
                             }
                         }
@@ -294,10 +294,10 @@ object QuickAccessDialog {
                 sendRcuKeyAsync(RcuKey.POWER, "دستور پاور (روشن/خاموش)")
             }
             "ch_up" -> {
-                sendRcuKeyAsync(RcuKey.CHANNEL_UP, "کانال بعدی")
+                sendRcuKeyAsync(RcuKey.CH_UP, "کانال بعدی")
             }
             "ch_down" -> {
-                sendRcuKeyAsync(RcuKey.CHANNEL_DOWN, "کانال قبلی")
+                sendRcuKeyAsync(RcuKey.CH_DOWN, "کانال قبلی")
             }
             "mute" -> {
                 sendRcuKeyAsync(RcuKey.MUTE, "بی‌صدا / باصدا")
@@ -368,7 +368,7 @@ object QuickAccessDialog {
                     repository.sendRcuKey(RcuKey.STOP)
                     delay(300)
                     repository.sendRcuKey(RcuKey.OK)
-                    repository.setStbRecording(false, null)
+                    repository.setStbRecording(false, "")
                     withContext(Dispatchers.Main) {
                         val msg = "فرمان توقف ضبط فلش رسیور ارسال شد"
                         AccessibilityHelper.announce(activity.window.decorView, msg)
@@ -383,7 +383,7 @@ object QuickAccessDialog {
                     Toast.makeText(activity, "شبکه یا اتصال برای ضبط صوتی روی گوشی فعال نیست", Toast.LENGTH_SHORT).show()
                     return
                 }
-                if (com.gmscreen.accessible.player.StreamRecorderManager.isRecording.value) {
+                if (com.gmscreen.accessible.player.StreamRecorderManager.isRecording) {
                     Toast.makeText(activity, "ضبط صوتی در حال حاضر روی گوشی فعال است", Toast.LENGTH_SHORT).show()
                     return
                 }
@@ -409,7 +409,7 @@ object QuickAccessDialog {
                 }
             }
             "rec_phone_stop" -> {
-                if (!com.gmscreen.accessible.player.StreamRecorderManager.isRecording.value) {
+                if (!com.gmscreen.accessible.player.StreamRecorderManager.isRecording) {
                     Toast.makeText(activity, "هیچ ضبط فعالی روی گوشی در حال اجرا نیست", Toast.LENGTH_SHORT).show()
                     return
                 }
@@ -426,9 +426,9 @@ object QuickAccessDialog {
                 val curCh = repository.currentChannel.value
                 val ip = repository.connectedIp.value
                 if (curCh != null && ip.isNotBlank()) {
-                    val intent = android.content.Intent(activity, com.gmscreen.accessible.player.VideoPlayerActivity::class.java).apply {
-                        putExtra(com.gmscreen.accessible.player.VideoPlayerActivity.EXTRA_CHANNEL, curCh)
-                        putExtra(com.gmscreen.accessible.player.VideoPlayerActivity.EXTRA_STB_IP, ip)
+                    val intent = android.content.Intent(activity, com.gmscreen.accessible.ui.VideoPlayerActivity::class.java).apply {
+                        putExtra("EXTRA_CHANNEL_NAME", curCh.serviceName)
+                        putExtra("EXTRA_SERVICE_ID", curCh.serviceId)
                     }
                     activity.startActivity(intent)
                 } else {
