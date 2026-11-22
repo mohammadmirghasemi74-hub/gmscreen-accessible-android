@@ -77,6 +77,9 @@ class StbRepository(private val context: Context) {
     private val _stbRecordingStartTime = MutableStateFlow(0L)
     val stbRecordingStartTime: StateFlow<Long> = _stbRecordingStartTime.asStateFlow()
 
+    private val _isStbPowerOn = MutableStateFlow(false)
+    val isStbPowerOn: StateFlow<Boolean> = _isStbPowerOn.asStateFlow()
+
     fun setStbRecording(recording: Boolean, channelName: String = "") {
         _isStbRecording.value = recording
         _stbRecordingChannelName.value = if (recording) channelName else ""
@@ -111,6 +114,7 @@ class StbRepository(private val context: Context) {
 
                 // Launch initial data fetch in background cleanly without monitor thread interference
                 repoScope.launch {
+                    _isStbPowerOn.value = client.isStbPowerOn()
                     refreshData()
                 }
                 Result.success(true)
@@ -130,6 +134,11 @@ class StbRepository(private val context: Context) {
             while (isActive && client.isConnected) {
                 delay(800)
                 if (!client.isConnected) break
+                // If STB is detected as off/standby, do not query or jump playing channel
+                if (!_isStbPowerOn.value) {
+                    delay(1200)
+                    continue
+                }
                 // Avoid socket conflicts if user sent a command recently (matching Windows architecture)
                 if (System.currentTimeMillis() - client.lastUserCmdTime < 1200L) {
                     continue
@@ -257,6 +266,8 @@ class StbRepository(private val context: Context) {
         monitorJob = null
         client.disconnect()
         _isConnected.value = false
+        _isStbPowerOn.value = false
+        _currentChannel.value = null
         _currentState.value = null
         _stbTimers.value = emptyList()
         _pvrFiles.value = emptyList()
@@ -391,7 +402,11 @@ class StbRepository(private val context: Context) {
 
     suspend fun sendRcuKey(keyCode: Int): Boolean {
         if (!client.isConnected) return false
-        return client.sendRcuKey(keyCode)
+        val ok = client.sendRcuKey(keyCode)
+        if (ok && (keyCode == 1041 || keyCode == RcuKey.POWER_TOGGLE)) {
+            _isStbPowerOn.value = !_isStbPowerOn.value
+        }
+        return ok
     }
 
     suspend fun restartStb(): Boolean {
@@ -411,8 +426,13 @@ class StbRepository(private val context: Context) {
     }
 
     suspend fun isStbPowerOn(): Boolean {
-        if (!client.isConnected) return false
-        return client.isStbPowerOn()
+        if (!client.isConnected) {
+            _isStbPowerOn.value = false
+            return false
+        }
+        val on = client.isStbPowerOn()
+        _isStbPowerOn.value = on
+        return on
     }
 
     suspend fun addStbTimer(timer: Map<String, Any>): Boolean {

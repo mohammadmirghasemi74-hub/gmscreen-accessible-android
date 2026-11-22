@@ -639,15 +639,23 @@ class StbClient {
     }
 
     suspend fun isStbPowerOn(): Boolean = withContext(Dispatchers.IO) {
+        if (!isConnected) return@withContext false
         try {
-            var res = sendCmd(14, timeoutMs = 3000)
-            if (res.isNullOrEmpty()) res = sendCmd(15, timeoutMs = 3000)
+            var res = sendCmd(14, timeoutMs = 2000)
+            if (res.isNullOrEmpty()) res = sendCmd(15, timeoutMs = 2000)
             if (!res.isNullOrEmpty()) {
-                val mode = res[0]["PowerMode"]?.toString()?.toIntOrNull()
-                if (mode != null) return@withContext (mode == 1)
+                val d = res[0]
+                val mode = d["PowerMode"]?.toString()?.toIntOrNull()
+                val standby = d["Standby"]?.toString()?.toIntOrNull()
+                if (standby != null && standby == 1) return@withContext false
+                if (mode != null && mode != 1) return@withContext false
+                val curProg = d["CurProgNumber"]?.toString()
+                if (curProg == "0") return@withContext false
+                return@withContext true
             }
         } catch (_: Exception) {}
-        true
+        // When in standby, ALi STBs keep port 20000 socket open but do not reply to high-level commands
+        false
     }
 
     suspend fun sendRcuKey(keyCode: Int): Boolean = withContext(Dispatchers.IO) {

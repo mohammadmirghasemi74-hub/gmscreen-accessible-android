@@ -189,6 +189,13 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
         val channels = repository.channels.value
         val matchedChannel = ChannelMatcher.findBestChannel(text, channels)
         if (matchedChannel != null) {
+            if (!repository.isConnected.value) {
+                val notConnMsg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+                txtExecutionResult.visibility = View.VISIBLE
+                txtExecutionResult.text = notConnMsg
+                AccessibilityHelper.announce(txtExecutionResult, notConnMsg)
+                return
+            }
             val msg = "شبکه ${matchedChannel.serviceName} پیدا شد. در حال تعویض کانال…"
             txtExecutionResult.visibility = View.VISIBLE
             txtExecutionResult.text = "شبکه پخش شد: ${matchedChannel.serviceName}"
@@ -216,6 +223,15 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
     }
 
     private fun handleRcuAction(action: String) {
+        val localActions = setOf("status", "reset_counter", "open_manual", "open_voice_help", "minimize_app", "close_app")
+        if (!localActions.contains(action) && !repository.isConnected.value) {
+            val notConnMsg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+            txtExecutionResult.visibility = View.VISIBLE
+            txtExecutionResult.text = notConnMsg
+            AccessibilityHelper.announce(txtExecutionResult, notConnMsg)
+            return
+        }
+
         when (action) {
             "status" -> {
                 com.gmscreen.accessible.util.StatusHelper.announceStatus(

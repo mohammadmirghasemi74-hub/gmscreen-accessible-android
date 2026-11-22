@@ -152,32 +152,42 @@ object QuickAccessDialog {
         updateVolumeDisplay(currentVol)
 
         val adjustVolumeBy = { delta: Int ->
-            val oldVol = currentVol
-            val newVol = (currentVol + delta).coerceIn(0, 100)
-            if (newVol != oldVol) {
-                currentVol = newVol
-                appConfig.stbVolume = newVol
-                updateVolumeDisplay(newVol)
-                val announceText = if (newVol == 0) "صدای رسیور کاملاً قطع شد (۰ درصد)" else if (delta > 0) "افزایش صدا: $newVol درصد" else "کاهش صدا: $newVol درصد"
-                AccessibilityHelper.announce(seekBarVolume, announceText)
-                dialogScope.launch(Dispatchers.IO) {
-                    if (repository.isConnected.value) {
-                        if (newVol == 0) {
-                            for (i in 0 until 30) {
-                                repository.sendRcuKey(RcuKey.VOL_DOWN)
-                                delay(20)
-                            }
-                        } else if (newVol == 100) {
-                            for (i in 0 until 20) {
-                                repository.sendRcuKey(RcuKey.VOL_UP)
-                                delay(25)
-                            }
-                        } else {
-                            val steps = (Math.abs(delta) / 5).coerceAtLeast(1)
-                            for (i in 0 until steps) {
-                                if (delta > 0) repository.sendRcuKey(RcuKey.VOL_UP)
-                                else repository.sendRcuKey(RcuKey.VOL_DOWN)
-                                delay(35)
+            if (!repository.isConnected.value) {
+                val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+                AccessibilityHelper.announce(seekBarVolume, msg)
+                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+            } else if (!repository.isStbPowerOn.value) {
+                val msg = "رسیور خاموش (آماده‌به‌کار) است. ابتدا کلید پاور را بزنید."
+                AccessibilityHelper.announce(seekBarVolume, msg)
+                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+            } else {
+                val oldVol = currentVol
+                val newVol = (currentVol + delta).coerceIn(0, 100)
+                if (newVol != oldVol) {
+                    currentVol = newVol
+                    appConfig.stbVolume = newVol
+                    updateVolumeDisplay(newVol)
+                    val announceText = if (newVol == 0) "صدای رسیور کاملاً قطع شد (۰ درصد)" else if (delta > 0) "افزایش صدا: $newVol درصد" else "کاهش صدا: $newVol درصد"
+                    AccessibilityHelper.announce(seekBarVolume, announceText)
+                    dialogScope.launch(Dispatchers.IO) {
+                        if (repository.isConnected.value) {
+                            if (newVol == 0) {
+                                for (i in 0 until 30) {
+                                    repository.sendRcuKey(RcuKey.VOL_DOWN)
+                                    delay(20)
+                                }
+                            } else if (newVol == 100) {
+                                for (i in 0 until 20) {
+                                    repository.sendRcuKey(RcuKey.VOL_UP)
+                                    delay(25)
+                                }
+                            } else {
+                                val steps = (Math.abs(delta) / 5).coerceAtLeast(1)
+                                for (i in 0 until steps) {
+                                    if (delta > 0) repository.sendRcuKey(RcuKey.VOL_UP)
+                                    else repository.sendRcuKey(RcuKey.VOL_DOWN)
+                                    delay(35)
+                                }
                             }
                         }
                     }
@@ -187,11 +197,18 @@ object QuickAccessDialog {
 
         seekBarVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onStartTrackingTouch(sb: SeekBar?) {
+                if (!repository.isConnected.value) {
+                    val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+                    AccessibilityHelper.announce(seekBarVolume, msg)
+                    Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                    return
+                }
                 trackingStartVol = currentVol
             }
 
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
+                    if (!repository.isConnected.value) return
                     val snapped = ((progress + 2) / 5) * 5
                     currentVol = snapped
                     if (snapped == 0) {
@@ -205,6 +222,12 @@ object QuickAccessDialog {
             }
 
             override fun onStopTrackingTouch(sb: SeekBar?) {
+                if (!repository.isConnected.value) {
+                    val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+                    AccessibilityHelper.announce(seekBarVolume, msg)
+                    Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                    return
+                }
                 val finalVol = currentVol
                 appConfig.stbVolume = finalVol
                 val delta = finalVol - trackingStartVol
@@ -248,6 +271,18 @@ object QuickAccessDialog {
 
         // Mute button matching RemoteFragment exact behavior
         btnQuickMute.setOnClickListener {
+            if (!repository.isConnected.value) {
+                val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+                AccessibilityHelper.announce(btnQuickMute, msg)
+                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (!repository.isStbPowerOn.value) {
+                val msg = "رسیور خاموش (آماده‌به‌کار) است. ابتدا کلید پاور را بزنید."
+                AccessibilityHelper.announce(btnQuickMute, msg)
+                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             executeMute(activity, btnQuickMute)
         }
 
@@ -394,6 +429,34 @@ object QuickAccessDialog {
     private fun handleQuickAction(activity: Activity, action: ActionItem, buttonView: MaterialButton) {
         val isConnected = repository.isConnected.value
 
+        if (!isConnected && action.id != "status" && action.id != "rec_phone_toggle") {
+            val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+            AccessibilityHelper.announce(buttonView, msg)
+            Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (isConnected && !repository.isStbPowerOn.value && action.id != "power" && action.id != "status" && action.id != "rec_phone_toggle") {
+            val prompt = "رسیور در حالت آماده‌به‌کار (خاموش) است. آیا می‌خواهید ابتدا رسیور روشن شود؟"
+            AccessibilityHelper.announce(buttonView, prompt)
+            MaterialAlertDialogBuilder(activity)
+                .setTitle("روشن کردن رسیور")
+                .setMessage(prompt)
+                .setPositiveButton("بله، روشن کن") { _, _ ->
+                    CoroutineScope(Dispatchers.IO).launch {
+                        repository.sendRcuKey(RcuKey.POWER_TOGGLE)
+                        withContext(Dispatchers.Main) {
+                            val onMsg = "رسیور روشن شد"
+                            AccessibilityHelper.announce(buttonView, onMsg)
+                            Toast.makeText(activity, onMsg, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+            return
+        }
+
         when (action.id) {
             "power" -> {
                 executePower(activity, buttonView)
@@ -533,6 +596,12 @@ object QuickAccessDialog {
     }
 
     private fun executeMute(context: Context, view: View?) {
+        if (!repository.isConnected.value) {
+            val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+            AccessibilityHelper.announce(view, msg)
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            return
+        }
         CoroutineScope(Dispatchers.IO).launch {
             repository.sendRcuKey(RcuKey.MUTE)
             delay(250)
@@ -550,6 +619,12 @@ object QuickAccessDialog {
     }
 
     private fun executePower(context: Context, view: View?) {
+        if (!repository.isConnected.value) {
+            val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+            AccessibilityHelper.announce(view, msg)
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            return
+        }
         CoroutineScope(Dispatchers.IO).launch {
             val wasOn = repository.isStbPowerOn()
             repository.sendRcuKey(RcuKey.POWER_TOGGLE)
@@ -562,6 +637,12 @@ object QuickAccessDialog {
     }
 
     private fun sendRcuKeyMatchingRemote(keyCode: Int, view: View?, text: String) {
+        if (!repository.isConnected.value) {
+            val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+            AccessibilityHelper.announce(view, msg)
+            Toast.makeText(GMScreenApplication.instance, msg, Toast.LENGTH_SHORT).show()
+            return
+        }
         AccessibilityHelper.announce(view, text)
         Toast.makeText(GMScreenApplication.instance, text, Toast.LENGTH_SHORT).show()
         CoroutineScope(Dispatchers.IO).launch {

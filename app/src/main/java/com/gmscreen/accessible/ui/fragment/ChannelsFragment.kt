@@ -550,57 +550,127 @@ class ChannelsFragment : Fragment() {
 
     // Tuning TV on the receiver: DOES NOT stream to phone!
     private fun tuneChannelOnTv(channel: Channel) {
-        val ip = repository.connectedIp.value
-        if (ip.isBlank()) {
-            AccessibilityHelper.announce(txtChannelCount, "رسیور متصل نیست")
-            Toast.makeText(requireContext(), "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val isAlreadyPlaying = (repository.currentChannel.value?.serviceId == channel.serviceId)
-
-        if (isAlreadyPlaying) {
-            val typePrefix = if (channel.isRadio) "رادیو" else "شبکه"
-            val msg = "همین $typePrefix (${channel.serviceName}) در حال پخش است"
+        if (!repository.isConnected.value) {
+            val msg = "رسیور متصل نیست. لطفاً ابتدا از سربرگ اتصال، به رسیور متصل شوید."
             AccessibilityHelper.announce(txtChannelCount, msg)
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             return
         }
 
-        val prefix = if (channel.isRadio) "رادیو" else "شبکه"
-        AccessibilityHelper.announce(txtChannelCount, "$prefix ${channel.serviceName}")
-
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            if (isAudioStreaming || com.gmscreen.accessible.player.StreamRecorderManager.isStreaming) {
+            val isPowerOn = repository.isStbPowerOn()
+            if (!isPowerOn) {
                 withContext(Dispatchers.Main) {
-                    stopAudioPlayback()
+                    val prompt = "رسیور در حالت آماده‌به‌کار (خاموش) است. آیا می‌خواهید رسیور روشن شود و به شبکه ${channel.serviceName} تغییر یابد؟"
+                    AccessibilityHelper.announce(txtChannelCount, prompt)
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("روشن کردن رسیور")
+                        .setMessage(prompt)
+                        .setPositiveButton("بله، روشن کن") { _, _ ->
+                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                                repository.sendRcuKey(RcuKey.POWER_TOGGLE)
+                                withContext(Dispatchers.Main) {
+                                    val onMsg = "رسیور روشن شد. در حال انتقال به شبکه ${channel.serviceName}..."
+                                    AccessibilityHelper.announce(txtChannelCount, onMsg)
+                                    Toast.makeText(requireContext(), onMsg, Toast.LENGTH_SHORT).show()
+                                }
+                                delay(1200)
+                                executeTuneChannel(channel)
+                            }
+                        }
+                        .setNegativeButton("انصراف", null)
+                        .show()
                 }
-                delay(250)
+                return@launch
             }
 
-            val switched = repository.switchChannel(channel)
+            executeTuneChannel(channel)
+        }
+    }
+
+    private suspend fun executeTuneChannel(channel: Channel) {
+        val isAlreadyPlaying = (repository.currentChannel.value?.serviceId == channel.serviceId)
+
+        if (isAlreadyPlaying) {
             withContext(Dispatchers.Main) {
-                if (switched) {
-                    if (appConfig.hapticFeedbackEnabled) {
-                        AccessibilityHelper.vibrateSuccess(requireContext())
-                    }
-                    channelsAdapter?.setCurrentPlayingChannel(channel.serviceId)
-                } else {
-                    AccessibilityHelper.announce(txtChannelCount, "خطا در تعویض کانال روی رسیور")
-                    Toast.makeText(requireContext(), "خطا در تعویض کانال روی رسیور", Toast.LENGTH_SHORT).show()
+                val typePrefix = if (channel.isRadio) "رادیو" else "شبکه"
+                val msg = "همین $typePrefix (${channel.serviceName}) در حال پخش است"
+                AccessibilityHelper.announce(txtChannelCount, msg)
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
+
+        val prefix = if (channel.isRadio) "رادیو" else "شبکه"
+        withContext(Dispatchers.Main) {
+            AccessibilityHelper.announce(txtChannelCount, "$prefix ${channel.serviceName}")
+        }
+
+        if (isAudioStreaming || com.gmscreen.accessible.player.StreamRecorderManager.isStreaming) {
+            withContext(Dispatchers.Main) {
+                stopAudioPlayback()
+            }
+            delay(250)
+        }
+
+        val switched = repository.switchChannel(channel)
+        withContext(Dispatchers.Main) {
+            if (switched) {
+                if (appConfig.hapticFeedbackEnabled) {
+                    AccessibilityHelper.vibrateSuccess(requireContext())
                 }
+                channelsAdapter?.setCurrentPlayingChannel(channel.serviceId)
+            } else {
+                AccessibilityHelper.announce(txtChannelCount, "خطا در تعویض کانال روی رسیور")
+                Toast.makeText(requireContext(), "خطا در تعویض کانال روی رسیور", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun playVideoOnPhone(channel: Channel) {
-        val ip = repository.connectedIp.value
-        if (ip.isBlank()) {
-            AccessibilityHelper.announce(txtChannelCount, "رسیور متصل نیست")
-            Toast.makeText(requireContext(), "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
+        if (!repository.isConnected.value) {
+            val msg = "رسیور متصل نیست. لطفاً ابتدا از سربرگ اتصال، به رسیور متصل شوید."
+            AccessibilityHelper.announce(txtChannelCount, msg)
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             return
         }
 
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val isPowerOn = repository.isStbPowerOn()
+            if (!isPowerOn) {
+                withContext(Dispatchers.Main) {
+                    val prompt = "رسیور در حالت آماده‌به‌کار (خاموش) است. برای پخش شبکه «${channel.serviceName}»، رسیور باید روشن باشد. آیا مایلید رسیور روشن شود؟"
+                    AccessibilityHelper.announce(txtChannelCount, prompt)
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("روشن کردن رسیور")
+                        .setMessage(prompt)
+                        .setPositiveButton("بله، روشن کن") { _, _ ->
+                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                                repository.sendRcuKey(RcuKey.POWER_TOGGLE)
+                                withContext(Dispatchers.Main) {
+                                    val onMsg = "رسیور روشن شد. در حال باز کردن پخش زنده..."
+                                    AccessibilityHelper.announce(txtChannelCount, onMsg)
+                                    Toast.makeText(requireContext(), onMsg, Toast.LENGTH_SHORT).show()
+                                }
+                                delay(1200)
+                                withContext(Dispatchers.Main) {
+                                    startVideoPlayer(channel)
+                                }
+                            }
+                        }
+                        .setNegativeButton("انصراف", null)
+                        .show()
+                }
+                return@launch
+            }
+
+            withContext(Dispatchers.Main) {
+                startVideoPlayer(channel)
+            }
+        }
+    }
+
+    private fun startVideoPlayer(channel: Channel) {
         stopAudioPlayback()
 
         val intent = Intent(requireContext(), com.gmscreen.accessible.ui.VideoPlayerActivity::class.java).apply {
@@ -612,12 +682,49 @@ class ChannelsFragment : Fragment() {
 
     private fun playAudioOnPhone(channel: Channel) {
         val ip = repository.connectedIp.value
-        if (ip.isBlank()) {
-            AccessibilityHelper.announce(txtChannelCount, "رسیور متصل نیست")
-            Toast.makeText(requireContext(), "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
+        if (!repository.isConnected.value || ip.isBlank()) {
+            val msg = "رسیور متصل نیست. لطفاً ابتدا از سربرگ اتصال، به رسیور متصل شوید."
+            AccessibilityHelper.announce(txtChannelCount, msg)
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             return
         }
 
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val isPowerOn = repository.isStbPowerOn()
+            if (!isPowerOn) {
+                withContext(Dispatchers.Main) {
+                    val prompt = "رسیور در حالت آماده‌به‌کار (خاموش) است. برای شنیدن صدای «${channel.serviceName}»، رسیور باید روشن باشد. آیا مایلید رسیور روشن شود؟"
+                    AccessibilityHelper.announce(txtChannelCount, prompt)
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("روشن کردن رسیور")
+                        .setMessage(prompt)
+                        .setPositiveButton("بله، روشن کن") { _, _ ->
+                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                                repository.sendRcuKey(RcuKey.POWER_TOGGLE)
+                                withContext(Dispatchers.Main) {
+                                    val onMsg = "رسیور روشن شد. در حال اتصال به پخش صوتی..."
+                                    AccessibilityHelper.announce(txtChannelCount, onMsg)
+                                    Toast.makeText(requireContext(), onMsg, Toast.LENGTH_SHORT).show()
+                                }
+                                delay(1200)
+                                withContext(Dispatchers.Main) {
+                                    executePlayAudio(channel, ip)
+                                }
+                            }
+                        }
+                        .setNegativeButton("انصراف", null)
+                        .show()
+                }
+                return@launch
+            }
+
+            withContext(Dispatchers.Main) {
+                executePlayAudio(channel, ip)
+            }
+        }
+    }
+
+    private fun executePlayAudio(channel: Channel, ip: String) {
         val isAlreadyStreamingSameChannel = com.gmscreen.accessible.player.StreamRecorderManager.isStreaming &&
                 com.gmscreen.accessible.player.StreamRecorderManager.currentChannel?.serviceId == channel.serviceId
 

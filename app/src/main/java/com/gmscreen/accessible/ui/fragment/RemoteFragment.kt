@@ -36,6 +36,12 @@ class RemoteFragment : Fragment() {
     private fun setupButtons(rootView: View) {
         // 1. Restart STB Button with Confirmation
         rootView.findViewById<MaterialButton?>(R.id.btnRestart)?.setOnClickListener { btn ->
+            if (!repository.isConnected.value) {
+                val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+                AccessibilityHelper.announce(btn, msg)
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             if (appConfig.hapticFeedbackEnabled) {
                 AccessibilityHelper.vibrateClick(requireContext())
             }
@@ -58,6 +64,12 @@ class RemoteFragment : Fragment() {
 
         // 2. Power Button with Smart State Detection
         rootView.findViewById<MaterialButton?>(R.id.btnPower)?.setOnClickListener { btn ->
+            if (!repository.isConnected.value) {
+                val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+                AccessibilityHelper.announce(btn, msg)
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             try {
                 if (appConfig.hapticFeedbackEnabled) {
                     AccessibilityHelper.vibrateClick(requireContext())
@@ -85,6 +97,18 @@ class RemoteFragment : Fragment() {
 
         // 3. Mute Button with Smart State Query
         rootView.findViewById<MaterialButton?>(R.id.btnMute)?.setOnClickListener { btn ->
+            if (!repository.isConnected.value) {
+                val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+                AccessibilityHelper.announce(btn, msg)
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (!repository.isStbPowerOn.value) {
+                val msg = "رسیور خاموش (آماده‌به‌کار) است. ابتدا کلید پاور را بزنید."
+                AccessibilityHelper.announce(btn, msg)
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             try {
                 if (appConfig.hapticFeedbackEnabled) {
                     AccessibilityHelper.vibrateClick(requireContext())
@@ -160,6 +184,18 @@ class RemoteFragment : Fragment() {
         for ((viewId, info) in keyMap) {
             val (keyCode, desc) = info
             rootView.findViewById<MaterialButton?>(viewId)?.setOnClickListener { btn ->
+                if (!repository.isConnected.value) {
+                    val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+                    AccessibilityHelper.announce(btn, msg)
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                if (!repository.isStbPowerOn.value) {
+                    val msg = "رسیور خاموش (آماده‌به‌کار) است. ابتدا کلید پاور را بزنید."
+                    AccessibilityHelper.announce(btn, msg)
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 try {
                     AppLogger.i("Remote", "Key pressed: $desc (code=$keyCode)")
                     if (appConfig.hapticFeedbackEnabled) {
