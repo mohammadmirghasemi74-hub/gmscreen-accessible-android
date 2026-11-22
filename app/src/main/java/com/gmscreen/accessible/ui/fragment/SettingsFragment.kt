@@ -1207,7 +1207,7 @@ class SettingsFragment : Fragment() {
         // 2. Volume step buttons (Direct 1-tap Toggle)
         addToggleSettingRow(
             contentLayout,
-            "۲. نمایش دکمه‌های گام‌های ۵ تایی ولوم در پنل",
+            "۲. نمایش دکمه‌های کم و زیاد ولوم در پنل",
             draftShowVolumeStepButtons,
             onText = "روشن (نمایش دکمه‌های کاهش و افزایش)",
             offText = "خاموش (مخفی - پیش‌فرض)"
@@ -1215,12 +1215,46 @@ class SettingsFragment : Fragment() {
             draftShowVolumeStepButtons = newState
         }
 
-        // 3. Customize quick access items
+        // 3. Volume step size (1%, 5%, 10%)
+        var draftVolumeStepInQuick = appConfig.volumeStep
+        val getStepTitle: (Int) -> String = { step ->
+            when (step) {
+                1 -> "۱ درصد (تک‌تک و دقیق)"
+                10 -> "۱۰ درصد"
+                else -> "۵ درصد (پیش‌فرض)"
+            }
+        }
+        addSettingRow(contentLayout, "۳. مقدار حرکت نوار لغزنده صدا (گام ولوم)", getStepTitle(draftVolumeStepInQuick)) { txtVal, row ->
+            val opts = arrayOf("۱ درصد (تک‌تک و دقیق)", "۵ درصد (پیش‌فرض)", "۱۰ درصد")
+            val currentIdx = when (draftVolumeStepInQuick) {
+                1 -> 0
+                10 -> 2
+                else -> 1
+            }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("انتخاب مقدار حرکت نوار لغزنده صدا")
+                .setSingleChoiceItems(opts, currentIdx) { dlg, which ->
+                    draftVolumeStepInQuick = when (which) {
+                        0 -> 1
+                        2 -> 10
+                        else -> 5
+                    }
+                    val label = getStepTitle(draftVolumeStepInQuick)
+                    txtVal.text = label
+                    row.contentDescription = "مقدار حرکت صدا: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 4. Customize quick access items
         val getQuickItemsSummary: () -> String = {
             val count = appConfig.quickAccessItems.size
             "$count کلید انتخاب شده (کلیک برای ویرایش)"
         }
-        addSettingRow(contentLayout, "۳. سفارشی‌سازی کلیدها و چینش پنل دسترسی سریع", getQuickItemsSummary()) { txtVal, row ->
+        addSettingRow(contentLayout, "۴. سفارشی‌سازی کلیدها و چینش پنل دسترسی سریع", getQuickItemsSummary()) { txtVal, row ->
             QuickAccessDialog.showCustomizeKeysDialog(requireContext(), appConfig) {
                 val summary = getQuickItemsSummary()
                 txtVal.text = summary
@@ -1228,8 +1262,8 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        // 4. Test and open Quick Access Dialog directly
-        addSettingRow(contentLayout, "۴. آزمایش و باز کردن پنل دسترسی سریع", "برای مشاهده پنل لمس کنید") { _, _ ->
+        // 5. Test and open Quick Access Dialog directly
+        addSettingRow(contentLayout, "۵. آزمایش و باز کردن پنل دسترسی سریع", "برای مشاهده پنل لمس کنید") { _, _ ->
             QuickAccessDialog.show(requireActivity())
         }
 
@@ -1239,6 +1273,7 @@ class SettingsFragment : Fragment() {
             .setPositiveButton("ذخیره تنظیمات") { _, _ ->
                 appConfig.quickAccessEnabled = draftQuickAccess
                 appConfig.showVolumeStepButtons = draftShowVolumeStepButtons
+                appConfig.volumeStep = draftVolumeStepInQuick
 
                 (activity as? com.gmscreen.accessible.ui.MainActivity)?.updateQuickAccessVisibility()
 
@@ -1408,15 +1443,15 @@ class SettingsFragment : Fragment() {
         // 10. Volume slider step
         val getVolumeStepTitle: (Int) -> String = { step ->
             when (step) {
-                2 -> "۲ درصد"
+                1 -> "۱ درصد (تک‌تک و دقیق)"
                 10 -> "۱۰ درصد"
                 else -> "۵ درصد (پیش‌فرض)"
             }
         }
         addSettingRow(contentLayout, "۱۰. گام تغییر ولوم لغزنده رسیور (اسلایدر دسترسی سریع)", getVolumeStepTitle(draftVolumeStep)) { txtVal, row ->
-            val opts = arrayOf("۲ درصد", "۵ درصد (پیش‌فرض)", "۱۰ درصد")
+            val opts = arrayOf("۱ درصد (تک‌تک و دقیق)", "۵ درصد (پیش‌فرض)", "۱۰ درصد")
             val currentIdx = when (draftVolumeStep) {
-                2 -> 0
+                1 -> 0
                 10 -> 2
                 else -> 1
             }
@@ -1424,7 +1459,7 @@ class SettingsFragment : Fragment() {
                 .setTitle("گام تغییر ولوم صدای رسیور")
                 .setSingleChoiceItems(opts, currentIdx) { dlg, which ->
                     draftVolumeStep = when (which) {
-                        0 -> 2
+                        0 -> 1
                         2 -> 10
                         else -> 5
                     }

@@ -399,34 +399,44 @@ object QuickAccessDialog {
 
         // 3. Settings Button: Full options including jump to Tab 6
         btnSettings.setOnClickListener {
+            val curStep = appConfig.volumeStep
             val options = arrayOf(
                 "۱. سفارشی‌سازی کلیدها (انتخاب کلیدهای فعال در پنل)",
-                "۲. تغییر نمایش دکمه‌های کم و زیاد ۵ درصدی ولوم",
-                "۳. تغییر نمایش کلید دسترسی سریع بالای برنامه",
-                "۴. ⚙️ رفتن به سربرگ تنظیمات برنامه (سربرگ ۶)"
+                "۲. تغییر گام حرکت ولوم (اکنون: $curStep درصد - انتخاب بین ۱٪، ۵٪ و ۱۰٪)",
+                "۳. تغییر نمایش دکمه‌های کم و زیاد ولوم در پنل",
+                "۴. تغییر نمایش کلید دسترسی سریع بالای برنامه",
+                "۵. ⚙️ رفتن به سربرگ تنظیمات برنامه (سربرگ ۶)"
             )
             MaterialAlertDialogBuilder(context)
                 .setTitle("تنظیمات پنل دسترسی سریع")
                 .setItems(options) { _, which ->
                     when (which) {
                         0 -> showCustomizeKeysDialog(context, appConfig) { refreshActionButtons() }
-                        1 -> {
+                        1 -> showVolumeStepDialog(context, appConfig) {
+                            val newStep = appConfig.volumeStep
+                            btnVolMinus5.text = "➖ $newStep٪ کمتر"
+                            btnVolPlus5.text = "➕ $newStep٪ بیشتر"
+                            btnVolMinus5.contentDescription = "کاهش $newStep درصد صدای رسیور"
+                            btnVolPlus5.contentDescription = "افزایش $newStep درصد صدای رسیور"
+                            AccessibilityHelper.announce(btnSettings, "گام حرکت ولوم روی $newStep درصد تنظیم شد")
+                        }
+                        2 -> {
                             appConfig.showVolumeStepButtons = !appConfig.showVolumeStepButtons
                             val show = appConfig.showVolumeStepButtons
                             btnVolMinus5.visibility = if (show) View.VISIBLE else View.GONE
                             btnVolPlus5.visibility = if (show) View.VISIBLE else View.GONE
-                            val msg = if (show) "دکمه‌های ۵ درصدی ولوم نمایان شدند" else "دکمه‌های ۵ درصدی ولوم مخفی شدند"
+                            val msg = if (show) "دکمه‌های کم و زیاد ولوم نمایان شدند" else "دکمه‌های کم و زیاد ولوم مخفی شدند"
                             AccessibilityHelper.announce(btnSettings, msg)
                             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                         }
-                        2 -> {
+                        3 -> {
                             appConfig.quickAccessEnabled = !appConfig.quickAccessEnabled
                             (activity as? com.gmscreen.accessible.ui.MainActivity)?.updateQuickAccessVisibility()
                             val msg = if (appConfig.quickAccessEnabled) "کلید دسترسی سریع فعال شد" else "کلید دسترسی سریع مخفی شد"
                             AccessibilityHelper.announce(btnSettings, msg)
                             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                         }
-                        3 -> {
+                        4 -> {
                             dialog.dismiss()
                             (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(5)
                         }
@@ -703,6 +713,36 @@ object QuickAccessDialog {
             listOf("status", "epg", "info", "audio_track", "subtitle")
         )
     )
+
+    fun showVolumeStepDialog(context: Context, appConfig: AppConfig, onStepChanged: (() -> Unit)? = null) {
+        val steps = arrayOf("۱ درصد (تک‌تک و دقیق)", "۵ درصد (پیش‌فرض)", "۱۰ درصد")
+        val currentIdx = when (appConfig.volumeStep) {
+            1 -> 0
+            10 -> 2
+            else -> 1
+        }
+        MaterialAlertDialogBuilder(context)
+            .setTitle("انتخاب مقدار حرکت نوار لغزنده صدا")
+            .setSingleChoiceItems(steps, currentIdx) { dlg, which ->
+                val newStep = when (which) {
+                    0 -> 1
+                    2 -> 10
+                    else -> 5
+                }
+                appConfig.volumeStep = newStep
+                onStepChanged?.invoke()
+                val label = when (newStep) {
+                    1 -> "۱ درصد"
+                    10 -> "۱۰ درصد"
+                    else -> "۵ درصد"
+                }
+                val msg = "گام حرکت لغزنده صدا روی $label تنظیم شد"
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                dlg.dismiss()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
 
     fun showCustomizeKeysDialog(context: Context, appConfig: AppConfig, onSaved: () -> Unit) {
         val workingSet = appConfig.quickAccessItems.toMutableSet()
