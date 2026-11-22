@@ -105,6 +105,13 @@ object AccessibilityHelper {
     }
 
     /**
+     * Trigger error feedback.
+     */
+    fun vibrateError(context: Context) {
+        vibrateWarning(context)
+    }
+
+    /**
      * Play earcon beep for voice recognition start/finish or button feedback.
      */
     fun playSoundCue(toneType: Int = ToneGenerator.TONE_PROP_BEEP) {
