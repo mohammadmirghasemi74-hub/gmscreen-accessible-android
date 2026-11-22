@@ -536,7 +536,7 @@ object QuickAccessDialog {
         CoroutineScope(Dispatchers.IO).launch {
             repository.sendRcuKey(keyCode)
             withContext(Dispatchers.Main) {
-                AccessibilityHelper.announce(GMScreenApplication.instance, announceText)
+                AccessibilityHelper.announce(null, announceText)
                 Toast.makeText(GMScreenApplication.instance, toastText, Toast.LENGTH_SHORT).show()
             }
         }

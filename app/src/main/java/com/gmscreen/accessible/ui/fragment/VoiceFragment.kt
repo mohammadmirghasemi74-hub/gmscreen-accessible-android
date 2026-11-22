@@ -235,14 +235,6 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
                 AccessibilityHelper.announce(txtExecutionResult, msg)
                 return
             }
-            "wake_enable" -> {
-                switchWakeWord.isChecked = true
-                return
-            }
-            "wake_disable" -> {
-                switchWakeWord.isChecked = false
-                return
-            }
             "open_manual" -> {
                 InternalBrowserActivity.open(requireContext(), "help.htm", "راهنمای کاربری نرم‌افزار")
                 return

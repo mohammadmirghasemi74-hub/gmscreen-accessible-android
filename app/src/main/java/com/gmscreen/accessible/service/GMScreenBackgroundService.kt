@@ -23,8 +23,7 @@ import com.gmscreen.accessible.ui.MainActivity
 import com.gmscreen.accessible.util.AccessibilityHelper
 import com.gmscreen.accessible.util.AppLogger
 import com.gmscreen.accessible.util.TtsHelper
-import com.gmscreen.accessible.voice.ChannelMatcher
-import com.gmscreen.accessible.voice.VoiceController
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -34,11 +33,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
 
-class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateListener, VoiceController.VoiceListener {
+class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateListener {
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var lastObservedPid: String? = null
-    private var bgVoiceController: VoiceController? = null
 
     companion object {
         const val CHANNEL_ID = "gmscreen_bg_channel"
@@ -99,20 +97,6 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
         fun notifyStbRecordingState(isRecording: Boolean, channelName: String) {
             activeServiceInstance?.handleStbRecordingState(isRecording, channelName)
         }
-
-        fun updateWakeWordState(context: Context) {
-            val appConfig = GMScreenApplication.instance.appConfig
-            val instance = activeServiceInstance
-            if (appConfig.voiceAlwaysListening) {
-                if (instance != null) {
-                    instance.initBackgroundWakeWord()
-                } else {
-                    startService(context)
-                }
-            } else {
-                instance?.stopBackgroundWakeWord()
-            }
-        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -129,7 +113,6 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
         StreamRecorderManager.addListener(this)
         observeChannelChanges()
         observeReconnectEvents()
-        initBackgroundWakeWord()
 
         AppLogger.i("GMScreenBackgroundService", "Background foreground service created and active")
     }
@@ -445,137 +428,12 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
         manager?.cancel(notifId)
     }
 
-    // --- Background Wake Word ("های رسیور") ---
-
-    fun initBackgroundWakeWord() {
-        val appConfig = GMScreenApplication.instance.appConfig
-        if (appConfig.voiceAlwaysListening) {
-            try {
-                if (bgVoiceController == null) {
-                    bgVoiceController = VoiceController(this, this)
-                }
-                bgVoiceController?.setWakeWordMode(true)
-                AppLogger.i("GMScreenBackgroundService", "Background wake word listening enabled")
-            } catch (e: Exception) {
-                AppLogger.e("GMScreenBackgroundService", "Failed to start wake word in background: ${e.message}")
-            }
-        } else {
-            stopBackgroundWakeWord()
-        }
-    }
-
-    fun stopBackgroundWakeWord() {
-        try {
-            bgVoiceController?.setWakeWordMode(false)
-            bgVoiceController?.stopListening()
-            bgVoiceController = null
-            AppLogger.i("GMScreenBackgroundService", "Background wake word listening stopped")
-        } catch (_: Exception) {}
-    }
-
-    override fun onReady() {}
-    override fun onListening() {}
-    override fun onResults(candidates: List<String>) {}
-
-    override fun onWakeWordTriggered(remainingCommand: String) {
-        if (GMScreenApplication.instance.appConfig.soundCuesEnabled) {
-            AccessibilityHelper.playSoundCue()
-        }
-
-        if (remainingCommand.isBlank()) {
-            TtsHelper.speak("بله، در خدمتم", interrupt = true)
-            return
-        }
-
-        val repository = GMScreenApplication.instance.repository
-        val channels = repository.channels.value
-
-        // 1. Check Voice Action
-        val action = ChannelMatcher.matchVoiceAction(remainingCommand)
-        if (action != null) {
-            executeBackgroundAction(action)
-            return
-        }
-
-        // 2. Check Channel Match
-        val matchedChannel = ChannelMatcher.findBestChannel(remainingCommand, channels)
-        if (matchedChannel != null) {
-            serviceScope.launch(Dispatchers.IO) {
-                repository.switchChannel(matchedChannel)
-            }
-            val msg = "شبکه ${matchedChannel.serviceName} پخش شد"
-            TtsHelper.speak(msg, interrupt = true)
-            return
-        }
-
-        // 3. Fallback
-        TtsHelper.speak("دستور شناسایی نشد", interrupt = true)
-    }
-
-    private fun executeBackgroundAction(action: String) {
-        val repository = GMScreenApplication.instance.repository
-        when (action) {
-            "stop_stb_rec" -> {
-                serviceScope.launch(Dispatchers.IO) {
-                    repository.sendRcuKey(RcuKey.STOP)
-                    kotlinx.coroutines.delay(800)
-                    repository.sendRcuKey(RcuKey.OK)
-                    kotlinx.coroutines.delay(500)
-                    repository.sendRcuKey(RcuKey.EXIT)
-                }
-                TtsHelper.speak("دستور توقف ضبط رسیور ارسال شد", interrupt = true)
-            }
-            "stop_phone_rec" -> {
-                serviceScope.launch(Dispatchers.IO) {
-                    StreamRecorderManager.stopRecording()
-                }
-                TtsHelper.speak("ضبط گوشی متوقف و ذخیره شد", interrupt = true)
-            }
-            "jump_first_channel" -> {
-                val first = repository.channels.value.firstOrNull()
-                if (first != null) {
-                    serviceScope.launch(Dispatchers.IO) { repository.switchChannel(first) }
-                    TtsHelper.speak("انتقال به کانال اول: ${first.serviceName}", interrupt = true)
-                }
-            }
-            "jump_last_channel" -> {
-                val last = repository.channels.value.lastOrNull()
-                if (last != null) {
-                    serviceScope.launch(Dispatchers.IO) { repository.switchChannel(last) }
-                    TtsHelper.speak("انتقال به کانال آخر: ${last.serviceName}", interrupt = true)
-                }
-            }
-            "vol_up" -> {
-                serviceScope.launch(Dispatchers.IO) { repository.sendRcuKey(RcuKey.VOL_UP) }
-                TtsHelper.speak("صدا زیاد شد", interrupt = true)
-            }
-            "vol_down" -> {
-                serviceScope.launch(Dispatchers.IO) { repository.sendRcuKey(RcuKey.VOL_DOWN) }
-                TtsHelper.speak("صدا کم شد", interrupt = true)
-            }
-            "mute" -> {
-                serviceScope.launch(Dispatchers.IO) { repository.sendRcuKey(RcuKey.MUTE) }
-                TtsHelper.speak("بی‌صدا شد", interrupt = true)
-            }
-            "power_toggle" -> {
-                serviceScope.launch(Dispatchers.IO) { repository.sendRcuKey(RcuKey.POWER) }
-                TtsHelper.speak("کلید خاموش و روشن رسیور زده شد", interrupt = true)
-            }
-            else -> {
-                TtsHelper.speak("دستور انجام شد", interrupt = true)
-            }
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         isServiceRunning = false
         activeServiceInstance = null
 
         StreamRecorderManager.removeListener(this)
-        bgVoiceController?.stopListening()
-        bgVoiceController = null
-
         serviceScope.cancel()
         AppLogger.i("GMScreenBackgroundService", "Background foreground service destroyed")
     }

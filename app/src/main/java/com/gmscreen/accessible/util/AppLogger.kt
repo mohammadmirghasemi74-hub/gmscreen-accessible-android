@@ -45,7 +45,7 @@ object AppLogger {
 
             try {
                 val app = com.gmscreen.accessible.GMScreenApplication.instance
-                val logOnlyErrors = try { app.appConfig.logOnlyErrors } catch (e: Exception) { true }
+                val logOnlyErrors = true
 
                 if (logOnlyErrors) {
                     // Smart Error-Only logging: only create/write to file when an actual error occurs!
