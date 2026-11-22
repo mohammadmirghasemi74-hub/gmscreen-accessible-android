@@ -22,6 +22,7 @@ import com.gmscreen.accessible.player.StreamRecorderManager
 import com.gmscreen.accessible.protocol.RcuKey
 import com.gmscreen.accessible.util.AccessibilityHelper
 import com.gmscreen.accessible.util.AppConfig
+import com.gmscreen.accessible.util.AppLogger
 import com.gmscreen.accessible.util.StatusHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,6 +53,7 @@ object QuickAccessDialog {
     val ALL_AVAILABLE_ACTIONS = listOf(
         ActionItem("power", "🔴 روشن / خاموش (Power)", "خاموش یا روشن کردن رسیور", Color.parseColor("#B91C1C"), true),
         ActionItem("mute", "🔇 قطع و وصل صدا (Mute)", "قطع یا وصل فوری صدای رسیور", Color.parseColor("#B45309"), true),
+        ActionItem("exit", "❌ خروج از منوها (Exit)", "بستن منوها، پیام‌ها و پنجره‌های باز در رسیور", Color.parseColor("#C2410C"), true),
         ActionItem("ch_up", "🔼 کانال بعدی (CH+)", "تعویض کانال به جلو", Color.parseColor("#047857"), true),
         ActionItem("ch_down", "🔽 کانال قبلی (CH-)", "تعویض کانال به عقب", Color.parseColor("#047857"), true),
         ActionItem("vol_slider", "🔊 لغزنده ولوم رسیور", "کادر لغزنده ولوم صدا در بالای پنل", Color.parseColor("#1D4ED8"), true),
@@ -499,6 +501,9 @@ object QuickAccessDialog {
             "mute" -> {
                 executeMute(activity, buttonView)
             }
+            "exit" -> {
+                sendRcuKeyMatchingRemote(RcuKey.EXIT, buttonView, "خروج از منو")
+            }
             "ch_up" -> {
                 sendRcuKeyMatchingRemote(RcuKey.CH_NEXT, buttonView, "کانال بعدی")
             }
@@ -506,14 +511,21 @@ object QuickAccessDialog {
                 sendRcuKeyMatchingRemote(RcuKey.CH_PREV, buttonView, "کانال قبلی")
             }
             "restart_stb" -> {
+                if (!repository.isConnected.value) {
+                    val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
+                    AccessibilityHelper.announce(buttonView, msg)
+                    Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                    return
+                }
                 MaterialAlertDialogBuilder(activity)
                     .setTitle("راه‌اندازی مجدد رسیور")
-                    .setMessage("آیا می‌خواهید رسیور را مجدداً راه‌اندازی (Reboot) کنید؟")
-                    .setPositiveButton("بله") { _, _ ->
+                    .setMessage("آیا می‌خواهید رسیور را راه‌اندازی مجدد (ری‌استارت) کنید؟")
+                    .setPositiveButton("بله، ری‌استارت شود") { _, _ ->
                         CoroutineScope(Dispatchers.IO).launch {
-                            repository.client.sendCmd(1011, expectReply = false)
+                            AppLogger.i("QuickAccess", "Sending STB restart command (request 1043)")
+                            val ok = repository.restartStb()
                             withContext(Dispatchers.Main) {
-                                val msg = "رسیور راه‌اندازی مجدد شد"
+                                val msg = if (ok) "دستور ری‌استارت ارسال شد. رسیور در حال راه‌اندازی مجدد است." else "خطا در ارسال دستور ری‌استارت"
                                 AccessibilityHelper.announce(buttonView, msg)
                                 Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
                             }
@@ -694,8 +706,8 @@ object QuickAccessDialog {
     val ACTION_CATEGORIES = listOf(
         ActionCategory(
             "۱. مدیریت پاور و صدا",
-            "کلیدهای کنترل برق، بی‌صدا، لغزنده ولوم و ری‌استارت رسیور",
-            listOf("power", "mute", "vol_slider", "restart_stb")
+            "کلیدهای کنترل برق، بی‌صدا، خروج از منو (Exit)، لغزنده ولوم و ری‌استارت رسیور",
+            listOf("power", "mute", "exit", "vol_slider", "restart_stb")
         ),
         ActionCategory(
             "۲. جابجایی و کنترل کانال‌ها",

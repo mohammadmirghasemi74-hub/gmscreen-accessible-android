@@ -216,6 +216,7 @@ class AppConfig(context: Context) {
     val defaultQuickAccessItems: Set<String> = setOf(
         "power",
         "mute",
+        "exit",
         "ch_up",
         "ch_down",
         "vol_slider",
@@ -237,6 +238,11 @@ class AppConfig(context: Context) {
             if (migrated.remove("rec_phone_instant") || migrated.remove("rec_phone_stop")) {
                 migrated.add("rec_phone_toggle")
                 changed = true
+            }
+            if (!prefs.getBoolean("quick_access_exit_migrated", false)) {
+                migrated.add("exit")
+                changed = true
+                prefs.edit().putBoolean("quick_access_exit_migrated", true).apply()
             }
             if (changed) {
                 prefs.edit().putStringSet(KEY_QUICK_ACCESS_ITEMS, migrated).apply()
