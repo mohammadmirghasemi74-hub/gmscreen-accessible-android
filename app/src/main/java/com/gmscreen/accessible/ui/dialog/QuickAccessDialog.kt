@@ -161,17 +161,16 @@ object QuickAccessDialog {
         fun volToStbLevel(vol: Int): Int {
             if (vol <= 0) return 0
             if (vol >= 100) return 30
-            // Root-cause fix for 0%, 5%, 10%, 15% silence:
-            // Hardware level 7 and below on ALi/StarSat/MediaStar STBs is below TV hearing threshold (silent).
-            // Level 8 is the audibility threshold.
-            // 0% -> 0 (completely silent / mute)
-            // 5% -> 8 (clearly audible, quiet)
-            // 10% -> 10 (audible low)
-            // 15% -> 12 (audible low-medium)
-            // 20% -> 14 (medium)
-            // 50% -> 21
-            // 100% -> 30
-            return (8 + Math.round((vol - 5) * 22.0 / 95.0).toInt()).coerceIn(8, 30)
+            // Exact linear scale matched to STB 0..30 hardware volume:
+            // 0% -> level 0 (کاملاً قطع و بی‌صدا)
+            // 5% -> level 1 (صدای بسیار آرام و ملایم، اولین پله صدا)
+            // 10% -> level 3 (صدای ملایم)
+            // 15% -> level 5 (صدای مناسب و آرام)
+            // 20% -> level 6
+            // 50% -> level 15 (دقیقاً نصف ولوم رسیور)
+            // 100% -> level 30 (حداکثر ولوم رسیور)
+            val mapped = Math.round(vol * 30.0 / 100.0).toInt()
+            return if (vol in 1..5) 1 else mapped.coerceIn(1, 29)
         }
 
         val applyVolumeChange = { oldVol: Int, newVol: Int ->
