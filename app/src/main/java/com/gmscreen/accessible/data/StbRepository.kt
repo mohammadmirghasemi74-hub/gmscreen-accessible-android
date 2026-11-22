@@ -161,9 +161,8 @@ class StbRepository(private val context: Context) {
                     }
                 }
 
-                // Never terminate monitor loop mid-zap on transient timeouts.
-                // Only disconnect if client socket is truly closed or after 30 consecutive failures (>45s of total silence).
-                if (!client.isConnected || consecutiveErrors >= 30) {
+                // Detect connection loss quickly when moving out of range (6 consecutive failures ~7s)
+                if (!client.isConnected || consecutiveErrors >= 6) {
                     break
                 }
             }
@@ -183,32 +182,44 @@ class StbRepository(private val context: Context) {
         reconnectJob?.cancel()
         reconnectJob = repoScope.launch {
             val targetIp = appConfig.lastConnectedIp.ifBlank { _connectedIp.value }
-            AppLogger.i("StbRepository", "Starting smart auto-reconnect loop to $targetIp...")
+            AppLogger.i("StbRepository", "Starting fast smart auto-reconnect loop to $targetIp...")
 
             var reconnected = false
             var activeIp = targetIp
-            // 30 attempts, each with 3s delay = 90 seconds (standard STB reboot duration)
-            for (attempt in 1..30) {
-                if (!isActive || isUserInitiatedDisconnect) break
-                delay(3000)
 
-                // Try direct connect to last known IP
+            // Progressive smart retry:
+            // Attempt 1: Immediate retry (delay 200ms, timeout 1500ms) - catches transient Wi-Fi handoffs
+            // Attempt 2: Quick retry (delay 500ms, timeout 1800ms) + fast UDP scan
+            // Attempts 3-25: Interleaved socket connect (1800ms) + UDP discovery every 2 attempts
+            for (attempt in 1..25) {
+                if (!isActive || isUserInitiatedDisconnect) break
+
+                val delayMs = when (attempt) {
+                    1 -> 200L
+                    2 -> 500L
+                    3 -> 800L
+                    else -> 1000L
+                }
+                delay(delayMs)
+
+                // 1. Direct connect to last known IP
                 if (activeIp.isNotBlank()) {
-                    val ok = client.connect(activeIp, timeoutMs = 2500)
+                    val ok = client.connect(activeIp, timeoutMs = 1800)
                     if (ok) {
                         reconnected = true
                         break
                     }
                 }
 
-                // Every 15 seconds (attempts 5, 10, 15, 20), run background UDP discovery in case DHCP IP changed
-                if (attempt % 5 == 0) {
+                // 2. Early UDP broadcast discovery starting on attempt 2, and every 2 attempts thereafter
+                // in case the STB got a new DHCP IP or phone switched Wi-Fi AP
+                if (attempt >= 2 && attempt % 2 == 0) {
                     try {
-                        val devices = discovery.discover(timeoutMs = 2500)
+                        val devices = discovery.discover(timeoutMs = 1500)
                         if (devices.isNotEmpty()) {
                             val foundDevice = devices.first()
                             activeIp = foundDevice.ip
-                            val ok = client.connect(activeIp, timeoutMs = 2500)
+                            val ok = client.connect(activeIp, timeoutMs = 1800)
                             if (ok) {
                                 reconnected = true
                                 break

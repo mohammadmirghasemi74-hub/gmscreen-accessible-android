@@ -27,6 +27,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.gmscreen.accessible.GMScreenApplication
 import com.gmscreen.accessible.R
 import com.gmscreen.accessible.ui.InternalBrowserActivity
+import com.gmscreen.accessible.ui.dialog.QuickAccessDialog
 import com.gmscreen.accessible.util.AccessibilityHelper
 
 import com.gmscreen.accessible.util.StorageManager
@@ -67,10 +68,11 @@ class SettingsFragment : Fragment() {
             Pair("۴. تنظیمات جامع ضبط و ذخیره‌سازی در گوشی (Recordings)", ::openRecordingSettingsDialog),
             Pair("۵. تنظیمات راهنمای برنامه‌ها و اعلام خودکار (EPG & Announcements)", ::openEpgSettingsDialog),
             Pair("۶. تنظیمات کنترل صوتی (Voice Assistant)", ::openVoiceSettingsDialog),
-            Pair("۷. تنظیمات دسترس‌پذیری، پنل سریع و دکمه‌های پرش (Accessibility)", ::openAccessibilitySettingsDialog),
-            Pair("۸. کتابچه راهنمای جامع کاربری نرم‌افزار", ::openHelpBrowser),
-            Pair("۹. راهنمای کامل فرامین صوتی", ::openVoiceHelpBrowser),
-            Pair("۱۰. درباره نرم‌افزار و مشخصات سازنده", ::openAboutBrowser)
+            Pair("۷. تنظیمات پنل دسترسی سریع رسیور (Quick Access)", ::openQuickAccessSettingsDialog),
+            Pair("۸. تنظیمات دسترس‌پذیری، ویبره و خروجی صدا (Accessibility)", ::openAccessibilitySettingsDialog),
+            Pair("۹. کتابچه راهنمای جامع کاربری نرم‌افزار", ::openHelpBrowser),
+            Pair("۱۰. راهنمای کامل فرامین صوتی", ::openVoiceHelpBrowser),
+            Pair("۱۱. درباره نرم‌افزار و مشخصات سازنده", ::openAboutBrowser)
         )
 
         for ((title, handler) in categories) {
@@ -1225,6 +1227,86 @@ class SettingsFragment : Fragment() {
             .show()
     }
 
+    private fun openQuickAccessSettingsDialog() {
+        var draftQuickAccess = appConfig.quickAccessEnabled
+        var draftShowVolumeStepButtons = appConfig.showVolumeStepButtons
+
+        val scrollView = ScrollView(requireContext()).apply {
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        val contentLayout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 20, 32, 20)
+        }
+        scrollView.addView(contentLayout)
+
+        // 1. Quick access button visibility
+        addSettingRow(contentLayout, "۱. نمایش کلید دسترسی سریع بالای صفحه", if (draftQuickAccess) "نمایش (پیش‌فرض)" else "مخفی") { txtVal, row ->
+            val opts = arrayOf("نمایش در نوار بالای برنامه (پیش‌فرض)", "مخفی کردن کلید")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("نمایش کلید دسترسی سریع")
+                .setItems(opts) { _, which ->
+                    draftQuickAccess = (which == 0)
+                    val label = if (draftQuickAccess) "نمایش (پیش‌فرض)" else "مخفی"
+                    txtVal.text = label
+                    row.contentDescription = "کلید دسترسی سریع: $label"
+                    AccessibilityHelper.announce(row, label)
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 2. Volume step buttons
+        addSettingRow(contentLayout, "۲. نمایش دکمه‌های گام‌های ۵ تایی ولوم در پنل", if (draftShowVolumeStepButtons) "نمایش دکمه‌های -۵٪ و +۵٪" else "مخفی (فقط لغزنده ولوم - پیش‌فرض)") { txtVal, row ->
+            val opts = arrayOf("مخفی (فقط لغزنده ولوم و قطع/وصل صدا - پیش‌فرض)", "نمایش دکمه‌های کم و زیاد کردن ۵ درصدی")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("دکمه‌های ۵ درصدی ولوم رسیور")
+                .setItems(opts) { _, which ->
+                    draftShowVolumeStepButtons = (which == 1)
+                    val label = if (draftShowVolumeStepButtons) "نمایش دکمه‌های -۵٪ و +۵٪" else "مخفی (فقط لغزنده ولوم - پیش‌فرض)"
+                    txtVal.text = label
+                    row.contentDescription = "دکمه‌های ۵ تایی ولوم: $label"
+                    AccessibilityHelper.announce(row, label)
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 3. Customize quick access items
+        val getQuickItemsSummary: () -> String = {
+            val count = appConfig.quickAccessItems.size
+            "$count کلید انتخاب شده (کلیک برای ویرایش)"
+        }
+        addSettingRow(contentLayout, "۳. سفارشی‌سازی کلیدها و چینش پنل دسترسی سریع", getQuickItemsSummary()) { txtVal, row ->
+            QuickAccessDialog.showCustomizeKeysDialog(requireContext(), appConfig) {
+                val summary = getQuickItemsSummary()
+                txtVal.text = summary
+                row.contentDescription = "سفارشی‌سازی کلیدها: $summary"
+            }
+        }
+
+        // 4. Test and open Quick Access Dialog directly
+        addSettingRow(contentLayout, "۴. آزمایش و باز کردن پنل دسترسی سریع", "برای مشاهده پنل لمس کنید") { _, _ ->
+            QuickAccessDialog.show(requireActivity())
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("تنظیمات پنل دسترسی سریع رسیور")
+            .setView(scrollView)
+            .setPositiveButton("ذخیره تنظیمات") { _, _ ->
+                appConfig.quickAccessEnabled = draftQuickAccess
+                appConfig.showVolumeStepButtons = draftShowVolumeStepButtons
+
+                (activity as? com.gmscreen.accessible.ui.MainActivity)?.updateQuickAccessVisibility()
+
+                val msg = "تنظیمات پنل دسترسی سریع ذخیره شد"
+                AccessibilityHelper.announce(null, msg)
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("انصراف", null)
+            .show()
+    }
+
     private fun openAccessibilitySettingsDialog() {
         var draftHaptic = appConfig.hapticFeedbackEnabled
         var draftKeepGlobal = appConfig.keepGlobalChannelNum
@@ -1232,11 +1314,9 @@ class SettingsFragment : Fragment() {
         var draftJumpFirst = appConfig.showJumpToFirstChannel
         var draftJumpLast = appConfig.showJumpToLastChannel
         var draftSeparateAudio = appConfig.separateAudioToBluetooth
-        var draftQuickAccess = appConfig.quickAccessEnabled
         var draftShowRecordings = appConfig.showRecordingsInChannels
         var draftShowRefresh = appConfig.showRefreshInChannels
         var draftShowMic = appConfig.showMicInChannels
-        var draftShowVolumeStepButtons = appConfig.showVolumeStepButtons
 
         val scrollView = ScrollView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -1421,83 +1501,8 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
-        // 10. Quick access button visibility
-        addSettingRow(contentLayout, "۱۰. نمایش کلید دسترسی سریع بالای صفحه", if (draftQuickAccess) "فعال (پیش‌فرض)" else "غیرفعال (مخفی)") { txtVal, row ->
-            val opts = arrayOf("فعال (نمایش کلید در نوار بالای برنامه)", "غیرفعال (مخفی کردن کلید)")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("نمایش کلید دسترسی سریع بالای صفحه")
-                .setItems(opts) { dlg, which ->
-                    draftQuickAccess = (which == 0)
-                    val label = if (draftQuickAccess) "فعال (پیش‌فرض)" else "غیرفعال (مخفی)"
-                    txtVal.text = label
-                    row.contentDescription = "کلید دسترسی سریع: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
-        // 11. Show volume step buttons in quick access
-        addSettingRow(contentLayout, "۱۱. نمایش دکمه‌های گام‌های ۵ تایی ولوم در دسترسی سریع", if (draftShowVolumeStepButtons) "نمایش دکمه‌های -۵٪ و +۵٪" else "مخفی (فقط لغزنده ولوم - پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("مخفی (فقط لغزنده ولوم و قطع/وصل صدا - پیش‌فرض)", "نمایش دکمه‌های کم و زیاد کردن ۵ درصدی")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("دکمه‌های ۵ درصدی ولوم در دسترسی سریع")
-                .setItems(opts) { dlg, which ->
-                    draftShowVolumeStepButtons = (which == 1)
-                    val label = if (draftShowVolumeStepButtons) "نمایش دکمه‌های -۵٪ و +۵٪" else "مخفی (فقط لغزنده ولوم - پیش‌فرض)"
-                    txtVal.text = label
-                    row.contentDescription = "دکمه‌های ۵ تایی ولوم: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
-        // 12. Customize quick access items
-        val getQuickItemsSummary: () -> String = {
-            val count = appConfig.quickAccessItems.size
-            "$count کلید انتخاب شده (کلیک برای ویرایش)"
-        }
-        addSettingRow(contentLayout, "۱۲. سفارشی‌سازی کلیدهای پنل دسترسی سریع", getQuickItemsSummary()) { txtVal, row ->
-            val allActions = com.gmscreen.accessible.ui.dialog.QuickAccessDialog.ALL_AVAILABLE_ACTIONS
-            val allTitles = allActions.map { it.title }.toTypedArray()
-            val currentSelected = appConfig.quickAccessItems
-            val checkedStates = BooleanArray(allActions.size) { i ->
-                currentSelected.contains(allActions[i].id)
-            }
-
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("سفارشی‌سازی کلیدهای پنل دسترسی سریع")
-                .setMultiChoiceItems(allTitles, checkedStates) { _, which, isChecked ->
-                    checkedStates[which] = isChecked
-                }
-                .setPositiveButton("ذخیره و اعمال") { _, _ ->
-                    val newSet = mutableSetOf<String>()
-                    for (i in checkedStates.indices) {
-                        if (checkedStates[i]) {
-                            newSet.add(allActions[i].id)
-                        }
-                    }
-                    if (newSet.isEmpty()) newSet.add("status")
-                    appConfig.quickAccessItems = newSet
-                    val summary = getQuickItemsSummary()
-                    txtVal.text = summary
-                    row.contentDescription = "سفارشی‌سازی دسترسی سریع: $summary"
-                    AccessibilityHelper.announce(row, "کلیدهای دسترسی سریع ذخیره شدند: $summary")
-                }
-                .setNeutralButton("پیش‌فرض") { _, _ ->
-                    appConfig.quickAccessItems = appConfig.defaultQuickAccessItems
-                    val summary = getQuickItemsSummary()
-                    txtVal.text = summary
-                    row.contentDescription = "سفارشی‌سازی دسترسی سریع: $summary"
-                    AccessibilityHelper.announce(row, "تنظیمات دسترسی سریع به حالت پیش‌فرض بازگشت")
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("تنظیمات دسترس‌پذیری و خروجی صدا")
+            .setTitle("تنظیمات دسترس‌پذیری، ویبره و خروجی صدا")
             .setView(scrollView)
             .setPositiveButton("ذخیره تنظیمات") { _, _ ->
                 appConfig.hapticFeedbackEnabled = draftHaptic
@@ -1509,12 +1514,9 @@ class SettingsFragment : Fragment() {
                 appConfig.showJumpToFirstChannel = draftJumpFirst
                 appConfig.showJumpToLastChannel = draftJumpLast
                 appConfig.separateAudioToBluetooth = draftSeparateAudio
-                appConfig.quickAccessEnabled = draftQuickAccess
-                appConfig.showVolumeStepButtons = draftShowVolumeStepButtons
 
-                (activity as? com.gmscreen.accessible.ui.MainActivity)?.updateQuickAccessVisibility()
-
-                val msg = "تنظیمات دسترس‌پذیری ذخیره شد"
+                val msg = "تنظیمات دسترس‌پذیری با موفقیت ذخیره شد"
+                AccessibilityHelper.announce(null, msg)
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("انصراف", null)

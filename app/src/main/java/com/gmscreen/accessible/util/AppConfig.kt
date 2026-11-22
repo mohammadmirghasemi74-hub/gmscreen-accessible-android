@@ -214,10 +214,10 @@ class AppConfig(context: Context) {
 
     val defaultQuickAccessItems: Set<String> = setOf(
         "power",
+        "mute",
         "ch_up",
         "ch_down",
         "vol_slider",
-        "mute",
         "rec_stb_toggle",
         "rec_phone_toggle",
         "status",
@@ -225,7 +225,23 @@ class AppConfig(context: Context) {
     )
 
     var quickAccessItems: Set<String>
-        get() = prefs.getStringSet(KEY_QUICK_ACCESS_ITEMS, null) ?: defaultQuickAccessItems
+        get() {
+            val raw = prefs.getStringSet(KEY_QUICK_ACCESS_ITEMS, null) ?: defaultQuickAccessItems
+            val migrated = raw.toMutableSet()
+            var changed = false
+            if (migrated.remove("rec_stb_instant") || migrated.remove("rec_stb_stop")) {
+                migrated.add("rec_stb_toggle")
+                changed = true
+            }
+            if (migrated.remove("rec_phone_instant") || migrated.remove("rec_phone_stop")) {
+                migrated.add("rec_phone_toggle")
+                changed = true
+            }
+            if (changed) {
+                prefs.edit().putStringSet(KEY_QUICK_ACCESS_ITEMS, migrated).apply()
+            }
+            return migrated
+        }
         set(value) = prefs.edit().putStringSet(KEY_QUICK_ACCESS_ITEMS, value).apply()
 
     var stbVolume: Int
