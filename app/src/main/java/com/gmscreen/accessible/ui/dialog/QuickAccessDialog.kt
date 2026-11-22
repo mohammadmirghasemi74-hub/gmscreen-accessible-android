@@ -155,45 +155,61 @@ object QuickAccessDialog {
 
         updateVolumeDisplay(currentVol)
 
+        var volumeJob: kotlinx.coroutines.Job? = null
+
         fun volToStbLevel(vol: Int): Int {
             if (vol <= 0) return 0
             if (vol >= 100) return 30
-            // Root-cause fix: Map 1..99% to hardware levels 3..29 so 5% is level 4 (clearly audible),
-            // 10% is level 5, 15% is level 7, 50% is level 16, and 100% is level 30.
-            return (3 + Math.round((vol - 1) * 26.0 / 98.0).toInt()).coerceIn(3, 29)
+            // Root-cause fix for 0%, 5%, 10%, 15% silence:
+            // Hardware level 7 and below on ALi/StarSat/MediaStar STBs is below TV hearing threshold (silent).
+            // Level 8 is the audibility threshold.
+            // 0% -> 0 (completely silent / mute)
+            // 5% -> 8 (clearly audible, quiet)
+            // 10% -> 10 (audible low)
+            // 15% -> 12 (audible low-medium)
+            // 20% -> 14 (medium)
+            // 50% -> 21
+            // 100% -> 30
+            return (8 + Math.round((vol - 5) * 22.0 / 95.0).toInt()).coerceIn(8, 30)
         }
 
         val applyVolumeChange = { oldVol: Int, newVol: Int ->
             val oldLevel = volToStbLevel(oldVol)
             val newLevel = volToStbLevel(newVol)
-            dialogScope.launch(Dispatchers.IO) {
+            volumeJob?.cancel()
+            volumeJob = dialogScope.launch(Dispatchers.IO) {
                 if (repository.isConnected.value) {
                     if (newVol == 0) {
-                        for (i in 0 until 35) {
+                        for (i in 0 until 10) {
+                            if (!isActive) break
                             repository.sendRcuKey(RcuKey.VOL_DOWN)
-                            delay(20)
+                            delay(25)
                         }
                     } else if (newVol == 100) {
-                        for (i in 0 until 32) {
+                        for (i in 0 until 15) {
+                            if (!isActive) break
                             repository.sendRcuKey(RcuKey.VOL_UP)
                             delay(25)
                         }
                     } else if (oldVol == 0 && newVol > 0) {
                         for (i in 0 until newLevel) {
+                            if (!isActive) break
                             repository.sendRcuKey(RcuKey.VOL_UP)
-                            delay(30)
+                            delay(25)
                         }
                     } else {
                         val levelDelta = newLevel - oldLevel
                         if (levelDelta > 0) {
                             for (i in 0 until levelDelta) {
+                                if (!isActive) break
                                 repository.sendRcuKey(RcuKey.VOL_UP)
-                                delay(35)
+                                delay(25)
                             }
                         } else if (levelDelta < 0) {
                             for (i in 0 until Math.abs(levelDelta)) {
+                                if (!isActive) break
                                 repository.sendRcuKey(RcuKey.VOL_DOWN)
-                                delay(35)
+                                delay(25)
                             }
                         }
                     }
@@ -282,10 +298,13 @@ object QuickAccessDialog {
                     return
                 }
                 val finalVol = currentVol
-                appConfig.stbVolume = finalVol
-                val announceText = if (finalVol == 0) "صدای رسیور کاملاً قطع شد (۰ درصد)" else "صدای رسیور: $finalVol درصد"
-                AccessibilityHelper.announce(seekBarVolume, announceText)
-                applyVolumeChange(trackingStartVol, finalVol)
+                if (finalVol != trackingStartVol) {
+                    appConfig.stbVolume = finalVol
+                    val announceText = if (finalVol == 0) "صدای رسیور کاملاً قطع شد (۰ درصد)" else "صدای رسیور: $finalVol درصد"
+                    AccessibilityHelper.announce(seekBarVolume, announceText)
+                    applyVolumeChange(trackingStartVol, finalVol)
+                    trackingStartVol = finalVol
+                }
             }
         })
 

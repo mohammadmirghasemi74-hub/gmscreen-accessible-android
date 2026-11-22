@@ -662,6 +662,17 @@ class ChannelsFragment : Fragment() {
                     AccessibilityHelper.vibrateSuccess(requireContext())
                 }
                 channelsAdapter?.setCurrentPlayingChannel(channel.serviceId)
+                if (appConfig.autoAnnounceEpg) {
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        delay(2000)
+                        val epgData = repository.getEpg(channel.serviceId)
+                        val (cur, nxt) = com.gmscreen.accessible.util.EpgHelper.extractCurrentAndNextEvent(epgData)
+                        val epgMsg = com.gmscreen.accessible.util.EpgHelper.buildEpgAnnouncement(cur, nxt, appConfig.epgAnnounceDetail)
+                        if (!epgMsg.isNullOrBlank()) {
+                            AccessibilityHelper.announce(recyclerViewChannels, epgMsg)
+                        }
+                    }
+                }
             } else {
                 AccessibilityHelper.announce(txtChannelCount, "خطا در تعویض کانال روی رسیور")
                 Toast.makeText(requireContext(), "خطا در تعویض کانال روی رسیور", Toast.LENGTH_SHORT).show()
@@ -1012,7 +1023,8 @@ class ChannelsFragment : Fragment() {
             val programs = com.gmscreen.accessible.util.EpgHelper.extractAllPrograms(epgData)
             withContext(Dispatchers.Main) {
                 if (programs.isEmpty()) {
-                    val msg = "جدول برنامه‌ای برای $progName در رسیور یافت نشد"
+                    val msg = "جدول برنامه‌ای برای $progName در حافظه رسیور یافت نشد. برای دریافت EPG، لطفاً چند ثانیه روی کانال بمانید تا رسیور اطلاعات را از فرکانس ماهواره دریافت کند."
+                    AccessibilityHelper.announce(recyclerViewChannels, msg)
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
                 } else {
                     val items = programs.map { p ->

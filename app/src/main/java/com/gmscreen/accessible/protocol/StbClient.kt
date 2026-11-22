@@ -710,8 +710,8 @@ class StbClient {
     suspend fun getEpg(programId: String): Map<String, Any>? = withContext(Dispatchers.IO) {
         try {
             val payload = mapOf("array" to listOf(mapOf("ProgramId" to programId)))
-            val res = sendCmd(5, payload, expectReply = true, timeoutMs = 4000)
-            if (res is List<*> && res.isNotEmpty() && res[0] is Map<*, *>) {
+            var res = sendCmd(5, payload, expectReply = true, timeoutMs = 6000)
+            var map = if (res is List<*> && res.isNotEmpty() && res[0] is Map<*, *>) {
                 @Suppress("UNCHECKED_CAST")
                 res[0] as Map<String, Any>
             } else if (res is Map<*, *>) {
@@ -720,7 +720,21 @@ class StbClient {
             } else {
                 null
             }
-        } catch (_: Exception) {
+
+            // Fallback: If STB expects 4-digit program ID or ServiceID
+            if (map == null || (map["daily_epg_list"] as? List<*>)?.isEmpty() == true) {
+                val shortId = if (programId.length >= 4) programId.takeLast(4) else programId
+                val fallbackPayload = mapOf("array" to listOf(mapOf("ProgramId" to shortId, "ServiceID" to programId)))
+                val resFallback = sendCmd(5, fallbackPayload, expectReply = true, timeoutMs = 4000)
+                if (resFallback is List<*> && resFallback.isNotEmpty() && resFallback[0] is Map<*, *>) {
+                    @Suppress("UNCHECKED_CAST")
+                    map = resFallback[0] as Map<String, Any>
+                }
+            }
+            AppLogger.i("StbClient", "getEpg for $programId: found=${map != null}")
+            map
+        } catch (e: Exception) {
+            AppLogger.e("StbClient", "getEpg error: ${e.message}")
             null
         }
     }
