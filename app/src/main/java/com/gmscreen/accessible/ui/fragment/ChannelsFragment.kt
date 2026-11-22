@@ -87,6 +87,8 @@ class ChannelsFragment : Fragment() {
     private var selectedSatelliteId: Int = -1 // -1 means all satellites
     private var searchQuery: String = ""
     private var announceJob: Job? = null
+    private var activeStandbyDialog: androidx.appcompat.app.AlertDialog? = null
+    private var isCheckingStandby = false
 
     private val repository get() = GMScreenApplication.instance.repository
     private val appConfig get() = GMScreenApplication.instance.appConfig
@@ -549,8 +551,8 @@ class ChannelsFragment : Fragment() {
         }
     }
 
-    // Tuning TV on the receiver: DOES NOT stream to phone!
-    private fun tuneChannelOnTv(channel: Channel) {
+    // Safe centralized power check preventing dialog spam & immediate standby detection
+    private fun checkPowerAndExecute(channel: Channel, promptType: String, onPowerReady: suspend () -> Unit) {
         if (!repository.isConnected.value) {
             val msg = "رسیور متصل نیست. لطفاً ابتدا از سربرگ اتصال، به رسیور متصل شوید."
             AccessibilityHelper.announce(txtChannelCount, msg)
@@ -558,33 +560,74 @@ class ChannelsFragment : Fragment() {
             return
         }
 
+        // If standby dialog is currently showing, do not stack another dialog
+        if (activeStandbyDialog?.isShowing == true) {
+            AccessibilityHelper.announce(txtChannelCount, "رسیور خاموش است. لطفاً به پیام روشن کردن رسیور پاسخ دهید.")
+            return
+        }
+
+        if (isCheckingStandby) return
+        isCheckingStandby = true
+
+        val promptMessage = when (promptType) {
+            "tune" -> "رسیور در حالت آماده‌به‌کار (خاموش) است. آیا می‌خواهید رسیور روشن شود و به شبکه ${channel.serviceName} تغییر یابد؟"
+            "video" -> "رسیور در حالت آماده‌به‌کار (خاموش) است. برای پخش شبکه «${channel.serviceName}»، رسیور باید روشن باشد. آیا مایلید رسیور روشن شود؟"
+            else -> "رسیور در حالت آماده‌به‌کار (خاموش) است. برای شنیدن صدای «${channel.serviceName}»، رسیور باید روشن باشد. آیا مایلید رسیور روشن شود؟"
+        }
+
+        val showStandbyDialog: (String) -> Unit = { prompt ->
+            isCheckingStandby = false
+            activeStandbyDialog?.dismiss()
+            AccessibilityHelper.announce(txtChannelCount, prompt)
+            val dlg = MaterialAlertDialogBuilder(requireContext())
+                .setTitle("روشن کردن رسیور")
+                .setMessage(prompt)
+                .setPositiveButton("بله، روشن کن") { _, _ ->
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        repository.sendRcuKey(RcuKey.POWER_TOGGLE)
+                        withContext(Dispatchers.Main) {
+                            val onMsg = "رسیور روشن شد. در حال انجام دستور..."
+                            AccessibilityHelper.announce(txtChannelCount, onMsg)
+                            Toast.makeText(requireContext(), onMsg, Toast.LENGTH_SHORT).show()
+                        }
+                        delay(1200)
+                        onPowerReady()
+                    }
+                }
+                .setNegativeButton("انصراف", null)
+                .setOnDismissListener {
+                    activeStandbyDialog = null
+                    isCheckingStandby = false
+                }
+                .create()
+            activeStandbyDialog = dlg
+            dlg.show()
+        }
+
+        // Fast path: if repository already flagged STB as off, show dialog immediately without waiting 2s!
+        if (!repository.isStbPowerOn.value) {
+            showStandbyDialog(promptMessage)
+            return
+        }
+
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val isPowerOn = repository.isStbPowerOn()
-            if (!isPowerOn) {
-                withContext(Dispatchers.Main) {
-                    val prompt = "رسیور در حالت آماده‌به‌کار (خاموش) است. آیا می‌خواهید رسیور روشن شود و به شبکه ${channel.serviceName} تغییر یابد؟"
-                    AccessibilityHelper.announce(txtChannelCount, prompt)
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("روشن کردن رسیور")
-                        .setMessage(prompt)
-                        .setPositiveButton("بله، روشن کن") { _, _ ->
-                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                                repository.sendRcuKey(RcuKey.POWER_TOGGLE)
-                                withContext(Dispatchers.Main) {
-                                    val onMsg = "رسیور روشن شد. در حال انتقال به شبکه ${channel.serviceName}..."
-                                    AccessibilityHelper.announce(txtChannelCount, onMsg)
-                                    Toast.makeText(requireContext(), onMsg, Toast.LENGTH_SHORT).show()
-                                }
-                                delay(1200)
-                                executeTuneChannel(channel)
-                            }
-                        }
-                        .setNegativeButton("انصراف", null)
-                        .show()
+            withContext(Dispatchers.Main) {
+                isCheckingStandby = false
+                if (!isPowerOn) {
+                    showStandbyDialog(promptMessage)
+                } else {
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        onPowerReady()
+                    }
                 }
-                return@launch
             }
+        }
+    }
 
+    // Tuning TV on the receiver: DOES NOT stream to phone!
+    private fun tuneChannelOnTv(channel: Channel) {
+        checkPowerAndExecute(channel, "tune") {
             executeTuneChannel(channel)
         }
     }
@@ -629,42 +672,7 @@ class ChannelsFragment : Fragment() {
     }
 
     private fun playVideoOnPhone(channel: Channel) {
-        if (!repository.isConnected.value) {
-            val msg = "رسیور متصل نیست. لطفاً ابتدا از سربرگ اتصال، به رسیور متصل شوید."
-            AccessibilityHelper.announce(txtChannelCount, msg)
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val isPowerOn = repository.isStbPowerOn()
-            if (!isPowerOn) {
-                withContext(Dispatchers.Main) {
-                    val prompt = "رسیور در حالت آماده‌به‌کار (خاموش) است. برای پخش شبکه «${channel.serviceName}»، رسیور باید روشن باشد. آیا مایلید رسیور روشن شود؟"
-                    AccessibilityHelper.announce(txtChannelCount, prompt)
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("روشن کردن رسیور")
-                        .setMessage(prompt)
-                        .setPositiveButton("بله، روشن کن") { _, _ ->
-                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                                repository.sendRcuKey(RcuKey.POWER_TOGGLE)
-                                withContext(Dispatchers.Main) {
-                                    val onMsg = "رسیور روشن شد. در حال باز کردن پخش زنده..."
-                                    AccessibilityHelper.announce(txtChannelCount, onMsg)
-                                    Toast.makeText(requireContext(), onMsg, Toast.LENGTH_SHORT).show()
-                                }
-                                delay(1200)
-                                withContext(Dispatchers.Main) {
-                                    startVideoPlayer(channel)
-                                }
-                            }
-                        }
-                        .setNegativeButton("انصراف", null)
-                        .show()
-                }
-                return@launch
-            }
-
+        checkPowerAndExecute(channel, "video") {
             withContext(Dispatchers.Main) {
                 startVideoPlayer(channel)
             }
@@ -683,39 +691,12 @@ class ChannelsFragment : Fragment() {
 
     private fun playAudioOnPhone(channel: Channel) {
         val ip = repository.connectedIp.value
-        if (!repository.isConnected.value || ip.isBlank()) {
-            val msg = "رسیور متصل نیست. لطفاً ابتدا از سربرگ اتصال، به رسیور متصل شوید."
-            AccessibilityHelper.announce(txtChannelCount, msg)
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-            return
+        checkPowerAndExecute(channel, "audio") {
+            withContext(Dispatchers.Main) {
+                executePlayAudio(channel, ip)
+            }
         }
-
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val isPowerOn = repository.isStbPowerOn()
-            if (!isPowerOn) {
-                withContext(Dispatchers.Main) {
-                    val prompt = "رسیور در حالت آماده‌به‌کار (خاموش) است. برای شنیدن صدای «${channel.serviceName}»، رسیور باید روشن باشد. آیا مایلید رسیور روشن شود؟"
-                    AccessibilityHelper.announce(txtChannelCount, prompt)
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("روشن کردن رسیور")
-                        .setMessage(prompt)
-                        .setPositiveButton("بله، روشن کن") { _, _ ->
-                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                                repository.sendRcuKey(RcuKey.POWER_TOGGLE)
-                                withContext(Dispatchers.Main) {
-                                    val onMsg = "رسیور روشن شد. در حال اتصال به پخش صوتی..."
-                                    AccessibilityHelper.announce(txtChannelCount, onMsg)
-                                    Toast.makeText(requireContext(), onMsg, Toast.LENGTH_SHORT).show()
-                                }
-                                delay(1200)
-                                withContext(Dispatchers.Main) {
-                                    executePlayAudio(channel, ip)
-                                }
-                            }
-                        }
-                        .setNegativeButton("انصراف", null)
-                        .show()
-                }
+    }
                 return@launch
             }
 

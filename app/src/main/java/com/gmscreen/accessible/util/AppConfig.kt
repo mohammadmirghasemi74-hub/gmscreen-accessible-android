@@ -49,6 +49,7 @@ class AppConfig(context: Context) {
         private const val KEY_QUICK_ACCESS_ENABLED = "quick_access_enabled"
         private const val KEY_QUICK_ACCESS_ITEMS = "quick_access_items"
         private const val KEY_STB_VOLUME = "stb_volume"
+        private const val KEY_STB_VOLUME_STEP = "stb_volume_step"
         private const val KEY_SHOW_VOLUME_STEP_BUTTONS = "show_volume_step_buttons"
     }
 
@@ -247,6 +248,10 @@ class AppConfig(context: Context) {
     var stbVolume: Int
         get() = prefs.getInt(KEY_STB_VOLUME, 50)
         set(value) = prefs.edit().putInt(KEY_STB_VOLUME, value).apply()
+
+    var volumeStep: Int
+        get() = prefs.getInt(KEY_STB_VOLUME_STEP, 5)
+        set(value) = prefs.edit().putInt(KEY_STB_VOLUME_STEP, value).apply()
 
     fun getNextRecordingNumber(): Int {
         val next = recordingCounter + 1

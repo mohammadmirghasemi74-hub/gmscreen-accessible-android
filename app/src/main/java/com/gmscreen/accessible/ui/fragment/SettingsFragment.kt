@@ -1317,6 +1317,7 @@ class SettingsFragment : Fragment() {
         var draftShowRecordings = appConfig.showRecordingsInChannels
         var draftShowRefresh = appConfig.showRefreshInChannels
         var draftShowMic = appConfig.showMicInChannels
+        var draftVolumeStep = appConfig.volumeStep
 
         val scrollView = ScrollView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -1501,6 +1502,39 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
+        // 10. Volume slider step
+        val getVolumeStepTitle: (Int) -> String = { step ->
+            when (step) {
+                2 -> "۲ درصد"
+                10 -> "۱۰ درصد"
+                else -> "۵ درصد (پیش‌فرض)"
+            }
+        }
+        addSettingRow(contentLayout, "۱۰. گام تغییر ولوم لغزنده رسیور (اسلایدر دسترسی سریع)", getVolumeStepTitle(draftVolumeStep)) { txtVal, row ->
+            val opts = arrayOf("۲ درصد", "۵ درصد (پیش‌فرض)", "۱۰ درصد")
+            val currentIdx = when (draftVolumeStep) {
+                2 -> 0
+                10 -> 2
+                else -> 1
+            }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("گام تغییر ولوم صدای رسیور")
+                .setSingleChoiceItems(opts, currentIdx) { dlg, which ->
+                    draftVolumeStep = when (which) {
+                        0 -> 2
+                        2 -> 10
+                        else -> 5
+                    }
+                    val label = getVolumeStepTitle(draftVolumeStep)
+                    txtVal.text = label
+                    row.contentDescription = "گام تغییر ولوم: $label"
+                    AccessibilityHelper.announce(row, label)
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("تنظیمات دسترس‌پذیری، ویبره و خروجی صدا")
             .setView(scrollView)
@@ -1514,6 +1548,7 @@ class SettingsFragment : Fragment() {
                 appConfig.showJumpToFirstChannel = draftJumpFirst
                 appConfig.showJumpToLastChannel = draftJumpLast
                 appConfig.separateAudioToBluetooth = draftSeparateAudio
+                appConfig.volumeStep = draftVolumeStep
 
                 val msg = "تنظیمات دسترس‌پذیری با موفقیت ذخیره شد"
                 AccessibilityHelper.announce(null, msg)

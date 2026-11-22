@@ -19,7 +19,7 @@
         android:gravity="center"
         android:layout_marginBottom="12dp" />
 
-    <!-- Count and Delete All Row -->
+    <!-- Count, Sort Toggle and Delete All Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -38,10 +38,24 @@
             android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnToggleSortOrder"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginEnd="6dp"
+            android:text="ترتیب: صعودی (۱ به آخر)"
+            android:contentDescription="ترتیب فایل‌ها: صعودی از ۱ به آخر. برای تغییر به نزولی ضربه بزنید."
+            android:textColor="@color/accent_blue"
+            android:textSize="11sp"
+            app:strokeColor="@color/accent_blue"
+            app:strokeWidth="1dp"
+            app:backgroundTint="#162234"
+            app:cornerRadius="8dp" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDeleteAllFiles"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
-            android:text="حذف همه فایل‌ها"
+            android:text="حذف همه"
             android:contentDescription="حذف تمام فایل‌های موجود در این لیست"
             android:textColor="@color/white"
             android:textSize="12sp"

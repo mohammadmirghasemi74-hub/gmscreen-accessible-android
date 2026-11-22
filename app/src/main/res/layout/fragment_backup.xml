@@ -33,199 +33,253 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="پشتیبان‌گیری، ذخیره‌سازی و پلی‌لیست‌ها"
+            android:text="مدیریت پشتیبان‌گیری، پلی‌لیست‌ها و ذخیره‌سازی"
             android:textColor="@color/text_primary"
-            android:textSize="18sp"
+            android:textSize="17sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="14dp" />
 
-        <!-- 1. STB USB Hardware Backup Card -->
+        <!-- ============================================== -->
+        <!-- SECTION 1: STB USB Hardware Backup             -->
+        <!-- ============================================== -->
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/card_border"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="۱. پشتیبان‌گیری سخت‌افزاری روی فلش رسیور (USB)"
-                    android:textColor="@color/accent_green"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
-
-                <TextView
-                    android:id="@+id/txtBackupDeviceInfo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="مدل رسیور متصل: نامشخص"
-                    android:textColor="@color/accent_yellow"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="روش بکاپ‌گیری سخت‌افزاری متناسب با مدل:"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="4dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSelectBackupMethod"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:text="۱. تشخیص خودکار هوشمند (توصیه‌شده)"
-                    android:contentDescription="روش بکاپ‌گیری سخت‌افزاری: تشخیص خودکار هوشمند. برای تغییر دو بار ضربه بزنید."
-                    android:textColor="@color/white"
-                    android:textSize="12sp"
-                    android:gravity="center_vertical|start"
-                    android:paddingHorizontal="10dp"
-                    android:layout_marginBottom="8dp"
-                    app:backgroundTint="#243447"
-                    app:cornerRadius="8dp"
-                    app:strokeColor="@color/card_border"
-                    app:strokeWidth="1dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnBackupStbUsb"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:text="شروع بکاپ‌گیری سخت‌افزاری روی فلش رسیور"
-                    android:contentDescription="شروع بکاپ‌گیری مستقیم از کانال‌ها و تنظیمات روی فلش متصل به رسیور"
-                    android:textColor="@color/white"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    app:backgroundTint="@color/accent_green"
-                    app:cornerRadius="8dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- 2. Phone Export and Storage Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="@color/card_border"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="۲. ذخیره‌سازی اطلاعات شبکه‌ها روی حافظه گوشی"
-                    android:textColor="@color/accent_blue"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="خروجی گرفتن از تمام کانال‌ها در قالب فایل‌های Word، TXT، HTML و JSON"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="8dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnExportChannels"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:text="ذخیره‌سازی اطلاعات شبکه‌ها (Word, TXT, HTML, JSON)..."
-                    android:contentDescription="ذخیره‌سازی و تولید خروجی از کانال‌ها با انتخاب فرمت"
-                    android:textColor="@color/white"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="8dp"
-                    app:backgroundTint="#1e88e5"
-                    app:cornerRadius="8dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnManageBackups"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:text="مشاهده و مدیریت فایل‌های ذخیره‌شده"
-                    android:contentDescription="مشاهده، باز کردن، اشتراک‌گذاری یا حذف فایل‌های ذخیره‌شده روی گوشی"
-                    android:textColor="@color/white"
-                    android:textSize="12sp"
-                    app:backgroundTint="#374151"
-                    app:cornerRadius="8dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- 3. M3U Playlists Card -->
-        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardSection1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="12dp"
+            app:cardCornerRadius="14dp"
             app:strokeColor="@color/card_border"
             app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp">
+                android:orientation="vertical">
 
-                <TextView
+                <!-- Section 1 Header Toggle Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnHeaderSection1"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:text="۱. پشتیبان‌گیری روی فلش رسیور (USB)  ▼"
+                    android:contentDescription="بخش اول: پشتیبان‌گیری روی فلش رسیور. کلیک برای باز یا بسته کردن این بخش"
+                    android:textColor="@color/accent_green"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:gravity="center_vertical|start"
+                    android:paddingHorizontal="14dp"
+                    app:backgroundTint="#172635"
+                    app:cornerRadius="14dp" />
+
+                <!-- Section 1 Content -->
+                <LinearLayout
+                    android:id="@+id/layoutSection1Content"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="۳. ساخت و مدیریت پلی‌لیست‌های M3U (جهت پخش در VLC)"
+                    android:orientation="vertical"
+                    android:padding="14dp"
+                    android:visibility="visible">
+
+                    <TextView
+                        android:id="@+id/txtBackupDeviceInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="مدل رسیور متصل: نامشخص"
+                        android:textColor="@color/accent_yellow"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="روش بکاپ‌گیری سخت‌افزاری متناسب با مدل:"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSelectBackupMethod"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:text="۱. تشخیص خودکار هوشمند (توصیه‌شده)"
+                        android:contentDescription="روش بکاپ‌گیری سخت‌افزاری: تشخیص خودکار هوشمند. برای تغییر دو بار ضربه بزنید."
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:gravity="center_vertical|start"
+                        android:paddingHorizontal="10dp"
+                        android:layout_marginBottom="10dp"
+                        app:backgroundTint="#243447"
+                        app:cornerRadius="8dp"
+                        app:strokeColor="@color/card_border"
+                        app:strokeWidth="1dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnBackupStbUsb"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="شروع بکاپ‌گیری سخت‌افزاری روی فلش رسیور"
+                        android:contentDescription="شروع بکاپ‌گیری مستقیم از کانال‌ها و تنظیمات روی فلش متصل به رسیور"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/accent_green"
+                        app:cornerRadius="8dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ============================================== -->
+        <!-- SECTION 2: M3U Playlists Creation & Management -->
+        <!-- ============================================== -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardSection2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="14dp"
+            app:strokeColor="@color/card_border"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Section 2 Header Toggle Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnHeaderSection2"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:text="۲. ساخت و مشاهده پلی‌لیست‌های M3U  ▼"
+                    android:contentDescription="بخش دوم: ساخت و مشاهده پلی‌لیست‌های M3U برای پخش در VLC. کلیک برای باز یا بسته کردن این بخش"
                     android:textColor="@color/accent_amber"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
+                    android:gravity="center_vertical|start"
+                    android:paddingHorizontal="14dp"
+                    app:backgroundTint="#262118"
+                    app:cornerRadius="14dp" />
 
-                <TextView
+                <!-- Section 2 Content -->
+                <LinearLayout
+                    android:id="@+id/layoutSection2Content"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="تولید فایل‌های لیست پخش استاندارد Sat>IP برای پخش با یک کلیک در VLC"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="8dp" />
+                    android:orientation="vertical"
+                    android:padding="14dp"
+                    android:visibility="visible">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnOpenPlaylistCreator"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:text="ساخت و تنظیمات پلی‌لیست شبکه‌ها (M3U)..."
-                    android:contentDescription="باز کردن پنجره ساخت و شخصی‌سازی فایل‌های لیست پخش ام تری یو"
-                    android:textColor="@color/white"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="8dp"
-                    app:backgroundTint="#0284c7"
-                    app:cornerRadius="8dp" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="تولید فایل‌های لیست پخش استاندارد Sat>IP برای پخش با یک کلیک در VLC"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="10dp" />
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnOpenPlaylistCreator"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="ساخت و تنظیمات پلی‌لیست شبکه‌ها (M3U)..."
+                        android:contentDescription="باز کردن پنجره ساخت و شخصی‌سازی فایل‌های لیست پخش ام تری یو"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:layout_marginBottom="8dp"
+                        app:backgroundTint="#0284c7"
+                        app:cornerRadius="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnManagePlaylists"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:text="مشاهده و مدیریت فایل‌های پلی‌لیست (M3U)"
+                        android:contentDescription="مشاهده، پخش مستقیم، اشتراک‌گذاری یا حذف فایل‌های پلی‌لیست ام تری یو"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        app:backgroundTint="#374151"
+                        app:cornerRadius="8dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ============================================== -->
+        <!-- SECTION 3: Phone Export & Storage (Word, TXT)  -->
+        <!-- ============================================== -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardSection3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="14dp"
+            app:strokeColor="@color/card_border"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Section 3 Header Toggle Button -->
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnManagePlaylists"
+                    android:id="@+id/btnHeaderSection3"
                     android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:text="مشاهده و مدیریت فایل‌های پلی‌لیست (M3U)"
-                    android:contentDescription="مشاهده، پخش مستقیم، اشتراک‌گذاری یا حذف فایل‌های پلی‌لیست ام تری یو"
-                    android:textColor="@color/white"
-                    android:textSize="12sp"
-                    app:backgroundTint="#374151"
-                    app:cornerRadius="8dp" />
+                    android:layout_height="54dp"
+                    android:text="۳. ذخیره‌سازی کانال‌ها در گوشی (Word, TXT, ...)  ▼"
+                    android:contentDescription="بخش سوم: ذخیره‌سازی اطلاعات شبکه‌ها روی حافظه گوشی با فرمت‌های Word، TXT، HTML و JSON. کلیک برای باز یا بسته کردن این بخش"
+                    android:textColor="@color/accent_blue"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:gravity="center_vertical|start"
+                    android:paddingHorizontal="14dp"
+                    app:backgroundTint="#132338"
+                    app:cornerRadius="14dp" />
+
+                <!-- Section 3 Content -->
+                <LinearLayout
+                    android:id="@+id/layoutSection3Content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp"
+                    android:visibility="visible">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="خروجی گرفتن از تمام کانال‌ها در قالب فایل‌های رسمی Word، TXT، HTML و JSON"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="10dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnExportChannels"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="ذخیره‌سازی اطلاعات شبکه‌ها (Word, TXT, HTML, JSON)..."
+                        android:contentDescription="ذخیره‌سازی و تولید خروجی از کانال‌ها با انتخاب فرمت"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:layout_marginBottom="8dp"
+                        app:backgroundTint="#1e88e5"
+                        app:cornerRadius="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnManageBackups"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:text="مشاهده و مدیریت فایل‌های ذخیره‌شده گوشی"
+                        android:contentDescription="مشاهده، باز کردن، اشتراک‌گذاری یا حذف فایل‌های ذخیره‌شده روی گوشی"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        app:backgroundTint="#374151"
+                        app:cornerRadius="8dp" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

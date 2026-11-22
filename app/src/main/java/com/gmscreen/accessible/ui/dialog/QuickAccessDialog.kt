@@ -119,7 +119,6 @@ object QuickAccessDialog {
         val seekBarVolume = dialogView.findViewById<SeekBar>(R.id.seekBarVolume)
         val btnVolMinus5 = dialogView.findViewById<MaterialButton>(R.id.btnVolMinus5)
         val btnVolPlus5 = dialogView.findViewById<MaterialButton>(R.id.btnVolPlus5)
-        val btnQuickMute = dialogView.findViewById<MaterialButton>(R.id.btnQuickMute)
         val pager = dialogView.findViewById<ViewPager2>(R.id.pagerQuickActions)
         val rowNavigation = dialogView.findViewById<View>(R.id.rowPageNavigation)
         val btnPrevPage = dialogView.findViewById<MaterialButton>(R.id.btnPrevPage)
@@ -129,13 +128,18 @@ object QuickAccessDialog {
         lateinit var dialog: AlertDialog
 
         // 1. Setup Volume Slider & Step Buttons
+        val volStep = appConfig.volumeStep
         var currentVol = appConfig.stbVolume.coerceIn(0, 100)
-        currentVol = ((currentVol + 2) / 5) * 5
+        currentVol = ((currentVol + (volStep / 2)) / volStep) * volStep
         var trackingStartVol = currentVol
 
         val showStepBtns = appConfig.showVolumeStepButtons
         btnVolMinus5.visibility = if (showStepBtns) View.VISIBLE else View.GONE
         btnVolPlus5.visibility = if (showStepBtns) View.VISIBLE else View.GONE
+        btnVolMinus5.text = "➖ $volStep٪ کمتر"
+        btnVolPlus5.text = "➕ $volStep٪ بیشتر"
+        btnVolMinus5.contentDescription = "کاهش $volStep درصد صدای رسیور"
+        btnVolPlus5.contentDescription = "افزایش $volStep درصد صدای رسیور"
 
         fun updateVolumeDisplay(vol: Int) {
             currentVol = vol.coerceIn(0, 100)
@@ -182,7 +186,7 @@ object QuickAccessDialog {
                                     delay(25)
                                 }
                             } else {
-                                val steps = (Math.abs(delta) / 5).coerceAtLeast(1)
+                                val steps = (Math.abs(delta) / appConfig.volumeStep).coerceAtLeast(1)
                                 for (i in 0 until steps) {
                                     if (delta > 0) repository.sendRcuKey(RcuKey.VOL_UP)
                                     else repository.sendRcuKey(RcuKey.VOL_DOWN)
@@ -194,6 +198,29 @@ object QuickAccessDialog {
                 }
             }
         }
+
+        // Accessibility Delegate for TalkBack gestures on Slider
+        androidx.core.view.ViewCompat.setAccessibilityDelegate(seekBarVolume, object : androidx.core.view.AccessibilityDelegateCompat() {
+            override fun performAccessibilityAction(host: View, action: Int, args: android.os.Bundle?): Boolean {
+                val step = appConfig.volumeStep
+                if (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD) {
+                    adjustVolumeBy(step)
+                    return true
+                } else if (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD) {
+                    adjustVolumeBy(-step)
+                    return true
+                }
+                return super.performAccessibilityAction(host, action, args)
+            }
+
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: androidx.core.view.accessibility.AccessibilityNodeInfoCompat) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_FORWARD)
+                info.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_BACKWARD)
+                val step = appConfig.volumeStep
+                info.text = "ولوم صدای رسیور: $currentVol درصد. با کشیدن انگشت به بالا صدا $step درصد زیاد و با کشیدن به پایین $step درصد کم می‌شود"
+            }
+        })
 
         seekBarVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onStartTrackingTouch(sb: SeekBar?) {
@@ -209,7 +236,8 @@ object QuickAccessDialog {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
                     if (!repository.isConnected.value) return
-                    val snapped = ((progress + 2) / 5) * 5
+                    val step = appConfig.volumeStep
+                    val snapped = ((progress + (step / 2)) / step) * step
                     currentVol = snapped
                     if (snapped == 0) {
                         txtVolumeBadge.text = "۰٪ (بی‌صدا)"
@@ -252,7 +280,7 @@ object QuickAccessDialog {
                                         delay(25)
                                     }
                                 } else {
-                                    val steps = (Math.abs(delta) / 5).coerceAtLeast(1)
+                                    val steps = (Math.abs(delta) / appConfig.volumeStep).coerceAtLeast(1)
                                     for (i in 0 until steps) {
                                         if (delta > 0) repository.sendRcuKey(RcuKey.VOL_UP)
                                         else repository.sendRcuKey(RcuKey.VOL_DOWN)
@@ -266,25 +294,8 @@ object QuickAccessDialog {
             }
         })
 
-        btnVolMinus5.setOnClickListener { adjustVolumeBy(-5) }
-        btnVolPlus5.setOnClickListener { adjustVolumeBy(5) }
-
-        // Mute button matching RemoteFragment exact behavior
-        btnQuickMute.setOnClickListener {
-            if (!repository.isConnected.value) {
-                val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
-                AccessibilityHelper.announce(btnQuickMute, msg)
-                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (!repository.isStbPowerOn.value) {
-                val msg = "رسیور خاموش (آماده‌به‌کار) است. ابتدا کلید پاور را بزنید."
-                AccessibilityHelper.announce(btnQuickMute, msg)
-                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            executeMute(activity, btnQuickMute)
-        }
+        btnVolMinus5.setOnClickListener { adjustVolumeBy(-appConfig.volumeStep) }
+        btnVolPlus5.setOnClickListener { adjustVolumeBy(appConfig.volumeStep) }
 
         // 2. Setup Action Buttons Pager (Carousel)
         lateinit var refreshActionButtons: () -> Unit
@@ -650,41 +661,88 @@ object QuickAccessDialog {
         }
     }
 
+    data class ActionCategory(
+        val name: String,
+        val description: String,
+        val itemIds: List<String>
+    )
+
+    val ACTION_CATEGORIES = listOf(
+        ActionCategory(
+            "۱. مدیریت پاور و صدا",
+            "کلیدهای کنترل برق، بی‌صدا، لغزنده ولوم و ری‌استارت رسیور",
+            listOf("power", "mute", "vol_slider", "restart_stb")
+        ),
+        ActionCategory(
+            "۲. جابجایی و کنترل کانال‌ها",
+            "کلیدهای کانال بعدی/قبلی، بازگشت، جستجو و لیست ماهواره/علاقه‌مندی",
+            listOf("ch_up", "ch_down", "recall", "find_channel", "sat_list", "fav_list")
+        ),
+        ActionCategory(
+            "۳. ضبط و پخش زنده",
+            "کلیدهای ضبط فوری فلش، ضبط گوشی و پخش زنده استریم",
+            listOf("rec_stb_toggle", "rec_phone_toggle", "play_stream")
+        ),
+        ActionCategory(
+            "۴. اطلاعات، جدول برنامه‌ها و ابزارها",
+            "گزارش وضعیت، جدول EPG، اطلاعات شبکه، ترک صوتی و زیرنویس",
+            listOf("status", "epg", "info", "audio_track", "subtitle")
+        )
+    )
+
     fun showCustomizeKeysDialog(context: Context, appConfig: AppConfig, onSaved: () -> Unit) {
-        val allTitles = ALL_AVAILABLE_ACTIONS.map { it.defaultTitle }.toTypedArray()
-        val currentSelected = appConfig.quickAccessItems
-        val checkedStates = BooleanArray(ALL_AVAILABLE_ACTIONS.size) { i ->
-            currentSelected.contains(ALL_AVAILABLE_ACTIONS[i].id)
+        val workingSet = appConfig.quickAccessItems.toMutableSet()
+
+        fun showCategorySelectionDialog() {
+            val categoryLabels = ACTION_CATEGORIES.map { cat ->
+                val activeCount = cat.itemIds.count { workingSet.contains(it) }
+                "${cat.name}\n($activeCount از ${cat.itemIds.size} کلید فعال است)"
+            }.toTypedArray()
+
+            MaterialAlertDialogBuilder(context)
+                .setTitle("گروه‌بندی کلیدهای دسترسی سریع")
+                .setItems(categoryLabels) { _, which ->
+                    val selectedCategory = ACTION_CATEGORIES[which]
+                    val items = selectedCategory.itemIds.mapNotNull { id -> ALL_AVAILABLE_ACTIONS.find { it.id == id } }
+                    val itemTitles = items.map { it.defaultTitle }.toTypedArray()
+                    val checkedStates = BooleanArray(items.size) { i -> workingSet.contains(items[i].id) }
+
+                    MaterialAlertDialogBuilder(context)
+                        .setTitle(selectedCategory.name)
+                        .setMultiChoiceItems(itemTitles, checkedStates) { _, itemIdx, isChecked ->
+                            val itemId = items[itemIdx].id
+                            if (isChecked) {
+                                workingSet.add(itemId)
+                            } else {
+                                workingSet.remove(itemId)
+                            }
+                        }
+                        .setPositiveButton("بستن و ثبت این گروه") { _, _ ->
+                            showCategorySelectionDialog()
+                        }
+                        .setCancelable(false)
+                        .show()
+                }
+                .setPositiveButton("ذخیره و اعمال") { _, _ ->
+                    if (workingSet.isEmpty()) workingSet.add("status")
+                    appConfig.quickAccessItems = workingSet
+                    onSaved()
+                    val saveMsg = "کلیدهای دسترسی سریع ذخیره شد (${workingSet.size} کلید فعال)"
+                    AccessibilityHelper.announce(null, saveMsg)
+                    Toast.makeText(context, saveMsg, Toast.LENGTH_SHORT).show()
+                }
+                .setNeutralButton("بازگردانی به پیش‌فرض") { _, _ ->
+                    appConfig.quickAccessItems = appConfig.defaultQuickAccessItems
+                    onSaved()
+                    val defMsg = "تنظیمات به حالت پیش‌فرض بازگشت"
+                    AccessibilityHelper.announce(null, defMsg)
+                    Toast.makeText(context, defMsg, Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
         }
 
-        MaterialAlertDialogBuilder(context)
-            .setTitle("سفارشی‌سازی کلیدهای پنل دسترسی سریع")
-            .setMultiChoiceItems(allTitles, checkedStates) { _, which, isChecked ->
-                checkedStates[which] = isChecked
-            }
-            .setPositiveButton("ذخیره و اعمال") { _, _ ->
-                val newSet = mutableSetOf<String>()
-                for (i in checkedStates.indices) {
-                    if (checkedStates[i]) {
-                        newSet.add(ALL_AVAILABLE_ACTIONS[i].id)
-                    }
-                }
-                if (newSet.isEmpty()) newSet.add("status")
-                appConfig.quickAccessItems = newSet
-                onSaved()
-                val saveMsg = "کلیدهای دسترسی سریع به‌روزرسانی شد"
-                AccessibilityHelper.announce(null, saveMsg)
-                Toast.makeText(context, saveMsg, Toast.LENGTH_SHORT).show()
-            }
-            .setNeutralButton("پیش‌فرض") { _, _ ->
-                appConfig.quickAccessItems = appConfig.defaultQuickAccessItems
-                onSaved()
-                val defMsg = "تنظیمات به حالت پیش‌فرض بازگشت"
-                AccessibilityHelper.announce(null, defMsg)
-                Toast.makeText(context, defMsg, Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
+        showCategorySelectionDialog()
     }
 
     // --- ViewPager2 Adapter for Paging Action Buttons ---

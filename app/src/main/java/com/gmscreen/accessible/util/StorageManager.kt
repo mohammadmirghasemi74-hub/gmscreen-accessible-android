@@ -694,6 +694,22 @@ object StorageManager {
         return count
     }
 
+    val NATURAL_FILE_COMPARATOR = Comparator<File> { f1, f2 ->
+        val name1 = f1.name
+        val name2 = f2.name
+        val regex = Regex("\\d+")
+        val match1 = regex.find(name1)
+        val match2 = regex.find(name2)
+        if (match1 != null && match2 != null) {
+            val num1 = match1.value.toLongOrNull() ?: 0L
+            val num2 = match2.value.toLongOrNull() ?: 0L
+            val cmp = num1.compareTo(num2)
+            if (cmp != 0) cmp else name1.compareTo(name2, ignoreCase = true)
+        } else {
+            name1.compareTo(name2, ignoreCase = true)
+        }
+    }
+
     fun listBackupFiles(context: Context): List<File> {
         val dir = getBackupsDir(context)
         return dir.listFiles { f ->
@@ -703,12 +719,12 @@ object StorageManager {
                          f.name.endsWith(".txt", ignoreCase = true) ||
                          f.name.endsWith(".html", ignoreCase = true) ||
                          f.name.endsWith(".htm", ignoreCase = true))
-        }?.sortedByDescending { it.lastModified() } ?: emptyList()
+        }?.sortedWith(NATURAL_FILE_COMPARATOR) ?: emptyList()
     }
 
     fun listPlaylistFiles(context: Context): List<File> {
         val dir = getPlaylistsDir(context)
         return dir.listFiles { f -> f.isFile && f.name.endsWith(".m3u", ignoreCase = true) }
-            ?.sortedByDescending { it.lastModified() } ?: emptyList()
+            ?.sortedWith(NATURAL_FILE_COMPARATOR) ?: emptyList()
     }
 }

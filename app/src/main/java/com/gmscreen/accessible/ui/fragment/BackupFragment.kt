@@ -76,6 +76,34 @@ class BackupFragment : Fragment() {
         btnOpenPlaylistCreator = view.findViewById(R.id.btnOpenPlaylistCreator)
         btnManagePlaylists = view.findViewById(R.id.btnManagePlaylists)
 
+        val btnHeader1 = view.findViewById<MaterialButton>(R.id.btnHeaderSection1)
+        val layoutContent1 = view.findViewById<View>(R.id.layoutSection1Content)
+        val btnHeader2 = view.findViewById<MaterialButton>(R.id.btnHeaderSection2)
+        val layoutContent2 = view.findViewById<View>(R.id.layoutSection2Content)
+        val btnHeader3 = view.findViewById<MaterialButton>(R.id.btnHeaderSection3)
+        val layoutContent3 = view.findViewById<View>(R.id.layoutSection3Content)
+
+        btnHeader1.setOnClickListener {
+            val isExpanded = layoutContent1.visibility == View.VISIBLE
+            layoutContent1.visibility = if (isExpanded) View.GONE else View.VISIBLE
+            btnHeader1.text = "۱. پشتیبان‌گیری روی فلش رسیور (USB)  " + if (isExpanded) "▶" else "▼"
+            AccessibilityHelper.announce(btnHeader1, if (isExpanded) "بخش ۱ بسته شد" else "بخش ۱ باز شد")
+        }
+
+        btnHeader2.setOnClickListener {
+            val isExpanded = layoutContent2.visibility == View.VISIBLE
+            layoutContent2.visibility = if (isExpanded) View.GONE else View.VISIBLE
+            btnHeader2.text = "۲. ساخت و مشاهده پلی‌لیست‌های M3U  " + if (isExpanded) "▶" else "▼"
+            AccessibilityHelper.announce(btnHeader2, if (isExpanded) "بخش ۲ بسته شد" else "بخش ۲ باز شد")
+        }
+
+        btnHeader3.setOnClickListener {
+            val isExpanded = layoutContent3.visibility == View.VISIBLE
+            layoutContent3.visibility = if (isExpanded) View.GONE else View.VISIBLE
+            btnHeader3.text = "۳. ذخیره‌سازی کانال‌ها در گوشی (Word, TXT, ...)  " + if (isExpanded) "▶" else "▼"
+            AccessibilityHelper.announce(btnHeader3, if (isExpanded) "بخش ۳ بسته شد" else "بخش ۳ باز شد")
+        }
+
         setupUI()
         observeData()
 
@@ -341,25 +369,6 @@ class BackupFragment : Fragment() {
                             txtStatus.text = successMsg
                             AccessibilityHelper.announce(btnExportChannels, successMsg)
                             Toast.makeText(requireContext(), successMsg, Toast.LENGTH_LONG).show()
-
-                            // Offer immediate open
-                            MaterialAlertDialogBuilder(requireContext())
-                                .setTitle("ذخیره‌سازی موفق")
-                                .setMessage("فایل ${createdFile.name} با ${channels.size} شبکه ذخیره شد.\nآیا مایل به باز کردن فایل هستید؟")
-                                .setPositiveButton("باز کردن") { _, _ ->
-                                    val mime = when (extName) {
-                                        "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                        "txt" -> "text/plain"
-                                        "html" -> "text/html"
-                                        else -> "application/json"
-                                    }
-                                    openFileWithExternalApp(createdFile, mime)
-                                }
-                                .setNeutralButton("مشاهده فایل‌ها") { _, _ ->
-                                    showCustomFileManagerDialog(isPlaylist = false)
-                                }
-                                .setNegativeButton("بستن", null)
-                                .show()
                         }
                     } catch (e: Exception) {
                         withContext(Dispatchers.Main) {
@@ -384,11 +393,13 @@ class BackupFragment : Fragment() {
         val btnDeleteAll = dialogView.findViewById<MaterialButton>(R.id.btnDeleteAllFiles)
         val txtEmpty = dialogView.findViewById<TextView>(R.id.txtEmptyFiles)
         val recycler = dialogView.findViewById<RecyclerView>(R.id.recyclerFiles)
+        val btnSortOrder = dialogView.findViewById<MaterialButton>(R.id.btnToggleSortOrder)
         val btnClose = dialogView.findViewById<MaterialButton>(R.id.btnCloseDialog)
 
         val title = if (isPlaylist) "مدیریت فایل‌های پلی‌لیست M3U" else "مدیریت فایل‌های ذخیره‌شده (Word, TXT, HTML, JSON)"
         txtTitle.text = title
 
+        var isAscending = true
         val fileList = mutableListOf<File>()
         val refreshFilesList: () -> Unit = {
             fileList.clear()
@@ -397,8 +408,28 @@ class BackupFragment : Fragment() {
             } else {
                 fileList.addAll(StorageManager.listBackupFiles(requireContext()))
             }
+            if (!isAscending) {
+                fileList.reverse()
+            }
         }
         refreshFilesList()
+
+        btnSortOrder?.setOnClickListener {
+            isAscending = !isAscending
+            if (isAscending) {
+                fileList.sortWith(StorageManager.NATURAL_FILE_COMPARATOR)
+                btnSortOrder.text = "ترتیب: صعودی (۱ به آخر)"
+                btnSortOrder.contentDescription = "ترتیب فایل‌ها: صعودی از ۱ به آخر. برای تغییر به نزولی ضربه بزنید."
+                AccessibilityHelper.announce(btnSortOrder, "ترتیب فایل‌ها به صورت صعودی از شماره ۱ مرتب شد.")
+            } else {
+                fileList.sortWith(StorageManager.NATURAL_FILE_COMPARATOR.reversed())
+                btnSortOrder.text = "ترتیب: نزولی (آخر به ۱)"
+                btnSortOrder.contentDescription = "ترتیب فایل‌ها: نزولی از آخر به ۱. برای تغییر به صعودی ضربه بزنید."
+                AccessibilityHelper.announce(btnSortOrder, "ترتیب فایل‌ها به صورت نزولی مرتب شد.")
+            }
+            adapter.notifyDataSetChanged()
+            recycler.scrollToPosition(0)
+        }
 
         lateinit var adapter: SavedFilesAdapter
         lateinit var dialog: AlertDialog
@@ -478,7 +509,7 @@ class BackupFragment : Fragment() {
     private fun showSingleFileActionsDialog(file: File, isPlaylist: Boolean, onResult: (Boolean) -> Unit) {
         val ext = file.extension.lowercase()
         val mimeType = when (ext) {
-            "m3u", "m3u8" -> "audio/x-mpegurl"
+            "m3u", "m3u8" -> "video/x-mpegurl"
             "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             "txt" -> "text/plain"
             "html", "htm" -> "text/html"
@@ -565,6 +596,8 @@ class BackupFragment : Fragment() {
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, mimeType)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
             startActivity(intent)
         } catch (e: Exception) {

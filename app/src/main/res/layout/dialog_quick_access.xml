@@ -112,7 +112,7 @@
                 android:progressTint="@color/accent_blue"
                 android:thumbTint="@color/accent_yellow" />
 
-            <!-- Volume Quick Buttons: -5%, Mute, +5% -->
+            <!-- Volume Quick Step Buttons: -Step, +Step -->
             <LinearLayout
                 android:id="@+id/layoutVolumeButtons"
                 android:layout_width="match_parent"
@@ -126,24 +126,11 @@
                     android:layout_width="0dp"
                     android:layout_height="38dp"
                     android:layout_weight="1"
-                    android:text="➖ ۵٪ کمتر"
-                    android:contentDescription="کاهش پنج درصد صدای رسیور"
+                    android:text="➖ کاهش ولوم"
+                    android:contentDescription="کاهش ولوم صدای رسیور"
                     android:textColor="@color/white"
                     android:textSize="12sp"
-                    android:layout_marginEnd="4dp"
-                    app:backgroundTint="#243044"
-                    app:cornerRadius="8dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnQuickMute"
-                    android:layout_width="0dp"
-                    android:layout_height="38dp"
-                    android:layout_weight="1.2"
-                    android:text="🔇 قطع / وصل صدا"
-                    android:contentDescription="قطع یا وصل فوری صدای رسیور"
-                    android:textColor="@color/accent_amber"
-                    android:textSize="12sp"
-                    android:layout_marginHorizontal="2dp"
+                    android:layout_marginEnd="6dp"
                     app:backgroundTint="#243044"
                     app:cornerRadius="8dp" />
 
@@ -152,11 +139,11 @@
                     android:layout_width="0dp"
                     android:layout_height="38dp"
                     android:layout_weight="1"
-                    android:text="➕ ۵٪ بیشتر"
-                    android:contentDescription="افزایش پنج درصد صدای رسیور"
+                    android:text="➕ افزایش ولوم"
+                    android:contentDescription="افزایش ولوم صدای رسیور"
                     android:textColor="@color/white"
                     android:textSize="12sp"
-                    android:layout_marginStart="4dp"
+                    android:layout_marginStart="6dp"
                     app:backgroundTint="#243044"
                     app:cornerRadius="8dp" />
             </LinearLayout>
