@@ -412,6 +412,9 @@ class BackupFragment : Fragment() {
                 fileList.reverse()
             }
         }
+        lateinit var adapter: SavedFilesAdapter
+        lateinit var dialog: AlertDialog
+
         refreshFilesList()
 
         btnSortOrder?.setOnClickListener {
@@ -430,9 +433,6 @@ class BackupFragment : Fragment() {
             adapter.notifyDataSetChanged()
             recycler.scrollToPosition(0)
         }
-
-        lateinit var adapter: SavedFilesAdapter
-        lateinit var dialog: AlertDialog
 
         fun updateUiState() {
             txtCount.text = "تعداد: ${fileList.size} فایل"

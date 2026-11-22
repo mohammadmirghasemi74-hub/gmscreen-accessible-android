@@ -697,14 +697,6 @@ class ChannelsFragment : Fragment() {
             }
         }
     }
-                return@launch
-            }
-
-            withContext(Dispatchers.Main) {
-                executePlayAudio(channel, ip)
-            }
-        }
-    }
 
     private fun executePlayAudio(channel: Channel, ip: String) {
         val isAlreadyStreamingSameChannel = com.gmscreen.accessible.player.StreamRecorderManager.isStreaming &&
