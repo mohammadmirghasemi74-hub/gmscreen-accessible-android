@@ -12,11 +12,24 @@ object ChannelMatcher {
     )
 
     private val WORD_TO_NUMBER = mapOf(
-        "یک" to 1, "دو" to 2, "سه" to 3, "چهار" to 4, "پنج" to 5,
-        "شش" to 6, "شیش" to 6, "هفت" to 7, "هشت" to 8, "نه" to 9, "ده" to 10,
-        "یازده" to 11, "دوازده" to 12, "سیزده" to 13, "چهارده" to 14, "پانزده" to 15, "پونزده" to 15,
-        "شانزده" to 16, "شونزده" to 16, "هفده" to 17, "هیجده" to 18, "هجده" to 18, "نوزده" to 19,
-        "بیست" to 20, "سی" to 30, "چهل" to 40, "پنجاه" to 50, "شصت" to 60, "هفتاد" to 70, "هشتاد" to 80, "نود" to 90,
+        "یک" to 1, "یکمی" to 1, "اول" to 1, "اولین" to 1,
+        "دو" to 2, "دومی" to 2, "دوم" to 2, "دومین" to 2,
+        "سه" to 3, "سومی" to 3, "سوم" to 3, "سومین" to 3,
+        "چهار" to 4, "چهارمی" to 4, "چهارم" to 4, "چهارمین" to 4,
+        "پنج" to 5, "پنجمی" to 5, "پنجم" to 5, "پنجمین" to 5,
+        "شش" to 6, "شیش" to 6, "شیشمی" to 6, "ششم" to 6, "شیشم" to 6,
+        "هفت" to 7, "هفتمی" to 7, "هفتم" to 7, "هفتمین" to 7,
+        "هشت" to 8, "هشتمی" to 8, "هشتم" to 8, "هشتمین" to 8,
+        "نه" to 9, "نهمی" to 9, "نهم" to 9, "نهمین" to 9,
+        "ده" to 10, "دهمی" to 10, "دهم" to 10,
+        "یازده" to 11, "یازدهم" to 11, "دوازده" to 12, "دوازدهم" to 12,
+        "سیزده" to 13, "سیزدهم" to 13, "چهارده" to 14, "چهاردهم" to 14,
+        "پانزده" to 15, "پونزده" to 15, "پانزدهم" to 15, "پونزدهم" to 15,
+        "شانزده" to 16, "شونزده" to 16, "شانزدهم" to 16, "شونزدهم" to 16,
+        "هفده" to 17, "هفدهم" to 17, "هیجده" to 18, "هجده" to 18, "هجدهم" to 18,
+        "نوزده" to 19, "نوزدهم" to 19,
+        "بیست" to 20, "بیستم" to 20, "سی" to 30, "چهل" to 40,
+        "پنجاه" to 50, "شصت" to 60, "هفتاد" to 70, "هشتاد" to 80, "نود" to 90,
         "صد" to 100, "دویست" to 200, "سیصد" to 300, "چهارصد" to 400, "پانصد" to 500
     )
 
@@ -88,7 +101,7 @@ object ChannelMatcher {
         "اینترنشنال" to "international intl", "اینتر نشنال" to "international intl",
         "موزیک" to "music", "موسیقی" to "music", "خبر" to "khabar irinn news", "نسیم" to "nasim",
         "پویا" to "pooya pouya", "نهال" to "nahal", "نمایش" to "namayesh", "افق" to "ofogh ofoq",
-        "تماشا" to "tamasha", "سلامت" to "salamat", "آموزش" to "amoozesh", "قرآن" to "quran",
+        "تماشا" to "tamasha", "سلامت" to "salamat", "آموزش" to "amoozesh", "قرآن" to "quran", "قران" to "quran",
         "آی فیلم" to "ifilm", "آیفیلم" to "ifilm", "ای فیلم" to "ifilm", "ایفیلم" to "ifilm",
         "منوتو" to "manoto", "من و تو" to "manoto", "بی بی سی" to "bbc", "طپش" to "tapesh",
         "تپش" to "tapesh", "رادیو جوان" to "radio javan", "رادیو فردا" to "radio farda",
@@ -96,7 +109,10 @@ object ChannelMatcher {
         "تیوی" to "tv", "تی وی" to "tv",
         "یک" to "1", "دو" to "2", "سه" to "3", "چهار" to "4", "پنج" to "5",
         "شش" to "6", "شیش" to "6", "هفت" to "7", "هشت" to "8", "نه" to "9", "ده" to "10",
-        "دری" to "dari"
+        "دری" to "dari",
+        "ام بی سی" to "mbc persia mbc", "ام‌بی‌سی" to "mbc persia mbc",
+        "نشنال جئوگرافیک" to "national geographic nat geo", "نشنال جئو" to "national geographic nat geo",
+        "دیسکاوری" to "discovery", "یورونیوز" to "euronews", "یورو نیوز" to "euronews"
     ).sortedByDescending { it.first.length }
 
     fun normalizePersian(text: String): String {
@@ -129,6 +145,22 @@ object ChannelMatcher {
         return t.replace(Regex("\\s+"), " ").trim().lowercase()
     }
 
+    private fun levenshtein(s1: String, s2: String): Int {
+        if (s1 == s2) return 0
+        if (s1.isEmpty()) return s2.length
+        if (s2.isEmpty()) return s1.length
+        val d = Array(s1.length + 1) { IntArray(s2.length + 1) }
+        for (i in 0..s1.length) d[i][0] = i
+        for (j in 0..s2.length) d[0][j] = j
+        for (i in 1..s1.length) {
+            for (j in 1..s2.length) {
+                val cost = if (s1[i - 1] == s2[j - 1]) 0 else 1
+                d[i][j] = minOf(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost)
+            }
+        }
+        return d[s1.length][s2.length]
+    }
+
     /**
      * Checks if the voice command matches a direct RCU/System action.
      */
@@ -140,41 +172,60 @@ object ChannelMatcher {
         if (norm.isBlank()) return null
 
         // Power
-        if (norm.contains("خاموش") || norm.contains("روشن") || norm.contains("پاور") || norm.contains("استندبای")) {
+        if (norm.contains("خاموش") || norm.contains("روشن") || norm.contains("پاور") || norm.contains("استندبای") ||
+            norm.contains("دستگاه رو خاموش") || norm.contains("دستگاه رو روشن") || norm.contains("به خواب برو")
+        ) {
             return "power"
         }
         // Channel Next / Prev
-        if (norm.contains("کانال بعد") || norm.contains("شبکه بعد") || norm.contains("کانال بعدی") || norm.contains("شبکه بعدی")) {
+        if (norm.contains("کانال بعد") || norm.contains("شبکه بعد") || norm.contains("کانال بعدی") || norm.contains("شبکه بعدی") ||
+            norm.contains("برو کانال بعد") || norm.contains("کانال جلو") || norm.contains("شبکه جلو")
+        ) {
             return "ch_next"
         }
-        if (norm.contains("کانال قبل") || norm.contains("شبکه قبل") || norm.contains("کانال قبلی") || norm.contains("شبکه قبلی")) {
+        if (norm.contains("کانال قبل") || norm.contains("شبکه قبل") || norm.contains("کانال قبلی") || norm.contains("شبکه قبلی") ||
+            norm.contains("برو کانال قبل") || norm.contains("کانال عقب") || norm.contains("شبکه عقب")
+        ) {
             return "ch_prev"
         }
         // Volume
-        if (norm.contains("صدا زیاد") || norm.contains("صدای بیشتر") || norm.contains("افزایش صدا") || norm.contains("بلندتر")) {
+        if (norm.contains("صدا زیاد") || norm.contains("صدای بیشتر") || norm.contains("افزایش صدا") || norm.contains("بلندتر") ||
+            norm.contains("بلند تر") || norm.contains("ببر بالا") || norm.contains("صدا رو زیاد کن") || norm.contains("صدا بیشتر")
+        ) {
             return "vol_up"
         }
-        if (norm.contains("صدا کم") || norm.contains("صدای کمتر") || norm.contains("کاهش صدا") || norm.contains("آهسته تر")) {
+        if (norm.contains("صدا کم") || norm.contains("صدای کمتر") || norm.contains("کاهش صدا") || norm.contains("آهسته تر") ||
+            norm.contains("آروم تر") || norm.contains("اروم تر") || norm.contains("بیار پایین") || norm.contains("صدا رو کم کن") || norm.contains("صدا کمتر")
+        ) {
             return "vol_down"
         }
-        if (norm.contains("بی صدا") || norm.contains("قطع صدا") || norm.contains("وصل صدا") || norm.contains("میوت")) {
+        if (norm.contains("بی صدا") || norm.contains("بیصدا") || norm.contains("قطع صدا") || norm.contains("وصل صدا") ||
+            norm.contains("میوت") || norm.contains("سایلنت") || norm.contains("صدا رو قطع کن") || norm.contains("صدا رو وصل کن")
+        ) {
             return "mute"
         }
-        // Menus
-        if (norm.contains("منو") || norm.contains("منوی رسیور")) {
+        // Menus & Navigation
+        if (norm.contains("منو") || norm.contains("منوی رسیور") || norm.contains("فهرست")) {
             return "menu"
         }
-        if (norm.contains("خروج") || norm.contains("بستن پنجره") || norm.contains("برگشت")) {
+        if (norm.contains("خروج") || norm.contains("بستن پنجره") || norm.contains("برگشت") || norm.contains("برگرد") || norm.contains("کنسل")) {
             return "exit"
         }
-        if (norm.contains("تایید") || norm.contains("اوکی")) {
+        if (norm.contains("تایید") || norm.contains("اوکی") || norm.contains("تأیید") || norm.contains("قبول")) {
             return "ok"
         }
-        if (norm.contains("ای پی جی") || norm.contains("جدول برنامه")) {
+        if (norm.contains("ای پی جی") || norm.contains("ای‌پی‌جی") || norm.contains("جدول برنامه") || norm.contains("راهنمای برنامه")) {
             return "epg"
         }
-        if (norm.contains("اینفو") || norm.contains("اطلاعات شبکه") || norm.contains("مشخصات برنامه")) {
+        if (norm.contains("اینفو") || norm.contains("اطلاعات شبکه") || norm.contains("مشخصات برنامه") || norm.contains("اطلاعات کانال")) {
             return "info"
+        }
+        // Recording
+        if (norm.contains("شروع ضبط") || norm.contains("ضبط کن") || norm.contains("رکورد") || norm.contains("ضبط روی فلش")) {
+            return "record_toggle"
+        }
+        if (norm.contains("توقف ضبط") || norm.contains("قطع ضبط") || norm.contains("پایان ضبط")) {
+            return "record_stop"
         }
         return null
     }
@@ -188,7 +239,6 @@ object ChannelMatcher {
         if (match != null) {
             return match.groupValues[1].toIntOrNull()
         }
-        // Check simple word numbers
         for ((word, num) in WORD_TO_NUMBER) {
             if (norm.contains(word)) {
                 return num
@@ -198,32 +248,30 @@ object ChannelMatcher {
     }
 
     /**
-     * Finds the best matching channel from the channels list.
-     * Incorporates GEM disambiguation, Persiana disambiguation, plus token handling, sports, etc.
+     * Evaluates a single candidate query against all channels, returning the best matched Channel and its score.
      */
-    fun findBestChannel(query: String, channels: List<Channel>): Channel? {
-        if (query.isBlank() || channels.isEmpty()) return null
+    fun scoreChannelForQuery(query: String, channels: List<Channel>): Pair<Channel?, Int> {
+        if (query.isBlank() || channels.isEmpty()) return Pair(null, -10000)
 
         val aliasMatch = VoiceCustomizationManager.matchChannelAlias(query, channels)
-        if (aliasMatch != null) return aliasMatch
+        if (aliasMatch != null) return Pair(aliasMatch, 99999)
 
         var qClean = normalizePersian(query)
-            .replace(Regex("^(?:برو\\s*به\\s*|بزن\\s*روی\\s*|کانال\\s+|شبکه\\s+)"), "")
-            .replace(Regex("\\s+(?:رو\\s*بیار|بیار|باز\\s*کن|نشون\\s*بده|بزار|بگذار|پخش\\s*کن)$"), "")
+            .replace(Regex("^(?:برو\\s*به\\s*|برو\\s*روی\\s*|بزن\\s*روی\\s*|بزن\\s*به\\s*|بزار\\s*روی\\s*|بگذار\\s*روی\\s*|بذار\\s*روی\\s*|لطفا\\s*|لطفاً\\s*|بی\\s*زحمت\\s*|بی‌زحمت\\s*|میشه\\s*|می‌شه\\s*|کانال\\s+|شبکه\\s+|شبکه‌ی\\s+|کانالِ\\s+)+"), "")
+            .replace(Regex("\\s+(?:رو\\s*بیار|بیار|رو\\s*باز\\s*کن|باز\\s*کن|رو\\s*پخش\\s*کن|پخش\\s*کن|رو\\s*نشون\\s*بده|نشون\\s*بده|بزار|بگذار|بذار|رو\\s*بزار|رو\\s*بگذار|رو\\s*بذار)$"), "")
             .trim()
 
-        if (qClean.isBlank()) return null
+        if (qClean.isBlank()) return Pair(null, -10000)
 
-        // First check if query requested a direct channel number
         val channelNum = parseChannelNumber(qClean)
         if (channelNum != null) {
             val directCh = channels.find { it.channelNumber == channelNum }
-            if (directCh != null) return directCh
+            if (directCh != null) return Pair(directCh, 50000)
         }
 
         val qTokenized = cleanChannelText(qClean)
         val qTokens = qTokenized.split(" ").filter { it.isNotBlank() }
-        if (qTokens.isEmpty()) return null
+        if (qTokens.isEmpty()) return Pair(null, -10000)
 
         val hasPlus = qTokens.contains("plus") || qClean.contains("+")
         val queryGemSubs = qTokens.filter { it in GEM_SUBBRANDS }.toSet()
@@ -265,7 +313,16 @@ object ChannelMatcher {
                 }
             }
 
-            if (matchedTokens == 0) continue
+            if (matchedTokens == 0) {
+                // Check fuzzy edit distance for short names (e.g. "نسیم" vs "نسیمه")
+                if (qTokenized.length >= 3 && nClean.length >= 3) {
+                    val dist = levenshtein(qTokenized, nClean)
+                    if (dist <= 2) {
+                        score += 350
+                        matchedTokens = 1
+                    } else continue
+                } else continue
+            }
 
             if (matchedTokens >= qTokens.size) score += 300
             if (nClean == qTokenized) score += 5000
@@ -381,6 +438,40 @@ object ChannelMatcher {
             }
         }
 
-        return if (bestScore > 100) bestCh else null
+        return Pair(bestCh, bestScore)
+    }
+
+    /**
+     * Evaluates ALL candidate hypotheses from speech recognition, finding the single channel with the highest score.
+     */
+    fun findBestMatchAcrossCandidates(candidates: List<String>, channels: List<Channel>): Pair<Channel, String>? {
+        if (candidates.isEmpty() || channels.isEmpty()) return null
+
+        var globalBestScore = -10000
+        var globalBestChannel: Channel? = null
+        var winningCandidate = candidates.first()
+
+        for (candidate in candidates) {
+            val (ch, score) = scoreChannelForQuery(candidate, channels)
+            if (ch != null && score > globalBestScore) {
+                globalBestScore = score
+                globalBestChannel = ch
+                winningCandidate = candidate
+            }
+        }
+
+        return if (globalBestChannel != null && globalBestScore > 100) {
+            Pair(globalBestChannel, winningCandidate)
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Legacy single query search.
+     */
+    fun findBestChannel(query: String, channels: List<Channel>): Channel? {
+        val (ch, score) = scoreChannelForQuery(query, channels)
+        return if (score > 100) ch else null
     }
 }

@@ -12,6 +12,24 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- STB Hero Banner Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="16dp"
+            app:strokeColor="@color/card_border"
+            app:strokeWidth="1dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="130dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/banner_stb_connection"
+                android:importantForAccessibility="no" />
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Connection Status Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"

@@ -59,6 +59,7 @@ class ChannelsAdapter(
 
     class ChannelViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val txtNum: TextView = itemView.findViewById(R.id.txtChannelNumber)
+        private val imgChannelType: android.widget.ImageView? = itemView.findViewById(R.id.imgChannelType)
         private val txtName: TextView = itemView.findViewById(R.id.txtChannelName)
         private val txtDetails: TextView = itemView.findViewById(R.id.txtChannelDetails)
         private val badgePlaying: TextView = itemView.findViewById(R.id.badgePlaying)
@@ -76,6 +77,7 @@ class ChannelsAdapter(
         ) {
             txtNum.text = displayNumber.toString()
             txtName.text = channel.serviceName
+            imgChannelType?.setImageResource(if (channel.isRadio) R.drawable.ic_radio_station else R.drawable.ic_tv_display)
 
             val satText = if (channel.satelliteName.isNotBlank()) channel.satelliteName else "ماهواره"
             val freqText = if (channel.frequency > 0) "${channel.frequency} MHz" else ""

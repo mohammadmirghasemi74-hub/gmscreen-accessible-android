@@ -116,7 +116,6 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
         btnMic.text = "شروع گفتار"
         txtVoiceStatus.text = "صدا دریافت شد، در حال پردازش…"
 
-        val primary = candidates.firstOrNull() ?: ""
         val channels = repository.channels.value
 
         // 1. Try matching RCU actions across all candidates
@@ -131,36 +130,36 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
             }
         }
 
-        // 2. Try matching Channels across all candidates
-        for (text in candidates) {
-            val matchedChannel = ChannelMatcher.findBestChannel(text, channels)
-            if (matchedChannel != null) {
-                txtRecognizedQuery.visibility = View.VISIBLE
-                txtRecognizedQuery.text = "عبارت شنیده شده: «$text»"
-                AccessibilityHelper.announce(txtRecognizedQuery, "شنیده شد: $text")
+        // 2. Try matching Channels across all candidates with highest confidence
+        val matchResult = ChannelMatcher.findBestMatchAcrossCandidates(candidates, channels)
+        if (matchResult != null) {
+            val (matchedChannel, text) = matchResult
+            txtRecognizedQuery.visibility = View.VISIBLE
+            txtRecognizedQuery.text = "عبارت شنیده شده: «$text»"
+            AccessibilityHelper.announce(txtRecognizedQuery, "شنیده شد: $text")
 
-                val msg = "شبکه ${matchedChannel.serviceName} پیدا شد. در حال تعویض کانال…"
-                txtExecutionResult.visibility = View.VISIBLE
-                txtExecutionResult.text = "شبکه پخش شد: ${matchedChannel.serviceName}"
-                AccessibilityHelper.announce(txtExecutionResult, msg)
+            val msg = "شبکه ${matchedChannel.serviceName} پیدا شد. در حال تعویض کانال…"
+            txtExecutionResult.visibility = View.VISIBLE
+            txtExecutionResult.text = "شبکه پخش شد: ${matchedChannel.serviceName}"
+            AccessibilityHelper.announce(txtExecutionResult, msg)
 
-                if (appConfig.hapticFeedbackEnabled) {
-                    AccessibilityHelper.vibrateSuccess(requireContext())
-                }
+            if (appConfig.hapticFeedbackEnabled) {
+                AccessibilityHelper.vibrateSuccess(requireContext())
+            }
 
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    val switched = repository.switchChannel(matchedChannel)
-                    withContext(Dispatchers.Main) {
-                        if (switched && appConfig.soundCuesEnabled) {
-                            AccessibilityHelper.playSoundCue()
-                        }
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                val switched = repository.switchChannel(matchedChannel)
+                withContext(Dispatchers.Main) {
+                    if (switched && appConfig.soundCuesEnabled) {
+                        AccessibilityHelper.playSoundCue()
                     }
                 }
-                return
             }
+            return
         }
 
         // 3. Not found
+        val primary = candidates.firstOrNull() ?: ""
         txtRecognizedQuery.visibility = View.VISIBLE
         txtRecognizedQuery.text = "عبارت شنیده شده: «$primary»"
         AccessibilityHelper.announce(txtRecognizedQuery, "شنیده شد: $primary")
@@ -169,6 +168,9 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
         txtExecutionResult.visibility = View.VISIBLE
         txtExecutionResult.text = notFoundMsg
         AccessibilityHelper.announce(txtExecutionResult, notFoundMsg)
+        if (appConfig.hapticFeedbackEnabled) {
+            AccessibilityHelper.vibrateError(requireContext())
+        }
     }
 
     override fun onError(errorMessage: String) {

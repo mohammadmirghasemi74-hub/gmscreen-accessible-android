@@ -12,6 +12,24 @@
         android:orientation="vertical"
         android:padding="12dp">
 
+        <!-- Remote Hero Banner Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="16dp"
+            app:strokeColor="@color/card_border"
+            app:strokeWidth="1dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/banner_remote_header"
+                android:importantForAccessibility="no" />
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- 1. Top Row: Restart, Power & Mute -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -30,6 +48,9 @@
                 android:textColor="@color/white"
                 android:textSize="13sp"
                 android:textStyle="bold"
+                app:icon="@drawable/ic_restart_btn"
+                app:iconGravity="textStart"
+                app:iconTint="@color/white"
                 app:backgroundTint="#7B1FA2"
                 app:cornerRadius="14dp" />
 
@@ -44,6 +65,9 @@
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
+                app:icon="@drawable/ic_power_btn"
+                app:iconGravity="textStart"
+                app:iconTint="@color/white"
                 app:backgroundTint="@color/accent_red"
                 app:cornerRadius="14dp" />
 
@@ -58,6 +82,9 @@
                 android:textColor="@color/black"
                 android:textSize="14sp"
                 android:textStyle="bold"
+                app:icon="@drawable/ic_volume_mute_btn"
+                app:iconGravity="textStart"
+                app:iconTint="@color/black"
                 app:backgroundTint="@color/accent_yellow"
                 app:cornerRadius="14dp" />
         </LinearLayout>

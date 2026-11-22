@@ -612,7 +612,10 @@ object VoiceCustomizationManager {
             for (p in phrases) {
                 val pNorm = ChannelMatcher.normalizePersian(p)
                 if (pNorm.isNotBlank()) {
-                    if (norm == pNorm || norm.contains(pNorm) || pNorm.contains(norm)) {
+                    if (norm == pNorm || norm.contains(pNorm)) {
+                        return action.id
+                    }
+                    if (norm.length >= 4 && pNorm.contains(norm) && norm.length >= (pNorm.length * 0.75).toInt()) {
                         return action.id
                     }
                 }
@@ -631,9 +634,15 @@ object VoiceCustomizationManager {
         for ((serviceId, aliases) in customChannelAliasesMap) {
             for (alias in aliases) {
                 val aNorm = ChannelMatcher.normalizePersian(alias)
-                if (aNorm.isNotBlank() && (norm == aNorm || norm.contains(aNorm) || aNorm.contains(norm))) {
-                    val found = channels.find { it.serviceId == serviceId }
-                    if (found != null) return found
+                if (aNorm.isNotBlank()) {
+                    if (norm == aNorm || norm.contains(aNorm)) {
+                        val found = channels.find { it.serviceId == serviceId }
+                        if (found != null) return found
+                    }
+                    if (norm.length >= 4 && aNorm.contains(norm) && norm.length >= (aNorm.length * 0.75).toInt()) {
+                        val found = channels.find { it.serviceId == serviceId }
+                        if (found != null) return found
+                    }
                 }
             }
         }
