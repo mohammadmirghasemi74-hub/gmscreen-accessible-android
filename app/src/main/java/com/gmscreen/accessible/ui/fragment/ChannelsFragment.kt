@@ -283,9 +283,7 @@ class ChannelsFragment : Fragment() {
             com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext(), btnBottomRecordings)
         }
 
-        btnBottomMic.setOnClickListener {
-            (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(4)
-        }
+        setupVoiceAssistantButton()
 
         updateBottomActionsUI()
 
@@ -1161,8 +1159,155 @@ class ChannelsFragment : Fragment() {
         }
     }
 
+    private var channelVoiceController: com.gmscreen.accessible.voice.VoiceController? = null
+
+    private fun setupVoiceAssistantButton() {
+        btnBottomMic.setOnClickListener {
+            if (channelVoiceController?.isCurrentlyListening() == true) {
+                channelVoiceController?.stopListening()
+                btnBottomMic.text = "🎙 دستیار صوتی"
+                btnBottomMic.contentDescription = "دستیار صوتی: برای شنیدن و گفتن دستور صوتی ضربه بزنید"
+                AccessibilityHelper.announce(btnBottomMic, "شنیدن صدا متوقف شد")
+                return@setOnClickListener
+            }
+
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    android.Manifest.permission.RECORD_AUDIO
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), 101)
+                return@setOnClickListener
+            }
+
+            if (channelVoiceController == null) {
+                channelVoiceController = com.gmscreen.accessible.voice.VoiceController(
+                    requireContext(),
+                    object : com.gmscreen.accessible.voice.VoiceController.VoiceListener {
+                        override fun onReady() {
+                            btnBottomMic.text = "🎙 در حال گوش دادن..."
+                            btnBottomMic.contentDescription = "در حال گوش دادن به فرمان شما... برای توقف ضربه بزنید"
+                        }
+
+                        override fun onListening() {
+                            btnBottomMic.text = "🎙 در حال گوش دادن..."
+                        }
+
+                        override fun onResults(candidates: List<String>) {
+                            btnBottomMic.text = "🎙 دستیار صوتی"
+                            btnBottomMic.contentDescription = "دستیار صوتی: برای شنیدن و گفتن دستور صوتی ضربه بزنید"
+
+                            val channels = repository.channels.value
+
+                            // 1. Try matching RCU actions
+                            for (text in candidates) {
+                                val rcuAction = com.gmscreen.accessible.voice.ChannelMatcher.matchVoiceAction(text)
+                                if (rcuAction != null) {
+                                    handleChannelVoiceAction(rcuAction, text)
+                                    return
+                                }
+                            }
+
+                            // 2. Try matching Channels
+                            val matchResult = com.gmscreen.accessible.voice.ChannelMatcher.findBestMatchAcrossCandidates(candidates, channels)
+                            if (matchResult != null) {
+                                val (matchedChannel, text) = matchResult
+                                val msg = "شبکه ${matchedChannel.serviceName} پیدا شد. در حال تعویض کانال..."
+                                AccessibilityHelper.announce(btnBottomMic, msg)
+                                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                                if (appConfig.hapticFeedbackEnabled) {
+                                    AccessibilityHelper.vibrateSuccess(requireContext())
+                                }
+                                tuneChannelOnTv(matchedChannel)
+                                return
+                            }
+
+                            val heard = candidates.firstOrNull() ?: ""
+                            val notFound = if (heard.isNotBlank()) "کانال یا دستوری برای «$heard» پیدا نشد" else "دستوری تشخیص داده نشد"
+                            AccessibilityHelper.announce(btnBottomMic, notFound)
+                            Toast.makeText(requireContext(), notFound, Toast.LENGTH_SHORT).show()
+                            if (appConfig.hapticFeedbackEnabled) {
+                                AccessibilityHelper.vibrateError(requireContext())
+                            }
+                        }
+
+                        override fun onError(errorMessage: String) {
+                            btnBottomMic.text = "🎙 دستیار صوتی"
+                            btnBottomMic.contentDescription = "دستیار صوتی: برای شنیدن و گفتن دستور صوتی ضربه بزنید"
+                            AccessibilityHelper.announce(btnBottomMic, errorMessage)
+                            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
+
+            if (appConfig.soundCuesEnabled) {
+                AccessibilityHelper.playSoundCue()
+            }
+            btnBottomMic.text = "🎙 در حال گوش دادن..."
+            channelVoiceController?.startListening()
+        }
+    }
+
+    private fun handleChannelVoiceAction(action: String, heardText: String) {
+        val (keyCode, desc) = when (action) {
+            "power" -> Pair(RcuKey.POWER_TOGGLE, "پاور رسیور ارسال شد")
+            "ch_next" -> Pair(RcuKey.CH_NEXT, "کانال بعدی زده شد")
+            "ch_prev" -> Pair(RcuKey.CH_PREV, "کانال قبلی زده شد")
+            "recall" -> Pair(RcuKey.RECALL, "بازگشت به کانال قبلی زده شد")
+            "tv_mode", "radio_mode" -> Pair(RcuKey.TV_RADIO, "تغییر حالت بین تلویزیون و رادیو ارسال شد")
+            "vol_up" -> Pair(RcuKey.VOL_UP, "صدا افزایش یافت")
+            "vol_down" -> Pair(RcuKey.VOL_DOWN, "صدا کاهش یافت")
+            "mute" -> Pair(RcuKey.MUTE, "حالت بی‌صدا تغییر کرد")
+            "audio_track" -> Pair(RcuKey.AUDIO, "تغییر باند صدا ارسال شد")
+            "subtitle" -> Pair(RcuKey.SUBTITLE, "زیرنویس تغییر کرد")
+            "menu" -> Pair(RcuKey.MENU, "منوی رسیور باز شد")
+            "exit", "rcu_exit" -> Pair(RcuKey.EXIT, "خروج ارسال شد")
+            "ok" -> Pair(RcuKey.OK, "تأیید زده شد")
+            "epg" -> Pair(RcuKey.EPG, "جدول EPG باز شد")
+            "info" -> Pair(RcuKey.INFO, "اطلاعات شبکه باز شد")
+            "red_btn" -> Pair(RcuKey.RED, "دکمه قرمز ارسال شد")
+            "green_btn" -> Pair(RcuKey.GREEN, "دکمه سبز ارسال شد")
+            "yellow_btn" -> Pair(RcuKey.YELLOW, "دکمه زرد ارسال شد")
+            "blue_btn" -> Pair(RcuKey.BLUE, "دکمه آبی ارسال شد")
+            "rec_stb" -> Pair(RcuKey.RECORD, "دستور ضبط روی فلش رسیور ارسال شد")
+            "refresh_channels" -> {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    repository.refreshData()
+                    val msg = "لیست شبکه‌ها با موفقیت به‌روزرسانی شد"
+                    AccessibilityHelper.announce(btnBottomMic, msg)
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
+            "status" -> {
+                com.gmscreen.accessible.util.StatusHelper.announceStatus(requireContext(), repository, btnBottomMic)
+                return
+            }
+            else -> Pair(null, "")
+        }
+
+        if (keyCode != null) {
+            val fullMsg = "دستور شنیده شد: $desc"
+            AccessibilityHelper.announce(btnBottomMic, fullMsg)
+            Toast.makeText(requireContext(), fullMsg, Toast.LENGTH_SHORT).show()
+            if (appConfig.hapticFeedbackEnabled) {
+                AccessibilityHelper.vibrateClick(requireContext())
+            }
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                repository.sendRcuKey(keyCode)
+            }
+        } else {
+            val msg = "دستور «$heardText» اجرا شد"
+            AccessibilityHelper.announce(btnBottomMic, msg)
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        channelVoiceController?.destroy()
+        channelVoiceController = null
         announceJob?.cancel()
         com.gmscreen.accessible.player.AudioStreamPlayer.removeListener(audioPlayerListener)
     }

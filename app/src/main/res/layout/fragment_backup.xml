@@ -63,8 +63,8 @@
                     android:id="@+id/btnHeaderSection1"
                     android:layout_width="match_parent"
                     android:layout_height="54dp"
-                    android:text="۱. پشتیبان‌گیری روی فلش رسیور (USB)  ▼"
-                    android:contentDescription="بخش اول: پشتیبان‌گیری روی فلش رسیور. کلیک برای باز یا بسته کردن این بخش"
+                    android:text="۱. پشتیبان‌گیری روی فلش رسیور (USB)  ▶"
+                    android:contentDescription="بخش اول: پشتیبان‌گیری روی فلش رسیور. وضعیت فعلی بسته است. کلیک برای باز کردن این بخش"
                     android:textColor="@color/accent_green"
                     android:textSize="14sp"
                     android:textStyle="bold"
@@ -80,7 +80,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="14dp"
-                    android:visibility="visible">
+                    android:visibility="gone">
 
                     <TextView
                         android:id="@+id/txtBackupDeviceInfo"
@@ -154,8 +154,8 @@
                     android:id="@+id/btnHeaderSection2"
                     android:layout_width="match_parent"
                     android:layout_height="54dp"
-                    android:text="۲. ساخت و مشاهده پلی‌لیست‌های M3U  ▼"
-                    android:contentDescription="بخش دوم: ساخت و مشاهده پلی‌لیست‌های M3U برای پخش در VLC. کلیک برای باز یا بسته کردن این بخش"
+                    android:text="۲. ساخت و مشاهده پلی‌لیست‌های M3U  ▶"
+                    android:contentDescription="بخش دوم: ساخت و مشاهده پلی‌لیست‌های M3U. وضعیت فعلی بسته است. کلیک برای باز کردن این بخش"
                     android:textColor="@color/accent_amber"
                     android:textSize="14sp"
                     android:textStyle="bold"
@@ -171,7 +171,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="14dp"
-                    android:visibility="visible">
+                    android:visibility="gone">
 
                     <TextView
                         android:layout_width="match_parent"
@@ -230,8 +230,8 @@
                     android:id="@+id/btnHeaderSection3"
                     android:layout_width="match_parent"
                     android:layout_height="54dp"
-                    android:text="۳. ذخیره‌سازی کانال‌ها در گوشی (Word, TXT, ...)  ▼"
-                    android:contentDescription="بخش سوم: ذخیره‌سازی اطلاعات شبکه‌ها روی حافظه گوشی با فرمت‌های Word، TXT، HTML و JSON. کلیک برای باز یا بسته کردن این بخش"
+                    android:text="۳. ذخیره‌سازی کانال‌ها در گوشی (Word, TXT, ...)  ▶"
+                    android:contentDescription="بخش سوم: ذخیره‌سازی اطلاعات شبکه‌ها روی حافظه گوشی. وضعیت فعلی بسته است. کلیک برای باز کردن این بخش"
                     android:textColor="@color/accent_blue"
                     android:textSize="14sp"
                     android:textStyle="bold"
@@ -247,7 +247,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="14dp"
-                    android:visibility="visible">
+                    android:visibility="gone">
 
                     <TextView
                         android:layout_width="match_parent"

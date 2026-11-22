@@ -155,6 +155,52 @@ object QuickAccessDialog {
 
         updateVolumeDisplay(currentVol)
 
+        fun volToStbLevel(vol: Int): Int {
+            if (vol <= 0) return 0
+            if (vol >= 100) return 30
+            // Root-cause fix: Map 1..99% to hardware levels 3..29 so 5% is level 4 (clearly audible),
+            // 10% is level 5, 15% is level 7, 50% is level 16, and 100% is level 30.
+            return (3 + Math.round((vol - 1) * 26.0 / 98.0).toInt()).coerceIn(3, 29)
+        }
+
+        val applyVolumeChange = { oldVol: Int, newVol: Int ->
+            val oldLevel = volToStbLevel(oldVol)
+            val newLevel = volToStbLevel(newVol)
+            dialogScope.launch(Dispatchers.IO) {
+                if (repository.isConnected.value) {
+                    if (newVol == 0) {
+                        for (i in 0 until 35) {
+                            repository.sendRcuKey(RcuKey.VOL_DOWN)
+                            delay(20)
+                        }
+                    } else if (newVol == 100) {
+                        for (i in 0 until 32) {
+                            repository.sendRcuKey(RcuKey.VOL_UP)
+                            delay(25)
+                        }
+                    } else if (oldVol == 0 && newVol > 0) {
+                        for (i in 0 until newLevel) {
+                            repository.sendRcuKey(RcuKey.VOL_UP)
+                            delay(30)
+                        }
+                    } else {
+                        val levelDelta = newLevel - oldLevel
+                        if (levelDelta > 0) {
+                            for (i in 0 until levelDelta) {
+                                repository.sendRcuKey(RcuKey.VOL_UP)
+                                delay(35)
+                            }
+                        } else if (levelDelta < 0) {
+                            for (i in 0 until Math.abs(levelDelta)) {
+                                repository.sendRcuKey(RcuKey.VOL_DOWN)
+                                delay(35)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         val adjustVolumeBy = { delta: Int ->
             if (!repository.isConnected.value) {
                 val msg = "رسیور متصل نیست. لطفاً ابتدا به رسیور متصل شوید."
@@ -173,28 +219,7 @@ object QuickAccessDialog {
                     updateVolumeDisplay(newVol)
                     val announceText = if (newVol == 0) "صدای رسیور کاملاً قطع شد (۰ درصد)" else if (delta > 0) "افزایش صدا: $newVol درصد" else "کاهش صدا: $newVol درصد"
                     AccessibilityHelper.announce(seekBarVolume, announceText)
-                    dialogScope.launch(Dispatchers.IO) {
-                        if (repository.isConnected.value) {
-                            if (newVol == 0) {
-                                for (i in 0 until 30) {
-                                    repository.sendRcuKey(RcuKey.VOL_DOWN)
-                                    delay(20)
-                                }
-                            } else if (newVol == 100) {
-                                for (i in 0 until 20) {
-                                    repository.sendRcuKey(RcuKey.VOL_UP)
-                                    delay(25)
-                                }
-                            } else {
-                                val steps = (Math.abs(delta) / appConfig.volumeStep).coerceAtLeast(1)
-                                for (i in 0 until steps) {
-                                    if (delta > 0) repository.sendRcuKey(RcuKey.VOL_UP)
-                                    else repository.sendRcuKey(RcuKey.VOL_DOWN)
-                                    delay(35)
-                                }
-                            }
-                        }
-                    }
+                    applyVolumeChange(oldVol, newVol)
                 }
             }
         }
@@ -258,39 +283,9 @@ object QuickAccessDialog {
                 }
                 val finalVol = currentVol
                 appConfig.stbVolume = finalVol
-                val delta = finalVol - trackingStartVol
-                if (finalVol == 0) {
-                    AccessibilityHelper.announce(seekBarVolume, "صدای رسیور کاملاً قطع شد (۰ درصد)")
-                    dialogScope.launch(Dispatchers.IO) {
-                        if (repository.isConnected.value) {
-                            for (i in 0 until 35) {
-                                repository.sendRcuKey(RcuKey.VOL_DOWN)
-                                delay(20)
-                            }
-                        }
-                    }
-                } else {
-                    AccessibilityHelper.announce(seekBarVolume, "صدای رسیور: $finalVol درصد")
-                    if (delta != 0 || finalVol == 100) {
-                        dialogScope.launch(Dispatchers.IO) {
-                            if (repository.isConnected.value) {
-                                if (finalVol == 100) {
-                                    for (i in 0 until 25) {
-                                        repository.sendRcuKey(RcuKey.VOL_UP)
-                                        delay(25)
-                                    }
-                                } else {
-                                    val steps = (Math.abs(delta) / appConfig.volumeStep).coerceAtLeast(1)
-                                    for (i in 0 until steps) {
-                                        if (delta > 0) repository.sendRcuKey(RcuKey.VOL_UP)
-                                        else repository.sendRcuKey(RcuKey.VOL_DOWN)
-                                        delay(35)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                val announceText = if (finalVol == 0) "صدای رسیور کاملاً قطع شد (۰ درصد)" else "صدای رسیور: $finalVol درصد"
+                AccessibilityHelper.announce(seekBarVolume, announceText)
+                applyVolumeChange(trackingStartVol, finalVol)
             }
         })
 

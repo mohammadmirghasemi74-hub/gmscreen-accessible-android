@@ -154,6 +154,58 @@ class SettingsFragment : Fragment() {
         return Pair(row, txtVal)
     }
 
+    private fun addToggleSettingRow(
+        contentLayout: LinearLayout,
+        title: String,
+        initialState: Boolean,
+        onText: String = "روشن (فعال)",
+        offText: String = "خاموش (غیرفعال)",
+        onToggle: (Boolean) -> Unit
+    ): Pair<LinearLayout, TextView> {
+        var state = initialState
+        val row = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(16, 18, 16, 18)
+            isClickable = true
+            isFocusable = true
+            setBackgroundResource(android.R.drawable.list_selector_background)
+        }
+        val txtTitle = TextView(requireContext()).apply {
+            text = title
+            setTextColor(resources.getColor(R.color.text_primary, null))
+            textSize = 15f
+            paint.isFakeBoldText = true
+        }
+        val txtVal = TextView(requireContext()).apply {
+            text = if (state) onText else offText
+            setTextColor(resources.getColor(if (state) R.color.accent_green else R.color.accent_yellow, null))
+            textSize = 13f
+            setPadding(0, 4, 0, 0)
+        }
+        row.addView(txtTitle)
+        row.addView(txtVal)
+
+        fun updateUi() {
+            val status = if (state) onText else offText
+            txtVal.text = status
+            txtVal.setTextColor(resources.getColor(if (state) R.color.accent_green else R.color.accent_yellow, null))
+            row.contentDescription = "$title: $status. برای تغییر وضعیت دو بار ضربه بزنید."
+        }
+
+        updateUi()
+
+        row.setOnClickListener {
+            state = !state
+            updateUi()
+            val announcement = "$title: ${if (state) onText else offText}"
+            AccessibilityHelper.announce(row, announcement)
+            onToggle(state)
+        }
+
+        contentLayout.addView(row)
+        return Pair(row, txtVal)
+    }
+
     private fun openStbInfoDialog() {
         val isConnected = repository.isConnected.value && repository.connectedIp.value.isNotBlank()
         if (!isConnected) {
@@ -333,24 +385,15 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
-        // 2. Power Mode
-        val getPowerTitle: (Int) -> String = { mode ->
-            if (mode == 1) "استندبای معمولی (روشن شدن فوری و حفظ اتصال) [پیش‌فرض]" else "حالت ذخیره انرژی (خاموشی عمیق قطعات، مصرف زیر ۰.۵ وات)"
-        }
-        addSettingRow(contentLayout, "۲. حالت آماده‌به‌کار رسیور (Power Mode)", getPowerTitle(draftPower)) { txtVal, row ->
-            val modes = arrayOf("استندبای معمولی (روشن شدن فوری و حفظ اتصال)", "حالت ذخیره انرژی (خاموشی عمیق قطعات، مصرف زیر ۰.۵ وات)")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("حالت آماده‌به‌کار رسیور")
-                .setItems(modes) { dlg, which ->
-                    draftPower = if (which == 0) 1 else 0
-                    val label = getPowerTitle(draftPower)
-                    txtVal.text = label
-                    row.contentDescription = "حالت پاور: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 2. Power Mode (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۲. حالت آماده‌به‌کار رسیور (Power Mode)",
+            draftPower == 1,
+            onText = "استندبای معمولی (روشن شدن فوری و حفظ اتصال)",
+            offText = "حالت ذخیره انرژی (خاموشی عمیق، مصرف زیر ۰.۵ وات)"
+        ) { isNormal ->
+            draftPower = if (isNormal) 1 else 0
         }
 
         // 3. Parental Control & Locks (PIN protected)
@@ -491,72 +534,24 @@ class SettingsFragment : Fragment() {
         }
         scrollView.addView(contentLayout)
 
-        // 1. Screen Lock
-        addSettingRow(contentLayout, "۱. قفل تصویر تلویزیون (Screen Lock)", if (subScreenLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("غیرفعال", "فعال")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("قفل تصویر تلویزیون")
-                .setItems(opts) { dlg, which ->
-                    subScreenLock = which
-                    val label = if (subScreenLock == 1) "فعال" else "غیرفعال"
-                    txtVal.text = label
-                    row.contentDescription = "قفل تصویر تلویزیون: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 1. Screen Lock (Direct 1-tap Toggle)
+        addToggleSettingRow(contentLayout, "۱. قفل تصویر تلویزیون (Screen Lock)", subScreenLock == 1, "فعال", "غیرفعال (پیش‌فرض)") { on ->
+            subScreenLock = if (on) 1 else 0
         }
 
-        // 2. Settings Lock
-        addSettingRow(contentLayout, "۲. قفل منوی تنظیمات رسیور (Settings Lock)", if (subSettingsLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("غیرفعال", "فعال")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("قفل منوی تنظیمات رسیور")
-                .setItems(opts) { dlg, which ->
-                    subSettingsLock = which
-                    val label = if (subSettingsLock == 1) "فعال" else "غیرفعال"
-                    txtVal.text = label
-                    row.contentDescription = "قفل منوی تنظیمات: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 2. Settings Lock (Direct 1-tap Toggle)
+        addToggleSettingRow(contentLayout, "۲. قفل منوی تنظیمات رسیور (Settings Lock)", subSettingsLock == 1, "فعال", "غیرفعال (پیش‌فرض)") { on ->
+            subSettingsLock = if (on) 1 else 0
         }
 
-        // 3. Edit Channel Lock
-        addSettingRow(contentLayout, "۳. قفل ویرایش و حذف کانال‌ها (Edit Channel Lock)", if (subEditLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("غیرفعال", "فعال")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("قفل ویرایش و حذف کانال‌ها")
-                .setItems(opts) { dlg, which ->
-                    subEditLock = which
-                    val label = if (subEditLock == 1) "فعال" else "غیرفعال"
-                    txtVal.text = label
-                    row.contentDescription = "قفل ویرایش کانال‌ها: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 3. Edit Channel Lock (Direct 1-tap Toggle)
+        addToggleSettingRow(contentLayout, "۳. قفل ویرایش و حذف کانال‌ها (Edit Channel Lock)", subEditLock == 1, "فعال", "غیرفعال (پیش‌فرض)") { on ->
+            subEditLock = if (on) 1 else 0
         }
 
-        // 4. Installation Lock
-        addSettingRow(contentLayout, "۴. قفل منوی نصب و جستجوی فرکانس (Installation Lock)", if (subInstallLock == 1) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("غیرفعال", "فعال")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("قفل منوی نصب ماهواره و فرکانس")
-                .setItems(opts) { dlg, which ->
-                    subInstallLock = which
-                    val label = if (subInstallLock == 1) "فعال" else "غیرفعال"
-                    txtVal.text = label
-                    row.contentDescription = "قفل منوی نصب: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 4. Installation Lock (Direct 1-tap Toggle)
+        addToggleSettingRow(contentLayout, "۴. قفل منوی نصب و جستجوی فرکانس (Installation Lock)", subInstallLock == 1, "فعال", "غیرفعال (پیش‌فرض)") { on ->
+            subInstallLock = if (on) 1 else 0
         }
 
         // 5. Age Rating
@@ -766,26 +761,15 @@ class SettingsFragment : Fragment() {
         }
         scrollView.addView(contentLayout)
 
-        // 1. Show button in channels
-        addSettingRow(
+        // 1. Show button in channels (Direct 1-tap Toggle)
+        addToggleSettingRow(
             contentLayout,
             "۱. نمایش دکمه فایل‌های ضبط‌شده در بخش کانال‌ها",
-            if (draftShowInChannels) "فعال (پیش‌فرض)" else "غیرفعال"
-        ) { txtVal, row ->
-            val options = arrayOf("فعال (نمایش دکمه شناور)", "غیرفعال (مخفی کردن از بخش کانال‌ها)")
-            val curIdx = if (draftShowInChannels) 0 else 1
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("نمایش دکمه در بخش کانال‌ها")
-                .setSingleChoiceItems(options, curIdx) { dlg, which ->
-                    draftShowInChannels = (which == 0)
-                    val label = if (draftShowInChannels) "فعال (پیش‌فرض)" else "غیرفعال"
-                    txtVal.text = label
-                    row.contentDescription = "نمایش دکمه فایل‌های ضبط در بخش کانال‌ها: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+            draftShowInChannels,
+            onText = "روشن (نمایش دکمه)",
+            offText = "خاموش (مخفی)"
+        ) { newState ->
+            draftShowInChannels = newState
         }
 
         // 2. Custom storage directory
@@ -1083,43 +1067,26 @@ class SettingsFragment : Fragment() {
         }
         scrollView.addView(contentLayout)
 
-        // 1. Auto announce channel
-        addSettingRow(contentLayout, "۱. اعلام صوتی خودکار نام شبکه پس از تعویض", if (draftAutoChannel) "فعال (پیش‌فرض)" else "غیرفعال") { txtVal, row ->
-            val opts = arrayOf("فعال (اعلام خودکار نام و شماره کانال)", "غیرفعال")
-            val cur = if (draftAutoChannel) 0 else 1
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("اعلام صوتی خودکار نام شبکه")
-                .setSingleChoiceItems(opts, cur) { dlg, which ->
-                    draftAutoChannel = (which == 0)
-                    val label = if (draftAutoChannel) "فعال (پیش‌فرض)" else "غیرفعال"
-                    txtVal.text = label
-                    row.contentDescription = "اعلام خودکار کانال: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 1. Auto announce channel (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۱. اعلام صوتی خودکار نام شبکه پس از تعویض",
+            draftAutoChannel,
+            onText = "روشن (اعلام خودکار نام و شماره)",
+            offText = "خاموش (غیرفعال)"
+        ) { newState ->
+            draftAutoChannel = newState
         }
 
-        // 2. EPG mode
-        val getEpgModeTitle: (Boolean) -> String = { auto ->
-            if (auto) "خودکار پس از تعویض کانال" else "خواندن دستی از طریق منوی کانال (پیش‌فرض)"
-        }
-        addSettingRow(contentLayout, "۲. نحوه اعلام جدول زمان‌بندی برنامه (EPG)", getEpgModeTitle(draftAutoEpg)) { txtVal, row ->
-            val modes = arrayOf("خواندن دستی از طریق منوی کانال (پیش‌فرض)", "خواندن خودکار پس از تعویض کانال")
-            val cur = if (draftAutoEpg) 1 else 0
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("نحوه اعلام جدول برنامه EPG")
-                .setSingleChoiceItems(modes, cur) { dlg, which ->
-                    draftAutoEpg = (which == 1)
-                    val label = getEpgModeTitle(draftAutoEpg)
-                    txtVal.text = label
-                    row.contentDescription = "اعلام EPG: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 2. EPG mode (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۲. نحوه اعلام جدول زمان‌بندی برنامه (EPG)",
+            draftAutoEpg,
+            onText = "خواندن خودکار پس از تعویض کانال",
+            offText = "خواندن دستی از طریق منوی کانال (پیش‌فرض)"
+        ) { newState ->
+            draftAutoEpg = newState
         }
 
         // 3. EPG details
@@ -1146,22 +1113,15 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
-        // 4. Background EPG Announcement
-        addSettingRow(contentLayout, "۴. اعلام جدول پخش برنامه (EPG) در پس‌زمینه", if (draftBackgroundEpg) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("فعال (اعلام خودکار عنوان برنامه EPG هنگام تعویض کانال با کنترل فیزیکی)", "غیرفعال (پیش‌فرض)")
-            val cur = if (draftBackgroundEpg) 0 else 1
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("اعلام EPG در پس‌زمینه")
-                .setSingleChoiceItems(opts, cur) { dlg, which ->
-                    draftBackgroundEpg = (which == 0)
-                    val label = if (draftBackgroundEpg) "فعال" else "غیرفعال (پیش‌فرض)"
-                    txtVal.text = label
-                    row.contentDescription = "اعلام EPG در پس‌زمینه: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 4. Background EPG Announcement (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۴. اعلام جدول پخش برنامه (EPG) در پس‌زمینه",
+            draftBackgroundEpg,
+            onText = "روشن (اعلام خودکار هنگام کار با ریموت فیزیکی)",
+            offText = "خاموش (غیرفعال - پیش‌فرض)"
+        ) { newState ->
+            draftBackgroundEpg = newState
         }
 
         MaterialAlertDialogBuilder(requireContext())
@@ -1192,22 +1152,15 @@ class SettingsFragment : Fragment() {
         }
         scrollView.addView(contentLayout)
 
-        // 1. Sound cues
-        addSettingRow(contentLayout, "۱. پخش افکت‌های صوتی و بوق فرامین", if (draftSound) "روشن (پیش‌فرض)" else "خاموش") { txtVal, row ->
-            val opts = arrayOf("روشن (پخش بوق شروع و پایان فرامین صوتی)", "خاموش")
-            val cur = if (draftSound) 0 else 1
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("افکت‌های صوتی فرامین")
-                .setSingleChoiceItems(opts, cur) { dlg, which ->
-                    draftSound = (which == 0)
-                    val label = if (draftSound) "روشن (پیش‌فرض)" else "خاموش"
-                    txtVal.text = label
-                    row.contentDescription = "افکت صوتی: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 1. Sound cues (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۱. پخش افکت‌های صوتی و بوق فرامین",
+            draftSound,
+            onText = "روشن (پخش بوق فرامین)",
+            offText = "خاموش"
+        ) { newState ->
+            draftSound = newState
         }
 
         // 2. Voice Commands Customization & Management
@@ -1240,36 +1193,26 @@ class SettingsFragment : Fragment() {
         }
         scrollView.addView(contentLayout)
 
-        // 1. Quick access button visibility
-        addSettingRow(contentLayout, "۱. نمایش کلید دسترسی سریع بالای صفحه", if (draftQuickAccess) "نمایش (پیش‌فرض)" else "مخفی") { txtVal, row ->
-            val opts = arrayOf("نمایش در نوار بالای برنامه (پیش‌فرض)", "مخفی کردن کلید")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("نمایش کلید دسترسی سریع")
-                .setItems(opts) { _, which ->
-                    draftQuickAccess = (which == 0)
-                    val label = if (draftQuickAccess) "نمایش (پیش‌فرض)" else "مخفی"
-                    txtVal.text = label
-                    row.contentDescription = "کلید دسترسی سریع: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 1. Quick access button visibility (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۱. نمایش کلید دسترسی سریع بالای صفحه",
+            draftQuickAccess,
+            onText = "روشن (نمایش در بالای برنامه)",
+            offText = "خاموش (مخفی)"
+        ) { newState ->
+            draftQuickAccess = newState
         }
 
-        // 2. Volume step buttons
-        addSettingRow(contentLayout, "۲. نمایش دکمه‌های گام‌های ۵ تایی ولوم در پنل", if (draftShowVolumeStepButtons) "نمایش دکمه‌های -۵٪ و +۵٪" else "مخفی (فقط لغزنده ولوم - پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("مخفی (فقط لغزنده ولوم و قطع/وصل صدا - پیش‌فرض)", "نمایش دکمه‌های کم و زیاد کردن ۵ درصدی")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("دکمه‌های ۵ درصدی ولوم رسیور")
-                .setItems(opts) { _, which ->
-                    draftShowVolumeStepButtons = (which == 1)
-                    val label = if (draftShowVolumeStepButtons) "نمایش دکمه‌های -۵٪ و +۵٪" else "مخفی (فقط لغزنده ولوم - پیش‌فرض)"
-                    txtVal.text = label
-                    row.contentDescription = "دکمه‌های ۵ تایی ولوم: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 2. Volume step buttons (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۲. نمایش دکمه‌های گام‌های ۵ تایی ولوم در پنل",
+            draftShowVolumeStepButtons,
+            onText = "روشن (نمایش دکمه‌های کاهش و افزایش)",
+            offText = "خاموش (مخفی - پیش‌فرض)"
+        ) { newState ->
+            draftShowVolumeStepButtons = newState
         }
 
         // 3. Customize quick access items
@@ -1328,132 +1271,92 @@ class SettingsFragment : Fragment() {
         }
         scrollView.addView(contentLayout)
 
-        // 1. Haptic feedback
-        addSettingRow(contentLayout, "۱. ویبره و بازخورد لمسی (Haptic Feedback)", if (draftHaptic) "فعال (پیش‌فرض)" else "غیرفعال") { txtVal, row ->
-            val opts = arrayOf("فعال (لرزش هنگام لمس کلیدها)", "غیرفعال")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("ویبره و بازخورد لمسی")
-                .setItems(opts) { dlg, which ->
-                    draftHaptic = (which == 0)
-                    val label = if (draftHaptic) "فعال (پیش‌فرض)" else "غیرفعال"
-                    txtVal.text = label
-                    row.contentDescription = "ویبره لمسی: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 1. Haptic feedback (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۱. ویبره و بازخورد لمسی (Haptic Feedback)",
+            draftHaptic,
+            onText = "روشن (لرزش هنگام لمس کلیدها)",
+            offText = "خاموش"
+        ) { newState ->
+            draftHaptic = newState
         }
 
-        // 2. Keep global channel number
-        addSettingRow(contentLayout, "۲. حفظ شماره سراسری کانال‌ها در فیلترها", if (draftKeepGlobal) "فعال" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("غیرفعال (شماره‌گذاری از ۱ در هر لیست فیلتر)", "فعال (حفظ شماره اصلی شبکه در کل رسیور)")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("نحوه نمایش شماره کانال‌ها در فیلتر")
-                .setItems(opts) { dlg, which ->
-                    draftKeepGlobal = (which == 1)
-                    val label = if (draftKeepGlobal) "فعال" else "غیرفعال (پیش‌فرض)"
-                    txtVal.text = label
-                    row.contentDescription = "شماره سراسری کانال‌ها: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 2. Keep global channel number (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۲. حفظ شماره سراسری کانال‌ها در فیلترها",
+            draftKeepGlobal,
+            onText = "روشن (حفظ شماره اصلی شبکه در کل رسیور)",
+            offText = "خاموش (شماره‌گذاری از ۱ در فیلتر)"
+        ) { newState ->
+            draftKeepGlobal = newState
         }
 
-        // 3. Video orientation
-        addSettingRow(contentLayout, "۳. جهت صفحه در پخش زنده ویدیویی", if (draftLandscape) "افقی (Landscape - مناسب افراد بینا)" else "عمودی (Portrait - پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("عمودی (Portrait - پیش‌فرض نابینایان)", "افقی (Landscape - تمام صفحه افقی)")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("جهت تصویر در پخش زنده")
-                .setItems(opts) { dlg, which ->
-                    draftLandscape = (which == 1)
-                    val label = if (draftLandscape) "افقی (Landscape)" else "عمودی (Portrait)"
-                    txtVal.text = label
-                    row.contentDescription = "جهت تصویر: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 3. Video orientation (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۳. جهت صفحه در پخش زنده ویدیویی",
+            draftLandscape,
+            onText = "افقی (Landscape - مناسب افراد بینا)",
+            offText = "عمودی (Portrait - پیش‌فرض نابینایان)"
+        ) { newState ->
+            draftLandscape = newState
         }
 
-        // 4. Show recordings button in channels tab
-        addSettingRow(contentLayout, "۴. نمایش دکمه مشاهده فایل‌های ضبطی در کانال‌ها", if (draftShowRecordings) "نمایش (پیش‌فرض)" else "مخفی") { txtVal, row ->
-            val opts = arrayOf("نمایش در نوار پایین کانال‌ها (پیش‌فرض)", "مخفی کردن دکمه")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("دکمه مشاهده فایل‌های ضبطی")
-                .setItems(opts) { dlg, which ->
-                    draftShowRecordings = (which == 0)
-                    val label = if (draftShowRecordings) "نمایش (پیش‌فرض)" else "مخفی"
-                    txtVal.text = label
-                    row.contentDescription = "دکمه ضبط‌ها در کانال‌ها: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 4. Show recordings button in channels tab (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۴. نمایش دکمه مشاهده فایل‌های ضبطی در کانال‌ها",
+            draftShowRecordings,
+            onText = "روشن (نمایش در نوار پایین)",
+            offText = "خاموش (مخفی)"
+        ) { newState ->
+            draftShowRecordings = newState
         }
 
-        // 5. Show refresh button in channels tab
-        addSettingRow(contentLayout, "۵. نمایش دکمه به‌روزرسانی کانال‌ها در سربرگ کانال‌ها", if (draftShowRefresh) "نمایش (پیش‌فرض)" else "مخفی") { txtVal, row ->
-            val opts = arrayOf("نمایش در نوار پایین کانال‌ها (پیش‌فرض)", "مخفی کردن دکمه")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("دکمه به‌روزرسانی کانال‌ها")
-                .setItems(opts) { dlg, which ->
-                    draftShowRefresh = (which == 0)
-                    val label = if (draftShowRefresh) "نمایش (پیش‌فرض)" else "مخفی"
-                    txtVal.text = label
-                    row.contentDescription = "دکمه به‌روزرسانی کانال‌ها: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 5. Show refresh button in channels tab (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۵. نمایش دکمه به‌روزرسانی کانال‌ها در سربرگ کانال‌ها",
+            draftShowRefresh,
+            onText = "روشن (نمایش در نوار پایین)",
+            offText = "خاموش (مخفی)"
+        ) { newState ->
+            draftShowRefresh = newState
         }
 
-        // 6. Show mic button in channels tab
-        addSettingRow(contentLayout, "۶. نمایش دکمه میکروفون دستیار صوتی در سربرگ کانال‌ها", if (draftShowMic) "نمایش (پیش‌فرض)" else "مخفی") { txtVal, row ->
-            val opts = arrayOf("نمایش در نوار پایین کانال‌ها (پیش‌فرض)", "مخفی کردن دکمه")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("دکمه دستیار صوتی در کانال‌ها")
-                .setItems(opts) { dlg, which ->
-                    draftShowMic = (which == 0)
-                    val label = if (draftShowMic) "نمایش (پیش‌فرض)" else "مخفی"
-                    txtVal.text = label
-                    row.contentDescription = "دکمه میکروفون دستیار صوتی: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 6. Show voice assistant button in channels tab (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۶. نمایش دکمه دستیار صوتی (شنیدن مستقیم) در پایین سربرگ کانال‌ها",
+            draftShowMic,
+            onText = "روشن (نمایش دکمه شنیدن)",
+            offText = "خاموش (مخفی)"
+        ) { newState ->
+            draftShowMic = newState
         }
 
-        // 7. Jump to first channel button
-        addSettingRow(contentLayout, "۷. نمایش دکمه رفتن به اولین کانال (کانال ۱)", if (draftJumpFirst) "فعال (نمایش دکمه در بالای لیست)" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("غیرفعال (مخفی)", "فعال (نمایش دکمه پرش به کانال ۱)")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("نمایش دکمه رفتن به اولین کانال")
-                .setItems(opts) { dlg, which ->
-                    draftJumpFirst = (which == 1)
-                    val label = if (draftJumpFirst) "فعال" else "غیرفعال (پیش‌فرض)"
-                    txtVal.text = label
-                    row.contentDescription = "دکمه پرش به اولین کانال: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 7. Jump to first channel button (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۷. نمایش دکمه رفتن به اولین کانال (کانال ۱)",
+            draftJumpFirst,
+            onText = "روشن (نمایش در بالای لیست)",
+            offText = "خاموش (مخفی)"
+        ) { newState ->
+            draftJumpFirst = newState
         }
 
-        // 8. Jump to last channel button
-        addSettingRow(contentLayout, "۸. نمایش دکمه رفتن به آخرین کانال", if (draftJumpLast) "فعال (نمایش دکمه در بالای لیست)" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("غیرفعال (مخفی)", "فعال (نمایش دکمه پرش به آخرین کانال)")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("نمایش دکمه رفتن به آخرین کانال")
-                .setItems(opts) { dlg, which ->
-                    draftJumpLast = (which == 1)
-                    val label = if (draftJumpLast) "فعال" else "غیرفعال (پیش‌فرض)"
-                    txtVal.text = label
-                    row.contentDescription = "دکمه پرش به آخرین کانال: $label"
-                    AccessibilityHelper.announce(row, label)
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
+        // 8. Jump to last channel button (Direct 1-tap Toggle)
+        addToggleSettingRow(
+            contentLayout,
+            "۸. نمایش دکمه رفتن به آخرین کانال",
+            draftJumpLast,
+            onText = "روشن (نمایش در بالای لیست)",
+            offText = "خاموش (مخفی)"
+        ) { newState ->
+            draftJumpLast = newState
         }
 
         // 9. Separate audio output to Bluetooth

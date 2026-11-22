@@ -232,7 +232,7 @@
             android:layout_weight="1"
             android:layout_marginHorizontal="3dp"
             android:text="🎙 دستیار صوتی"
-            android:contentDescription="انتقال به سربرگ دستیار صوتی"
+            android:contentDescription="دستیار صوتی: برای شنیدن و گفتن دستور صوتی ضربه بزنید"
             android:textColor="@color/white"
             android:textSize="12sp"
             android:textStyle="bold"
