@@ -43,6 +43,30 @@
         app:strokeColor="#364765"
         app:strokeWidth="1dp" />
 
+    <!-- Channel Type Filter (All / TV / Radio) -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="نوع شبکه‌ها:"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp"
+        android:layout_marginBottom="6dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnChannelTypeFilter"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="همه شبکه‌ها (تلویزیون و رادیو)"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:gravity="center_vertical|start"
+        android:paddingHorizontal="14dp"
+        android:layout_marginBottom="10dp"
+        app:backgroundTint="#1F2A3E"
+        app:cornerRadius="12dp"
+        app:strokeColor="#364765"
+        app:strokeWidth="1dp" />
+
     <!-- 2. Select All, Deselect All, and Count Row -->
     <LinearLayout
         android:layout_width="match_parent"

@@ -307,15 +307,24 @@ class GMScreenBackgroundService : Service(), StreamRecorderManager.StreamStateLi
                             if (GMScreenApplication.instance.appConfig.backgroundAnnounceEpg) {
                                 serviceScope.launch(Dispatchers.IO) {
                                     try {
-                                        val epgData = repository.getEpg(ch.serviceId)
-                                        val (cur, nxt) = com.gmscreen.accessible.util.EpgHelper.extractCurrentAndNextEvent(epgData)
+                                        // Wait 1200ms for STB tuner transponder lock & EIT table parsing
+                                        delay(1200)
+                                        var epgData = repository.getEpg(ch.serviceId)
+                                        var (cur, nxt) = com.gmscreen.accessible.util.EpgHelper.extractCurrentAndNextEvent(epgData)
+                                        if (cur == null && nxt == null) {
+                                            // Retry once after 1000ms if STB hadn't populated EPG yet
+                                            delay(1000)
+                                            epgData = repository.getEpg(ch.serviceId)
+                                            val pair = com.gmscreen.accessible.util.EpgHelper.extractCurrentAndNextEvent(epgData)
+                                            cur = pair.first
+                                            nxt = pair.second
+                                        }
                                         val epgMsg = com.gmscreen.accessible.util.EpgHelper.buildEpgAnnouncement(
                                             cur,
                                             nxt,
                                             GMScreenApplication.instance.appConfig.epgAnnounceDetail
                                         )
                                         if (!epgMsg.isNullOrBlank() && !GMScreenApplication.instance.isAppInForeground) {
-                                            delay(400)
                                             TtsHelper.speak(epgMsg, interrupt = false)
                                         }
                                     } catch (_: Exception) {}

@@ -593,6 +593,7 @@ class BackupFragment : Fragment() {
 
         val txtCount = dialogView.findViewById<TextView>(R.id.txtSelectedCount)
         val btnPlaylistMode = dialogView.findViewById<MaterialButton>(R.id.btnPlaylistMode)
+        val btnChannelTypeFilter = dialogView.findViewById<MaterialButton>(R.id.btnChannelTypeFilter)
         val btnSelectAll = dialogView.findViewById<MaterialButton>(R.id.btnSelectAll)
         val btnDeselectAll = dialogView.findViewById<MaterialButton>(R.id.btnDeselectAll)
         val edtSearch = dialogView.findViewById<EditText>(R.id.edtSearchChannel)
@@ -602,28 +603,37 @@ class BackupFragment : Fragment() {
 
         var playlistModeIndex = 0 // 0: تک‌تک (پیش‌فرض), 1: جامع, 2: هر دو
         val modeOptions = arrayOf(
-            "تولید فایل‌های مجزا برای هر شبکه (تک‌تک - پیش‌فرض)",
-            "تولید یک فایل جامع کلی برای تمام شبکه‌ها",
-            "تولید هر دو حالت (هم مجزا و هم فایل جامع)"
+            "فایل‌های مجزا برای هر شبکه (تک‌تک)",
+            "یک فایل جامع برای تمام شبکه‌ها",
+            "هر دو حالت (مجزا و فایل جامع)"
         )
 
         btnPlaylistMode.text = modeOptions[playlistModeIndex]
-        btnPlaylistMode.contentDescription = "حالت ساخت لیست پخش: ${modeOptions[playlistModeIndex]}. برای تغییر دو بار ضربه بزنید."
+        btnPlaylistMode.contentDescription = "حالت ساخت: ${modeOptions[playlistModeIndex]}"
 
         btnPlaylistMode.setOnClickListener {
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("حالت ساخت فایل‌های لیست پخش")
+                .setTitle("حالت ساخت پلی‌لیست")
                 .setSingleChoiceItems(modeOptions, playlistModeIndex) { dlg, which ->
                     playlistModeIndex = which
                     val selectedText = modeOptions[which]
                     btnPlaylistMode.text = selectedText
-                    btnPlaylistMode.contentDescription = "حالت ساخت لیست پخش: $selectedText. برای تغییر دو بار ضربه بزنید."
-                    AccessibilityHelper.announce(btnPlaylistMode, "حالت انتخاب شد: $selectedText")
+                    btnPlaylistMode.contentDescription = "حالت ساخت: $selectedText"
+                    AccessibilityHelper.announce(btnPlaylistMode, selectedText)
                     dlg.dismiss()
                 }
                 .setNegativeButton("انصراف", null)
                 .show()
         }
+
+        var channelTypeFilterIndex = 0 // 0: همه, 1: تلویزیون, 2: رادیو
+        val filterOptions = arrayOf(
+            "همه شبکه‌ها (تلویزیون و رادیو)",
+            "فقط شبکه‌های تلویزیونی",
+            "فقط شبکه‌های رادیویی"
+        )
+        btnChannelTypeFilter.text = filterOptions[channelTypeFilterIndex]
+        btnChannelTypeFilter.contentDescription = "نوع شبکه: ${filterOptions[channelTypeFilterIndex]}"
 
         val selectedSet = HashSet<Channel>(allChannels)
         var filteredList = allChannels.toList()
@@ -631,10 +641,41 @@ class BackupFragment : Fragment() {
         lateinit var dialog: AlertDialog
         lateinit var adapter: PlaylistChannelAdapter
 
+        fun getActiveList(): List<Channel> {
+            val byType = when (channelTypeFilterIndex) {
+                1 -> allChannels.filter { !it.isRadio }
+                2 -> allChannels.filter { it.isRadio }
+                else -> allChannels
+            }
+            val query = edtSearch.text?.toString()?.trim() ?: ""
+            return if (query.isEmpty()) byType else byType.filter {
+                it.serviceName.contains(query, ignoreCase = true) ||
+                it.channelNumber.toString().contains(query)
+            }
+        }
+
         fun updateCountText() {
             val countText = "انتخاب شده: ${selectedSet.size} از ${allChannels.size}"
             txtCount.text = countText
             txtCount.contentDescription = countText
+        }
+
+        btnChannelTypeFilter.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("انتخاب نوع شبکه‌ها")
+                .setSingleChoiceItems(filterOptions, channelTypeFilterIndex) { dlg, which ->
+                    channelTypeFilterIndex = which
+                    val opt = filterOptions[which]
+                    btnChannelTypeFilter.text = opt
+                    btnChannelTypeFilter.contentDescription = "نوع شبکه: $opt"
+                    AccessibilityHelper.announce(btnChannelTypeFilter, opt)
+                    filteredList = getActiveList()
+                    adapter.updateList(filteredList)
+                    updateCountText()
+                    dlg.dismiss()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
         }
 
         adapter = PlaylistChannelAdapter(filteredList, selectedSet) {
@@ -646,10 +687,11 @@ class BackupFragment : Fragment() {
         updateCountText()
 
         btnSelectAll.setOnClickListener {
-            selectedSet.addAll(allChannels)
+            val curActive = getActiveList()
+            selectedSet.addAll(curActive)
             adapter.notifyDataSetChanged()
             updateCountText()
-            val msg = "تمام ${allChannels.size} شبکه انتخاب شدند."
+            val msg = "${curActive.size} شبکه انتخاب شد"
             AccessibilityHelper.announce(btnSelectAll, msg)
         }
 
@@ -658,22 +700,14 @@ class BackupFragment : Fragment() {
             selectedSet.clear()
             adapter.notifyDataSetChanged()
             updateCountText()
-            val msg = "لغو انتخاب تمام شبکه‌ها انجام شد."
+            val msg = "لغو انتخاب همه انجام شد"
             AccessibilityHelper.announce(btnDeselectAll, msg)
         }
 
         edtSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val query = s?.toString()?.trim() ?: ""
-                filteredList = if (query.isEmpty()) {
-                    allChannels
-                } else {
-                    allChannels.filter {
-                        it.serviceName.contains(query, ignoreCase = true) ||
-                        it.channelNumber.toString().contains(query)
-                    }
-                }
+                filteredList = getActiveList()
                 adapter.updateList(filteredList)
             }
             override fun afterTextChanged(s: Editable?) {}

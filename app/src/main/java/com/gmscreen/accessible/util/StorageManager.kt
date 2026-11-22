@@ -199,9 +199,10 @@ object StorageManager {
                 val fileName = String.format(Locale.US, "%03d - %s.m3u", num, safeName)
                 val file = File(targetDir, fileName)
                 val url = channelUrls?.get(ch.serviceId) ?: ch.toSatIpUrl(hostIp)
+                val radioAttr = if (ch.isRadio) " radio=\"true\"" else ""
                 val lines = listOf(
                     "#EXTM3U",
-                    "#EXTINF:-1 tvg-id=\"${ch.serviceId}\",${ch.serviceName}",
+                    "#EXTINF:-1 tvg-id=\"${ch.serviceId}\"$radioAttr,${ch.serviceName}",
                     url
                 )
                 file.writeText(lines.joinToString("\n") + "\n", Charsets.UTF_8)
@@ -216,7 +217,8 @@ object StorageManager {
             sb.append("#EXTM3U\n")
             channels.forEach { ch ->
                 val url = channelUrls?.get(ch.serviceId) ?: ch.toSatIpUrl(hostIp)
-                sb.append("#EXTINF:-1 tvg-id=\"${ch.serviceId}\",${ch.serviceName}\n")
+                val radioAttr = if (ch.isRadio) " radio=\"true\"" else ""
+                sb.append("#EXTINF:-1 tvg-id=\"${ch.serviceId}\"$radioAttr,${ch.serviceName}\n")
                 sb.append("$url\n")
             }
             file.writeText(sb.toString(), Charsets.UTF_8)

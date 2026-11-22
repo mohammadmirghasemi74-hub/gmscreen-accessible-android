@@ -28,7 +28,7 @@ import com.gmscreen.accessible.GMScreenApplication
 import com.gmscreen.accessible.R
 import com.gmscreen.accessible.ui.InternalBrowserActivity
 import com.gmscreen.accessible.util.AccessibilityHelper
-import com.gmscreen.accessible.util.AppLogger
+
 import com.gmscreen.accessible.util.StorageManager
 import com.gmscreen.accessible.util.VoiceCustomizationDialogHelper
 import kotlinx.coroutines.Dispatchers
@@ -66,12 +66,11 @@ class SettingsFragment : Fragment() {
             Pair("۳. تغییر رمز عبور رسیور (Parental PIN)", ::openChangePasswordDialog),
             Pair("۴. تنظیمات جامع ضبط و ذخیره‌سازی در گوشی (Recordings)", ::openRecordingSettingsDialog),
             Pair("۵. تنظیمات راهنمای برنامه‌ها و اعلام خودکار (EPG & Announcements)", ::openEpgSettingsDialog),
-            Pair("۶. تنظیمات کنترل صوتی و بیدارباش (Voice & Wake-Word)", ::openVoiceSettingsDialog),
-            Pair("۷. تنظیمات دسترس‌پذیری، ویبره و دکمه‌های پرش (Accessibility)", ::openAccessibilitySettingsDialog),
-            Pair("۸. مدیریت و مشاهده لاگ‌های سیستم (System Logs)", ::openSystemLogsDialog),
-            Pair("۹. کتابچه راهنمای جامع کاربری نرم‌افزار", ::openHelpBrowser),
-            Pair("۱۰. راهنمای کامل فرامین صوتی", ::openVoiceHelpBrowser),
-            Pair("۱۱. درباره نرم‌افزار و مشخصات سازنده", ::openAboutBrowser)
+            Pair("۶. تنظیمات کنترل صوتی (Voice Assistant)", ::openVoiceSettingsDialog),
+            Pair("۷. تنظیمات دسترس‌پذیری، پنل سریع و دکمه‌های پرش (Accessibility)", ::openAccessibilitySettingsDialog),
+            Pair("۸. کتابچه راهنمای جامع کاربری نرم‌افزار", ::openHelpBrowser),
+            Pair("۹. راهنمای کامل فرامین صوتی", ::openVoiceHelpBrowser),
+            Pair("۱۰. درباره نرم‌افزار و مشخصات سازنده", ::openAboutBrowser)
         )
 
         for ((title, handler) in categories) {
@@ -1180,9 +1179,7 @@ class SettingsFragment : Fragment() {
     }
 
     private fun openVoiceSettingsDialog() {
-        var draftListening = appConfig.voiceAlwaysListening
         var draftSound = appConfig.soundCuesEnabled
-        var draftWakeWord = appConfig.voiceWakeWord
 
         val scrollView = ScrollView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -1193,26 +1190,8 @@ class SettingsFragment : Fragment() {
         }
         scrollView.addView(contentLayout)
 
-        // 1. Always listening
-        addSettingRow(contentLayout, "۱. بیدارباش صوتی پیوسته در پس‌زمینه", if (draftListening) "روشن" else "خاموش (پیش‌فرض)") { txtVal, row ->
-            val opts = arrayOf("خاموش (مصرف بهینه باتری - پیش‌فرض)", "روشن (گوش به زنگ دائم عبارت بیدارباش)")
-            val cur = if (draftListening) 1 else 0
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("بیدارباش صوتی پیوسته")
-                .setSingleChoiceItems(opts, cur) { dlg, which ->
-                    draftListening = (which == 1)
-                    val label = if (draftListening) "روشن" else "خاموش (پیش‌فرض)"
-                    txtVal.text = label
-                    row.contentDescription = "بیدارباش صوتی: $label"
-                    AccessibilityHelper.announce(row, label)
-                    dlg.dismiss()
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
-        // 2. Sound cues
-        addSettingRow(contentLayout, "۲. پخش افکت‌های صوتی و بوق فرامین", if (draftSound) "روشن (پیش‌فرض)" else "خاموش") { txtVal, row ->
+        // 1. Sound cues
+        addSettingRow(contentLayout, "۱. پخش افکت‌های صوتی و بوق فرامین", if (draftSound) "روشن (پیش‌فرض)" else "خاموش") { txtVal, row ->
             val opts = arrayOf("روشن (پخش بوق شروع و پایان فرامین صوتی)", "خاموش")
             val cur = if (draftSound) 0 else 1
             MaterialAlertDialogBuilder(requireContext())
@@ -1229,62 +1208,8 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
-        // 3. Wake word
-        addSettingRow(contentLayout, "۳. عبارت کلیدی بیدارباش صوتی", draftWakeWord) { txtVal, row ->
-            val presetLabels = arrayOf(
-                "های رسیور (پیش‌فرض)",
-                "های دیوایس",
-                "جی ام اسکرین",
-                "رسیور",
-                "دستگاه",
-                "دستیار صوتی",
-                "سفارشی (تایپ عبارت دلخواه)..."
-            )
-            val presetValues = listOf(
-                "های رسیور",
-                "های دیوایس",
-                "جی ام اسکرین",
-                "رسیور",
-                "دستگاه",
-                "دستیار صوتی"
-            )
-
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("انتخاب عبارت بیدارباش صوتی")
-                .setItems(presetLabels) { _, which ->
-                    if (which < presetValues.size) {
-                        draftWakeWord = presetValues[which]
-                        txtVal.text = draftWakeWord
-                        row.contentDescription = "عبارت بیدارباش: $draftWakeWord"
-                        AccessibilityHelper.announce(row, "عبارت بیدارباش صوتی به $draftWakeWord تغییر یافت")
-                    } else {
-                        val input = EditText(requireContext()).apply {
-                            hint = "عبارت بیدارباش دلخواه (مثلاً: سلام رسیور)"
-                            setText(draftWakeWord)
-                            setSingleLine()
-                        }
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("تایپ عبارت بیدارباش سفارشی")
-                            .setView(input)
-                            .setPositiveButton("تأیید") { _, _ ->
-                                val word = input.text.toString().trim()
-                                if (word.isNotBlank()) {
-                                    draftWakeWord = word
-                                    txtVal.text = draftWakeWord
-                                    row.contentDescription = "عبارت بیدارباش: $draftWakeWord"
-                                    AccessibilityHelper.announce(row, "عبارت بیدارباش سفارشی تنظیم شد: $draftWakeWord")
-                                }
-                            }
-                            .setNegativeButton("انصراف", null)
-                            .show()
-                    }
-                }
-                .setNegativeButton("انصراف", null)
-                .show()
-        }
-
-        // 4. Voice Commands Customization & Management
-        addSettingRow(contentLayout, "۴. مدیریت و شخصی‌سازی فرامین صوتی رسیور", "مشاهده، ویرایش، افزودن، همگام‌سازی و بازنشانی فرامین") { _, _ ->
+        // 2. Voice Commands Customization & Management
+        addSettingRow(contentLayout, "۲. مدیریت و شخصی‌سازی فرامین صوتی رسیور", "مشاهده، ویرایش، افزودن، همگام‌سازی و بازنشانی فرامین") { _, _ ->
             VoiceCustomizationDialogHelper.showVoiceCustomizationMenu(requireContext(), repository)
         }
 
@@ -1292,13 +1217,7 @@ class SettingsFragment : Fragment() {
             .setTitle("تنظیمات کنترل صوتی و فرامین")
             .setView(scrollView)
             .setPositiveButton("ذخیره تنظیمات") { _, _ ->
-                appConfig.voiceAlwaysListening = draftListening
                 appConfig.soundCuesEnabled = draftSound
-                appConfig.voiceWakeWord = draftWakeWord
-
-                // Immediately update background wake-word listening service state
-                com.gmscreen.accessible.service.GMScreenBackgroundService.updateWakeWordState(requireContext())
-
                 val msg = "تنظیمات صوتی با موفقیت ذخیره شد"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             }
@@ -1314,6 +1233,10 @@ class SettingsFragment : Fragment() {
         var draftJumpLast = appConfig.showJumpToLastChannel
         var draftSeparateAudio = appConfig.separateAudioToBluetooth
         var draftQuickAccess = appConfig.quickAccessEnabled
+        var draftShowRecordings = appConfig.showRecordingsInChannels
+        var draftShowRefresh = appConfig.showRefreshInChannels
+        var draftShowMic = appConfig.showMicInChannels
+        var draftShowVolumeStepButtons = appConfig.showVolumeStepButtons
 
         val scrollView = ScrollView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -1372,8 +1295,56 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
-        // 4. Jump to first channel button
-        addSettingRow(contentLayout, "۴. نمایش دکمه رفتن به اولین کانال (کانال ۱)", if (draftJumpFirst) "فعال (نمایش دکمه در بالای لیست)" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
+        // 4. Show recordings button in channels tab
+        addSettingRow(contentLayout, "۴. نمایش دکمه مشاهده فایل‌های ضبطی در کانال‌ها", if (draftShowRecordings) "نمایش (پیش‌فرض)" else "مخفی") { txtVal, row ->
+            val opts = arrayOf("نمایش در نوار پایین کانال‌ها (پیش‌فرض)", "مخفی کردن دکمه")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("دکمه مشاهده فایل‌های ضبطی")
+                .setItems(opts) { dlg, which ->
+                    draftShowRecordings = (which == 0)
+                    val label = if (draftShowRecordings) "نمایش (پیش‌فرض)" else "مخفی"
+                    txtVal.text = label
+                    row.contentDescription = "دکمه ضبط‌ها در کانال‌ها: $label"
+                    AccessibilityHelper.announce(row, label)
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 5. Show refresh button in channels tab
+        addSettingRow(contentLayout, "۵. نمایش دکمه به‌روزرسانی کانال‌ها در سربرگ کانال‌ها", if (draftShowRefresh) "نمایش (پیش‌فرض)" else "مخفی") { txtVal, row ->
+            val opts = arrayOf("نمایش در نوار پایین کانال‌ها (پیش‌فرض)", "مخفی کردن دکمه")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("دکمه به‌روزرسانی کانال‌ها")
+                .setItems(opts) { dlg, which ->
+                    draftShowRefresh = (which == 0)
+                    val label = if (draftShowRefresh) "نمایش (پیش‌فرض)" else "مخفی"
+                    txtVal.text = label
+                    row.contentDescription = "دکمه به‌روزرسانی کانال‌ها: $label"
+                    AccessibilityHelper.announce(row, label)
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 6. Show mic button in channels tab
+        addSettingRow(contentLayout, "۶. نمایش دکمه میکروفون دستیار صوتی در سربرگ کانال‌ها", if (draftShowMic) "نمایش (پیش‌فرض)" else "مخفی") { txtVal, row ->
+            val opts = arrayOf("نمایش در نوار پایین کانال‌ها (پیش‌فرض)", "مخفی کردن دکمه")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("دکمه دستیار صوتی در کانال‌ها")
+                .setItems(opts) { dlg, which ->
+                    draftShowMic = (which == 0)
+                    val label = if (draftShowMic) "نمایش (پیش‌فرض)" else "مخفی"
+                    txtVal.text = label
+                    row.contentDescription = "دکمه میکروفون دستیار صوتی: $label"
+                    AccessibilityHelper.announce(row, label)
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 7. Jump to first channel button
+        addSettingRow(contentLayout, "۷. نمایش دکمه رفتن به اولین کانال (کانال ۱)", if (draftJumpFirst) "فعال (نمایش دکمه در بالای لیست)" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
             val opts = arrayOf("غیرفعال (مخفی)", "فعال (نمایش دکمه پرش به کانال ۱)")
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("نمایش دکمه رفتن به اولین کانال")
@@ -1388,8 +1359,8 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
-        // 5. Jump to last channel button
-        addSettingRow(contentLayout, "۵. نمایش دکمه رفتن به آخرین کانال", if (draftJumpLast) "فعال (نمایش دکمه در بالای لیست)" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
+        // 8. Jump to last channel button
+        addSettingRow(contentLayout, "۸. نمایش دکمه رفتن به آخرین کانال", if (draftJumpLast) "فعال (نمایش دکمه در بالای لیست)" else "غیرفعال (پیش‌فرض)") { txtVal, row ->
             val opts = arrayOf("غیرفعال (مخفی)", "فعال (نمایش دکمه پرش به آخرین کانال)")
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("نمایش دکمه رفتن به آخرین کانال")
@@ -1404,11 +1375,11 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
-        // 6. Separate audio output to Bluetooth
+        // 9. Separate audio output to Bluetooth
         val getAudioRouteTitle: (Boolean) -> String = { enabled ->
             if (enabled) "هدایت به هندزفری بلوتوث (جداسازی از اسپیکر گوشی و تاک‌بک)" else "پیش‌فرض سیستم (پخش معمول گوشی)"
         }
-        addSettingRow(contentLayout, "۶. تفکیک خروجی صدای شبکه و تاک‌بک", getAudioRouteTitle(draftSeparateAudio)) { txtVal, row ->
+        addSettingRow(contentLayout, "۹. تفکیک خروجی صدای شبکه و تاک‌بک", getAudioRouteTitle(draftSeparateAudio)) { txtVal, row ->
             val opts = arrayOf(
                 "پیش‌فرض سیستم (پخش عادی بدون تفکیک)",
                 "هدایت مستقیم صدای برنامه به هندزفری بلوتوث",
@@ -1450,8 +1421,8 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
-        // 7. Quick access button visibility
-        addSettingRow(contentLayout, "۷. نمایش کلید دسترسی سریع بالای صفحه", if (draftQuickAccess) "فعال (پیش‌فرض)" else "غیرفعال (مخفی)") { txtVal, row ->
+        // 10. Quick access button visibility
+        addSettingRow(contentLayout, "۱۰. نمایش کلید دسترسی سریع بالای صفحه", if (draftQuickAccess) "فعال (پیش‌فرض)" else "غیرفعال (مخفی)") { txtVal, row ->
             val opts = arrayOf("فعال (نمایش کلید در نوار بالای برنامه)", "غیرفعال (مخفی کردن کلید)")
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("نمایش کلید دسترسی سریع بالای صفحه")
@@ -1466,12 +1437,28 @@ class SettingsFragment : Fragment() {
                 .show()
         }
 
-        // 8. Customize quick access items
+        // 11. Show volume step buttons in quick access
+        addSettingRow(contentLayout, "۱۱. نمایش دکمه‌های گام‌های ۵ تایی ولوم در دسترسی سریع", if (draftShowVolumeStepButtons) "نمایش دکمه‌های -۵٪ و +۵٪" else "مخفی (فقط لغزنده ولوم - پیش‌فرض)") { txtVal, row ->
+            val opts = arrayOf("مخفی (فقط لغزنده ولوم و قطع/وصل صدا - پیش‌فرض)", "نمایش دکمه‌های کم و زیاد کردن ۵ درصدی")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("دکمه‌های ۵ درصدی ولوم در دسترسی سریع")
+                .setItems(opts) { dlg, which ->
+                    draftShowVolumeStepButtons = (which == 1)
+                    val label = if (draftShowVolumeStepButtons) "نمایش دکمه‌های -۵٪ و +۵٪" else "مخفی (فقط لغزنده ولوم - پیش‌فرض)"
+                    txtVal.text = label
+                    row.contentDescription = "دکمه‌های ۵ تایی ولوم: $label"
+                    AccessibilityHelper.announce(row, label)
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        // 12. Customize quick access items
         val getQuickItemsSummary: () -> String = {
             val count = appConfig.quickAccessItems.size
             "$count کلید انتخاب شده (کلیک برای ویرایش)"
         }
-        addSettingRow(contentLayout, "۸. سفارشی‌سازی کلیدهای پنل دسترسی سریع", getQuickItemsSummary()) { txtVal, row ->
+        addSettingRow(contentLayout, "۱۲. سفارشی‌سازی کلیدهای پنل دسترسی سریع", getQuickItemsSummary()) { txtVal, row ->
             val allActions = com.gmscreen.accessible.ui.dialog.QuickAccessDialog.ALL_AVAILABLE_ACTIONS
             val allTitles = allActions.map { it.title }.toTypedArray()
             val currentSelected = appConfig.quickAccessItems
@@ -1498,7 +1485,7 @@ class SettingsFragment : Fragment() {
                     row.contentDescription = "سفارشی‌سازی دسترسی سریع: $summary"
                     AccessibilityHelper.announce(row, "کلیدهای دسترسی سریع ذخیره شدند: $summary")
                 }
-                .setNeutralButton("بازگردانی به پیش‌فرض") { _, _ ->
+                .setNeutralButton("پیش‌فرض") { _, _ ->
                     appConfig.quickAccessItems = appConfig.defaultQuickAccessItems
                     val summary = getQuickItemsSummary()
                     txtVal.text = summary
@@ -1516,10 +1503,14 @@ class SettingsFragment : Fragment() {
                 appConfig.hapticFeedbackEnabled = draftHaptic
                 appConfig.keepGlobalChannelNum = draftKeepGlobal
                 appConfig.videoLandscapeOrientation = draftLandscape
+                appConfig.showRecordingsInChannels = draftShowRecordings
+                appConfig.showRefreshInChannels = draftShowRefresh
+                appConfig.showMicInChannels = draftShowMic
                 appConfig.showJumpToFirstChannel = draftJumpFirst
                 appConfig.showJumpToLastChannel = draftJumpLast
                 appConfig.separateAudioToBluetooth = draftSeparateAudio
                 appConfig.quickAccessEnabled = draftQuickAccess
+                appConfig.showVolumeStepButtons = draftShowVolumeStepButtons
 
                 (activity as? com.gmscreen.accessible.ui.MainActivity)?.updateQuickAccessVisibility()
 
@@ -1530,249 +1521,9 @@ class SettingsFragment : Fragment() {
             .show()
     }
 
-    private fun openSystemLogsDialog() {
-        val smartErrorState = if (appConfig.logOnlyErrors) "روشن (فقط خطاها - بهینه و بدون لاگ اضافی)" else "خاموش (ثبت کامل تمامی رویدادها)"
-        val options = arrayOf(
-            "۱. وضعیت لاگ هوشمند: $smartErrorState (کلیک برای تغییر)",
-            "۲. مشاهده گزارش زنده در مرورگر داخلی",
-            "۳. ذخیره لاگ متنی (TXT)",
-            "۴. ذخیره لاگ وب (HTML)",
-            "۵. مدیریت و مشاهده فایل‌های لاگ",
-            "۶. باز کردن پوشه لاگ‌ها در مدیریت فایل",
-            "۷. پاک‌سازی کامل لاگ‌های سیستم"
-        )
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("مدیریت و مشاهده لاگ‌های سیستم")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> {
-                        appConfig.logOnlyErrors = !appConfig.logOnlyErrors
-                        val newLabel = if (appConfig.logOnlyErrors) "ثبت هوشمند فقط خطاها فعال شد. در صورت عدم بروز خطا، هیچ فایل لاگی ایجاد نخواهد شد." else "ثبت کامل تمامی رویدادها فعال شد."
-                        Toast.makeText(requireContext(), newLabel, Toast.LENGTH_LONG).show()
-                        AccessibilityHelper.announce(containerSettingsList, newLabel)
-                        openSystemLogsDialog()
-                    }
-                    1 -> {
-                        val html = AppLogger.getRecentLogsHtml(requireContext())
-                        InternalBrowserActivity.openHtml(requireContext(), html, "گزارش زنده رویدادهای سیستم")
-                    }
-                    2 -> {
-                        try {
-                            val fTxt = AppLogger.exportLogs(requireContext(), asHtml = false)
-                            val msg = "لاگ متنی با موفقیت ذخیره شد:\n${fTxt.name}"
-                            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                            AccessibilityHelper.announce(containerSettingsList, "لاگ متنی ذخیره شد")
-                        } catch (e: Exception) {
-                            Toast.makeText(requireContext(), "خطا در ذخیره لاگ: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                    3 -> {
-                        try {
-                            val fHtml = AppLogger.exportLogs(requireContext(), asHtml = true)
-                            val msg = "لاگ وب با موفقیت ذخیره شد:\n${fHtml.name}"
-                            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                            AccessibilityHelper.announce(containerSettingsList, "لاگ وب ذخیره شد")
-                        } catch (e: Exception) {
-                            Toast.makeText(requireContext(), "خطا در ذخیره لاگ: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                    4 -> openExportedLogsManagerDialog()
-                    5 -> openLogsFolder()
-                    6 -> confirmClearSystemLogs()
-                }
-            }
-            .setNegativeButton("بستن", null)
-            .show()
-    }
 
-    private fun openExportedLogsManagerDialog() {
-        val liveLog = AppLogger.getLogFile(requireContext())
-        val exportedFiles = AppLogger.listExportedLogFiles(requireContext())
-        val allFiles = mutableListOf<File>()
-        if (liveLog.exists() && liveLog.length() > 0) {
-            allFiles.add(liveLog)
-        }
-        allFiles.addAll(exportedFiles)
 
-        if (allFiles.isEmpty()) {
-            Toast.makeText(requireContext(), "هیچ فایل لاگی در سیستم یافت نشد", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val items = allFiles.map { file ->
-            val sizeKb = String.format(Locale.US, "%.1f KB", file.length() / 1024f)
-            if (file.name == "gmscreen.log") {
-                "🔴 ${file.name} (گزارش زنده جاری سیستم) - $sizeKb"
-            } else {
-                val icon = if (file.name.endsWith(".html", ignoreCase = true)) "🌐" else "📄"
-                "$icon ${file.name} ($sizeKb)"
-            }
-        }.toTypedArray()
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("فایل‌های لاگ سیستم (${allFiles.size} فایل)")
-            .setItems(items) { _, which ->
-                val selectedFile = allFiles.getOrNull(which)
-                if (selectedFile != null) {
-                    showSingleLogFileActions(selectedFile)
-                }
-            }
-            .setPositiveButton("حذف همه لاگ‌ها") { _, _ ->
-                confirmDeleteAllExportedLogs(allFiles.size)
-            }
-            .setNeutralButton("پوشه لاگ‌ها") { _, _ ->
-                openLogsFolder()
-            }
-            .setNegativeButton("بازگشت") { _, _ ->
-                openSystemLogsDialog()
-            }
-            .show()
-    }
-
-    private fun showSingleLogFileActions(file: File) {
-        val isLive = (file.name == "gmscreen.log")
-        val options = arrayOf(
-            "۱. مشاهده محتوای فایل",
-            "۲. کپی متن فایل به حافظه",
-            "۳. اشتراک‌گذاری یا ارسال فایل",
-            if (isLive) "۴. پاک‌سازی محتوای لاگ زنده" else "۴. حذف این فایل لاگ"
-        )
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(file.name)
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> {
-                        val content = try {
-                            file.readText(Charsets.UTF_8)
-                        } catch (e: Exception) {
-                            "خطا در خواندن فایل لاگ: ${e.message}"
-                        }
-                        val scrollView = ScrollView(requireContext()).apply {
-                            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                        }
-                        val txt = TextView(requireContext()).apply {
-                            text = if (content.isBlank()) "این فایل لاگ در حال حاضر خالی است." else content
-                            setTextIsSelectable(true)
-                            textSize = 13f
-                            setTypeface(Typeface.MONOSPACE)
-                            setTextColor(resources.getColor(R.color.text_primary, null))
-                            setPadding(28, 20, 28, 20)
-                            contentDescription = "محتوای فایل ${file.name}. برای خواندن گزارش پیمایش کنید."
-                        }
-                        scrollView.addView(txt)
-
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("مشاهده لاگ: ${file.name}")
-                            .setView(scrollView)
-                            .setPositiveButton("کپی متن لاگ") { _, _ ->
-                                val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                val clip = ClipData.newPlainText("Log File Content", content)
-                                clipboard.setPrimaryClip(clip)
-                                Toast.makeText(requireContext(), "محتوای لاگ در کلیپ‌بورد کپی شد", Toast.LENGTH_SHORT).show()
-                                showSingleLogFileActions(file)
-                            }
-                            .setNegativeButton("بستن") { _, _ ->
-                                showSingleLogFileActions(file)
-                            }
-                            .show()
-                    }
-                    1 -> {
-                        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val content = file.readText(Charsets.UTF_8)
-                        val clip = ClipData.newPlainText("Log File Content", content)
-                        clipboard.setPrimaryClip(clip)
-                        Toast.makeText(requireContext(), "محتوای فایل در کلیپ‌بورد کپی شد", Toast.LENGTH_SHORT).show()
-                        showSingleLogFileActions(file)
-                    }
-                    2 -> {
-                        try {
-                            val uri = androidx.core.content.FileProvider.getUriForFile(
-                                requireContext(),
-                                "${requireContext().packageName}.fileprovider",
-                                file
-                            )
-                            val mime = if (file.name.endsWith(".html", ignoreCase = true)) "text/html" else "text/plain"
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = mime
-                                putExtra(Intent.EXTRA_STREAM, uri)
-                                putExtra(Intent.EXTRA_SUBJECT, file.name)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
-                            startActivity(Intent.createChooser(shareIntent, "ارسال فایل لاگ"))
-                        } catch (e: Exception) {
-                            Toast.makeText(requireContext(), "خطا در ارسال فایل: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                        showSingleLogFileActions(file)
-                    }
-                    3 -> {
-                        val confirmTitle = if (isLive) "پاک‌سازی لاگ زنده سیستم" else "حذف فایل لاگ"
-                        val confirmMsg = if (isLive) "آیا مطمئن هستید که می‌خواهید محتوای فایل لاگ زنده gmscreen.log پاک شود؟" else "آیا از حذف فایل «${file.name}» مطمئن هستید؟"
-
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle(confirmTitle)
-                            .setMessage(confirmMsg)
-                            .setPositiveButton("بله، پاک شود") { _, _ ->
-                                val ok = if (isLive) {
-                                    AppLogger.clearLogs(requireContext())
-                                } else {
-                                    AppLogger.deleteExportedLogFile(file)
-                                }
-                                val msg = if (ok) "فایل «${file.name}» با موفقیت پاک شد" else "خطا در حذف فایل"
-                                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                                openExportedLogsManagerDialog()
-                            }
-                            .setNegativeButton("انصراف") { _, _ ->
-                                showSingleLogFileActions(file)
-                            }
-                            .show()
-                    }
-                }
-            }
-            .setNegativeButton("بازگشت") { _, _ ->
-                openExportedLogsManagerDialog()
-            }
-            .show()
-    }
-
-    private fun confirmDeleteAllExportedLogs(count: Int) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("حذف تمام لاگ‌های ذخیره‌شده")
-            .setMessage("آیا مطمئن هستید که می‌خواهید تمام $count فایل لاگ ذخیره‌شده را حذف کنید؟")
-            .setPositiveButton("بله، همه حذف شوند") { _, _ ->
-                val deleted = AppLogger.deleteAllExportedLogs(requireContext())
-                Toast.makeText(requireContext(), "تمام لاگ‌های ذخیره‌شده حذف شدند ($deleted فایل)", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
-
-    private fun confirmClearSystemLogs() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("پاک‌سازی کامل لاگ‌های سیستم")
-            .setMessage("آیا مطمئن هستید که می‌خواهید تمام لاگ‌ها و گزارشات ثبت‌شده در سیستم پاک شوند؟")
-            .setPositiveButton("بله، پاک شود") { _, _ ->
-                AppLogger.clearLogs(requireContext())
-                Toast.makeText(requireContext(), "تمام لاگ‌های سیستم با موفقیت پاک شدند", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("انصراف", null)
-            .show()
-    }
-
-    private fun openLogsFolder() {
-        try {
-            val logsDir = AppLogger.getLogsDir(requireContext())
-            val uri = android.net.Uri.parse(logsDir.absolutePath)
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "resource/folder")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(intent)
-        } catch (_: Exception) {
-            val path = AppLogger.getLogsDir(requireContext()).absolutePath
-            Toast.makeText(requireContext(), "مسیر پوشه لاگ‌ها:\n$path", Toast.LENGTH_LONG).show()
-        }
-    }
 
     private fun openHelpBrowser() {
         InternalBrowserActivity.open(requireContext(), "help.htm", "کتابچه راهنمای جامع کاربری")

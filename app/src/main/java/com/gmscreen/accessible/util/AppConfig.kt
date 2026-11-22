@@ -12,8 +12,6 @@ class AppConfig(context: Context) {
         private const val KEY_KEEP_GLOBAL_NUM = "keep_global_channel_num_on_filter"
         private const val KEY_HAPTIC_ENABLED = "haptic_feedback_enabled"
         private const val KEY_SOUND_ENABLED = "sound_cues_enabled"
-        private const val KEY_VOICE_ALWAYS_LISTENING = "voice_always_listening"
-        private const val KEY_VOICE_WAKE_WORD = "voice_wake_word"
         private const val KEY_AUTO_ANNOUNCE = "auto_announce_channel"
         private const val KEY_AUDIO_REC_FORMAT = "audio_rec_format"
         private const val KEY_AUDIO_REC_BITRATE = "audio_rec_bitrate"
@@ -25,6 +23,8 @@ class AppConfig(context: Context) {
         private const val KEY_AUTO_ANNOUNCE_EPG = "auto_announce_epg"
         private const val KEY_EPG_ANNOUNCE_DETAIL = "epg_announce_detail"
         private const val KEY_SHOW_RECORDINGS_IN_CHANNELS = "show_recordings_in_channels"
+        private const val KEY_SHOW_REFRESH_IN_CHANNELS = "show_refresh_in_channels"
+        private const val KEY_SHOW_MIC_IN_CHANNELS = "show_mic_in_channels"
         private const val KEY_PARENTAL_PIN = "parental_pin"
         private const val KEY_SLEEP_TIMER = "sleep_timer"
         private const val KEY_POWER_MODE = "power_mode"
@@ -39,7 +39,6 @@ class AppConfig(context: Context) {
         private const val KEY_AGE_RATING = "age_rating"
         private const val KEY_SEPARATE_AUDIO_BLUETOOTH = "separate_audio_bluetooth"
         private const val KEY_REC_COUNTER = "recording_counter"
-        private const val KEY_LOG_ONLY_ERRORS = "log_only_errors"
         private const val KEY_BACKUP_METHOD = "backup_method"
         private const val KEY_BACKGROUND_ANNOUNCE_EPG = "background_announce_epg"
         private const val KEY_GESTURE_STATUS_ENABLED = "gesture_status_enabled"
@@ -50,6 +49,7 @@ class AppConfig(context: Context) {
         private const val KEY_QUICK_ACCESS_ENABLED = "quick_access_enabled"
         private const val KEY_QUICK_ACCESS_ITEMS = "quick_access_items"
         private const val KEY_STB_VOLUME = "stb_volume"
+        private const val KEY_SHOW_VOLUME_STEP_BUTTONS = "show_volume_step_buttons"
     }
 
     var gestureStatusEnabled: Boolean
@@ -96,14 +96,6 @@ class AppConfig(context: Context) {
         get() = prefs.getBoolean(KEY_SOUND_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_SOUND_ENABLED, value).apply()
 
-    var voiceAlwaysListening: Boolean
-        get() = prefs.getBoolean(KEY_VOICE_ALWAYS_LISTENING, false)
-        set(value) = prefs.edit().putBoolean(KEY_VOICE_ALWAYS_LISTENING, value).apply()
-
-    var voiceWakeWord: String
-        get() = prefs.getString(KEY_VOICE_WAKE_WORD, "های رسیور") ?: "های رسیور"
-        set(value) = prefs.edit().putString(KEY_VOICE_WAKE_WORD, value).apply()
-
     var autoAnnounceChannel: Boolean
         get() = prefs.getBoolean(KEY_AUTO_ANNOUNCE, true)
         set(value) = prefs.edit().putBoolean(KEY_AUTO_ANNOUNCE, value).apply()
@@ -111,6 +103,14 @@ class AppConfig(context: Context) {
     var showRecordingsInChannels: Boolean
         get() = prefs.getBoolean(KEY_SHOW_RECORDINGS_IN_CHANNELS, true)
         set(value) = prefs.edit().putBoolean(KEY_SHOW_RECORDINGS_IN_CHANNELS, value).apply()
+
+    var showRefreshInChannels: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_REFRESH_IN_CHANNELS, true)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_REFRESH_IN_CHANNELS, value).apply()
+
+    var showMicInChannels: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_MIC_IN_CHANNELS, true)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_MIC_IN_CHANNELS, value).apply()
 
     var audioRecFormat: String
         get() = prefs.getString(KEY_AUDIO_REC_FORMAT, "mp3") ?: "mp3"
@@ -204,13 +204,13 @@ class AppConfig(context: Context) {
         get() = prefs.getInt(KEY_REC_COUNTER, 0)
         set(value) = prefs.edit().putInt(KEY_REC_COUNTER, value).apply()
 
-    var logOnlyErrors: Boolean
-        get() = prefs.getBoolean(KEY_LOG_ONLY_ERRORS, true)
-        set(value) = prefs.edit().putBoolean(KEY_LOG_ONLY_ERRORS, value).apply()
-
     var quickAccessEnabled: Boolean
         get() = prefs.getBoolean(KEY_QUICK_ACCESS_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_QUICK_ACCESS_ENABLED, value).apply()
+
+    var showVolumeStepButtons: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_VOLUME_STEP_BUTTONS, false)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_VOLUME_STEP_BUTTONS, value).apply()
 
     val defaultQuickAccessItems: Set<String> = setOf(
         "power",
@@ -218,10 +218,8 @@ class AppConfig(context: Context) {
         "ch_down",
         "vol_slider",
         "mute",
-        "rec_stb_instant",
-        "rec_stb_stop",
-        "rec_phone_instant",
-        "rec_phone_stop",
+        "rec_stb_toggle",
+        "rec_phone_toggle",
         "status",
         "play_stream"
     )

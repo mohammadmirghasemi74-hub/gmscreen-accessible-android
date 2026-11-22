@@ -211,14 +211,6 @@ object VoiceCustomizationManager {
 
         // ۸. ابزارهای هوشمند و برنامه
         VoiceAction(
-            "wake_enable", "ابزارهای هوشمند", "روشن کردن بیدارباش و شنیدن پیوسته",
-            listOf("روشن کردن بیدارباش", "فعال کردن شنیدن پیوسته", "بیدارباش روشن")
-        ),
-        VoiceAction(
-            "wake_disable", "ابزارهای هوشمند", "خاموش کردن بیدارباش و شنیدن پیوسته",
-            listOf("خاموش کردن بیدارباش", "غیرفعال کردن شنیدن پیوسته", "بیدارباش خاموش")
-        ),
-        VoiceAction(
             "minimize_app", "ابزارهای هوشمند", "اجرا در پس‌زمینه (فعال ماندن)",
             listOf("اجرا در پس زمینه", "برو به پس زمینه", "پس زمینه")
         ),
@@ -248,6 +240,7 @@ object VoiceCustomizationManager {
     private var customChannelAliasesMap = mutableMapOf<String, MutableList<String>>() // serviceId -> list of aliases
     private var disabledActionsSet = mutableSetOf<String>()
     private var syncedChannelIds = mutableSetOf<String>()
+    private var manuallySyncedIds = mutableSetOf<String>()
     private var isLoaded = false
 
     fun init(context: Context) {
@@ -454,13 +447,31 @@ object VoiceCustomizationManager {
     }
 
     /**
+     * Updates channel number aliases for a channel, removing any obsolete numeric aliases
+     * (e.g. previous channel number 9 when channel is now 485) and setting current number.
+     */
+    fun updateChannelNumberAliases(channel: Channel) {
+        val list = customChannelAliasesMap[channel.serviceId] ?: return
+        val regex = Regex("^(کانال|شبکه)\\s+\\d+$")
+        list.removeAll { regex.matches(it.trim()) }
+        if (channel.realChannelNum > 0) {
+            val a1 = "کانال ${channel.realChannelNum}"
+            val a2 = "شبکه ${channel.realChannelNum}"
+            if (!list.contains(a1)) list.add(a1)
+            if (!list.contains(a2)) list.add(a2)
+        }
+    }
+
+    /**
      * Called automatically when STB channels are first loaded/received.
-     * Silently indexes channels if they are not already indexed.
+     * Silently indexes channels and updates existing numbers.
      */
     fun autoIndexChannels(context: Context, channels: List<Channel>) {
         if (channels.isEmpty()) return
         init(context)
         var changed = false
+        val currentIds = channels.map { it.serviceId }.toSet()
+
         for (ch in channels) {
             if (!syncedChannelIds.contains(ch.serviceId)) {
                 syncedChannelIds.add(ch.serviceId)
@@ -470,8 +481,24 @@ object VoiceCustomizationManager {
                     if (!list.contains(a)) list.add(a)
                 }
                 changed = true
+            } else {
+                // Ensure channel number is always fresh and obsolete numbers are purged
+                updateChannelNumberAliases(ch)
+                changed = true
             }
         }
+
+        // Clean up removed channels from memory
+        val removed = syncedChannelIds.filter { !currentIds.contains(it) }
+        if (removed.isNotEmpty()) {
+            for (id in removed) {
+                syncedChannelIds.remove(id)
+                customChannelAliasesMap.remove(id)
+                manuallySyncedIds.remove(id)
+            }
+            changed = true
+        }
+
         if (changed) {
             saveChannelAliases(context)
             saveSyncedChannelIds(context)
@@ -480,19 +507,21 @@ object VoiceCustomizationManager {
     }
 
     /**
-     * Manually triggers sync when user clicks the button.
+     * Manually triggers sync when user clicks the button in Voice Fragment.
      * Returns Pair(newChannelsCount, totalChannelsCount)
      */
     fun syncChannelsWithVoice(context: Context, channels: List<Channel>): Pair<Int, Int> {
         init(context)
         var newChannelsCount = 0
+        val currentIds = channels.map { it.serviceId }.toSet()
 
         for (channel in channels) {
-            val isNew = !syncedChannelIds.contains(channel.serviceId)
+            val isNew = !manuallySyncedIds.contains(channel.serviceId)
             if (isNew) {
                 newChannelsCount++
-                syncedChannelIds.add(channel.serviceId)
+                manuallySyncedIds.add(channel.serviceId)
             }
+            syncedChannelIds.add(channel.serviceId)
 
             val list = customChannelAliasesMap.getOrPut(channel.serviceId) { mutableListOf() }
             val generated = generateDefaultAliases(channel)
@@ -501,6 +530,16 @@ object VoiceCustomizationManager {
                     list.add(a)
                 }
             }
+            // Smartly purge old numbers and ensure current number is set
+            updateChannelNumberAliases(channel)
+        }
+
+        // Remove deleted channels
+        val removed = syncedChannelIds.filter { !currentIds.contains(it) }
+        for (id in removed) {
+            syncedChannelIds.remove(id)
+            customChannelAliasesMap.remove(id)
+            manuallySyncedIds.remove(id)
         }
 
         saveChannelAliases(context)

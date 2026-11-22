@@ -28,7 +28,6 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
 
     private lateinit var btnMic: MaterialButton
     private lateinit var btnVoiceHelp: MaterialButton
-    private lateinit var switchWakeWord: SwitchMaterial
     private lateinit var txtVoiceStatus: TextView
     private lateinit var txtRecognizedQuery: TextView
     private lateinit var txtExecutionResult: TextView
@@ -59,7 +58,6 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
 
         btnMic = view.findViewById(R.id.btnMic)
         btnVoiceHelp = view.findViewById(R.id.btnVoiceHelp)
-        switchWakeWord = view.findViewById(R.id.switchWakeWord)
         txtVoiceStatus = view.findViewById(R.id.txtVoiceStatus)
         txtRecognizedQuery = view.findViewById(R.id.txtRecognizedQuery)
         txtExecutionResult = view.findViewById(R.id.txtExecutionResult)
@@ -85,29 +83,6 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
         btnVoiceHelp.setOnClickListener {
             InternalBrowserActivity.open(requireContext(), "voice_help.htm", "راهنمای کامل دستورات صوتی")
         }
-
-        switchWakeWord.isChecked = appConfig.voiceAlwaysListening
-        switchWakeWord.setOnCheckedChangeListener { _, isChecked ->
-            appConfig.voiceAlwaysListening = isChecked
-            if (isChecked) {
-                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO)
-                    == PackageManager.PERMISSION_GRANTED
-                ) {
-                    voiceController?.setWakeWordMode(true)
-                    val msg = "حالت بیدارباش فعال شد. هر زمان بگویید «های رسیور»، برنامه فرمان شما را می‌شنود."
-                    txtVoiceStatus.text = msg
-                    AccessibilityHelper.announce(txtVoiceStatus, msg)
-                } else {
-                    switchWakeWord.isChecked = false
-                    requestAudioPermission.launch(Manifest.permission.RECORD_AUDIO)
-                }
-            } else {
-                voiceController?.setWakeWordMode(false)
-                val msg = "حالت بیدارباش غیرفعال شد."
-                txtVoiceStatus.text = msg
-                AccessibilityHelper.announce(txtVoiceStatus, msg)
-            }
-        }
     }
 
     private fun startSpeech() {
@@ -130,15 +105,11 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
     }
 
     override fun onReady() {
-        if (voiceController?.isWakeWordEnabled() != true) {
-            txtVoiceStatus.text = "میکروفون فعال شد، اکنون صحبت کنید…"
-        }
+        txtVoiceStatus.text = "میکروفون فعال شد، اکنون صحبت کنید…"
     }
 
     override fun onListening() {
-        if (voiceController?.isWakeWordEnabled() != true) {
-            txtVoiceStatus.text = "در حال دریافت صدا…"
-        }
+        txtVoiceStatus.text = "در حال دریافت صدا…"
     }
 
     override fun onResults(candidates: List<String>) {
@@ -198,21 +169,6 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
         txtExecutionResult.visibility = View.VISIBLE
         txtExecutionResult.text = notFoundMsg
         AccessibilityHelper.announce(txtExecutionResult, notFoundMsg)
-    }
-
-    override fun onWakeWordTriggered(remainingCommand: String) {
-        if (appConfig.soundCuesEnabled) {
-            AccessibilityHelper.playSoundCue()
-        }
-        if (remainingCommand.isNotBlank()) {
-            txtRecognizedQuery.visibility = View.VISIBLE
-            txtRecognizedQuery.text = "فرمان بیدارباش: «$remainingCommand»"
-            processVoiceCommand(remainingCommand)
-        } else {
-            val msg = "بیدارباش تشخیص داده شد. گوش به زنگ فرمان شما هستم…"
-            txtVoiceStatus.text = msg
-            AccessibilityHelper.announce(txtVoiceStatus, msg)
-        }
     }
 
     override fun onError(errorMessage: String) {

@@ -19,7 +19,7 @@ object StatusHelper {
         val model = repository.deviceModel.value
         if (ip.isNotBlank()) {
             val modelName = model.ifBlank { "رسیور" }
-            parts.add("رسیور متصل است: $modelName در آدرس $ip")
+            parts.add("رسیور $modelName متصل است")
         } else {
             parts.add("رسیور متصل نیست")
         }
@@ -49,12 +49,13 @@ object StatusHelper {
         if (StreamRecorderManager.isRecording) {
             val recCh = StreamRecorderManager.currentChannel?.serviceName ?: "شبکه"
             val elapsed = StreamRecorderManager.recordingElapsedSeconds
-            val m = elapsed / 60
+            val h = elapsed / 3600
+            val m = (elapsed % 3600) / 60
             val s = elapsed % 60
-            val dur = if (m > 0) "$m دقیقه و $s ثانیه" else "$s ثانیه"
-            parts.add("ضبط مستقیم روی گوشی فعال است برای شبکه $recCh، مدت زمان گذشته: $dur")
+            val dur = if (h > 0) "$h ساعت و $m دقیقه" else if (m > 0) "$m دقیقه و $s ثانیه" else "$s ثانیه"
+            parts.add("کانال $recCh در حال ضبط روی گوشی است. مدت زمان ضبط: $dur")
         } else {
-            parts.add("هیچ فایلی در حال ضبط روی گوشی نیست")
+            parts.add("هیچ شبکه‌ای در حال ضبط روی گوشی نیست")
         }
 
         // 5. STB Flash Recording
@@ -64,12 +65,13 @@ object StatusHelper {
             }
             val startMs = repository.stbRecordingStartTime.value
             val elapsedSec = if (startMs > 0L) (System.currentTimeMillis() - startMs) / 1000 else 0L
-            val m = elapsedSec / 60
+            val h = elapsedSec / 3600
+            val m = (elapsedSec % 3600) / 60
             val s = elapsedSec % 60
-            val dur = if (m > 0) "$m دقیقه و $s ثانیه" else "$s ثانیه"
-            parts.add("ضبط روی فلش رسیور فعال است برای شبکه $recCh، مدت زمان گذشته: $dur")
+            val dur = if (h > 0) "$h ساعت و $m دقیقه" else if (m > 0) "$m دقیقه و $s ثانیه" else "$s ثانیه"
+            parts.add("کانال $recCh در حال ضبط روی فلش رسیور است. مدت زمان ضبط: $dur")
         } else {
-            parts.add("هیچ برنامه‌ای در حال ضبط روی فلش رسیور نیست")
+            parts.add("هیچ شبکه‌ای در حال ضبط روی فلش نیست")
         }
 
         // 6. STB Scheduled Timers (if known)

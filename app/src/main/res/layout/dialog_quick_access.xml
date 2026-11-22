@@ -114,6 +114,7 @@
 
             <!-- Volume Quick Buttons: -5%, Mute, +5% -->
             <LinearLayout
+                android:id="@+id/layoutVolumeButtons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -123,12 +124,12 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnVolMinus5"
                     android:layout_width="0dp"
-                    android:layout_height="36dp"
+                    android:layout_height="38dp"
                     android:layout_weight="1"
                     android:text="➖ ۵٪ کمتر"
                     android:contentDescription="کاهش پنج درصد صدای رسیور"
                     android:textColor="@color/white"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:layout_marginEnd="4dp"
                     app:backgroundTint="#243044"
                     app:cornerRadius="8dp" />
@@ -136,25 +137,25 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnQuickMute"
                     android:layout_width="0dp"
-                    android:layout_height="36dp"
-                    android:layout_weight="1"
-                    android:text="🔇 بی‌صدا (Mute)"
+                    android:layout_height="38dp"
+                    android:layout_weight="1.2"
+                    android:text="🔇 قطع / وصل صدا"
                     android:contentDescription="قطع یا وصل فوری صدای رسیور"
                     android:textColor="@color/accent_amber"
-                    android:textSize="11sp"
-                    android:layout_marginHorizontal="4dp"
+                    android:textSize="12sp"
+                    android:layout_marginHorizontal="2dp"
                     app:backgroundTint="#243044"
                     app:cornerRadius="8dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnVolPlus5"
                     android:layout_width="0dp"
-                    android:layout_height="36dp"
+                    android:layout_height="38dp"
                     android:layout_weight="1"
                     android:text="➕ ۵٪ بیشتر"
                     android:contentDescription="افزایش پنج درصد صدای رسیور"
                     android:textColor="@color/white"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:layout_marginStart="4dp"
                     app:backgroundTint="#243044"
                     app:cornerRadius="8dp" />

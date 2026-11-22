@@ -51,8 +51,10 @@ class ChannelsFragment : Fragment() {
     private lateinit var btnClearSearch: ImageButton
     private lateinit var txtChannelCount: TextView
     private lateinit var recyclerViewChannels: RecyclerView
-    private lateinit var fabRefreshChannels: ExtendedFloatingActionButton
-    private lateinit var fabRecordings: ExtendedFloatingActionButton
+    private lateinit var layoutBottomChannelActions: LinearLayout
+    private lateinit var btnBottomRecordings: MaterialButton
+    private lateinit var btnBottomMic: MaterialButton
+    private lateinit var btnBottomRefresh: MaterialButton
     private lateinit var layoutJumpButtons: LinearLayout
     private lateinit var btnJumpToFirstChannel: MaterialButton
     private lateinit var btnJumpToLastChannel: MaterialButton
@@ -105,8 +107,10 @@ class ChannelsFragment : Fragment() {
         btnClearSearch = view.findViewById(R.id.btnClearSearch)
         txtChannelCount = view.findViewById(R.id.txtChannelCount)
         recyclerViewChannels = view.findViewById(R.id.recyclerViewChannels)
-        fabRefreshChannels = view.findViewById(R.id.fabRefreshChannels)
-        fabRecordings = view.findViewById(R.id.fabRecordings)
+        layoutBottomChannelActions = view.findViewById(R.id.layoutBottomChannelActions)
+        btnBottomRecordings = view.findViewById(R.id.btnBottomRecordings)
+        btnBottomMic = view.findViewById(R.id.btnBottomMic)
+        btnBottomRefresh = view.findViewById(R.id.btnBottomRefresh)
         layoutJumpButtons = view.findViewById(R.id.layoutJumpButtons)
         btnJumpToFirstChannel = view.findViewById(R.id.btnJumpToFirstChannel)
         btnJumpToLastChannel = view.findViewById(R.id.btnJumpToLastChannel)
@@ -268,14 +272,19 @@ class ChannelsFragment : Fragment() {
             }
         }
 
-        fabRefreshChannels.setOnClickListener {
+        btnBottomRefresh.setOnClickListener {
             refreshChannelsFromStb()
         }
 
-        fabRecordings.visibility = if (appConfig.showRecordingsInChannels) View.VISIBLE else View.GONE
-        fabRecordings.setOnClickListener {
-            com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext(), fabRecordings)
+        btnBottomRecordings.setOnClickListener {
+            com.gmscreen.accessible.util.RecordingsDialogHelper.showRecordingsDialog(requireContext(), btnBottomRecordings)
         }
+
+        btnBottomMic.setOnClickListener {
+            (activity as? com.gmscreen.accessible.ui.MainActivity)?.switchToTab(4)
+        }
+
+        updateBottomActionsUI()
 
         edtSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -315,7 +324,7 @@ class ChannelsFragment : Fragment() {
             return
         }
 
-        fabRefreshChannels.isEnabled = false
+        btnBottomRefresh.isEnabled = false
         AccessibilityHelper.announce(txtChannelCount, "در حال دریافت شبکه‌ها از رسیور...")
         txtChannelCount.text = "در حال دریافت اطلاعات از رسیور..."
 
@@ -334,7 +343,7 @@ class ChannelsFragment : Fragment() {
             } catch (e: Exception) {
                 AccessibilityHelper.announce(txtChannelCount, "خطا در دریافت شبکه‌ها از رسیور.")
             } finally {
-                fabRefreshChannels.isEnabled = true
+                btnBottomRefresh.isEnabled = true
             }
         }
     }
@@ -705,10 +714,19 @@ class ChannelsFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        if (::fabRecordings.isInitialized) {
-            fabRecordings.visibility = if (appConfig.showRecordingsInChannels) View.VISIBLE else View.GONE
-        }
+        updateBottomActionsUI()
         updateJumpButtonsUI()
+    }
+
+    private fun updateBottomActionsUI() {
+        if (!::layoutBottomChannelActions.isInitialized) return
+        val showRec = appConfig.showRecordingsInChannels
+        val showMic = appConfig.showMicInChannels
+        val showRefresh = appConfig.showRefreshInChannels
+        btnBottomRecordings.visibility = if (showRec) View.VISIBLE else View.GONE
+        btnBottomMic.visibility = if (showMic) View.VISIBLE else View.GONE
+        btnBottomRefresh.visibility = if (showRefresh) View.VISIBLE else View.GONE
+        layoutBottomChannelActions.visibility = if (showRec || showMic || showRefresh) View.VISIBLE else View.GONE
     }
 
     private fun updateJumpButtonsUI() {

@@ -19,6 +19,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.gmscreen.accessible.GMScreenApplication
 import com.gmscreen.accessible.R
 import com.gmscreen.accessible.data.model.Channel
+import com.gmscreen.accessible.player.StreamRecorderManager
 import com.gmscreen.accessible.protocol.RcuKey
 import com.gmscreen.accessible.util.AccessibilityHelper
 import com.gmscreen.accessible.util.AppConfig
@@ -33,39 +34,81 @@ object QuickAccessDialog {
 
     data class ActionItem(
         val id: String,
-        val title: String,
-        val description: String,
-        val bgTint: Int = Color.parseColor("#1F2A3C"),
-        val isDefault: Boolean = false
-    )
+        val defaultTitle: String,
+        val defaultDescription: String,
+        val defaultBgTint: Int = Color.parseColor("#1F2A3C"),
+        val isDefault: Boolean = false,
+        val dynamicTitle: (() -> String)? = null,
+        val dynamicDescription: (() -> String)? = null,
+        val dynamicBgTint: (() -> Int)? = null
+    ) {
+        val title: String get() = dynamicTitle?.invoke() ?: defaultTitle
+        val description: String get() = dynamicDescription?.invoke() ?: defaultDescription
+        val bgTint: Int get() = dynamicBgTint?.invoke() ?: defaultBgTint
+    }
+
+    private val repository get() = GMScreenApplication.instance.repository
 
     val ALL_AVAILABLE_ACTIONS = listOf(
-        ActionItem("power", "🔴 روشن / استندبای (Power)", "خاموش یا روشن کردن رسیور", Color.parseColor("#B91C1C"), true),
+        ActionItem("power", "🔴 روشن / خاموش (Power)", "خاموش یا روشن کردن رسیور", Color.parseColor("#B91C1C"), true),
+        ActionItem("mute", "🔇 قطع و وصل صدا (Mute)", "قطع یا وصل فوری صدای رسیور", Color.parseColor("#B45309"), true),
         ActionItem("ch_up", "🔼 کانال بعدی (CH+)", "تعویض کانال به جلو", Color.parseColor("#047857"), true),
         ActionItem("ch_down", "🔽 کانال قبلی (CH-)", "تعویض کانال به عقب", Color.parseColor("#047857"), true),
-        ActionItem("vol_slider", "🔊 لغزنده تنظیم صدا (گام‌های ۵ تایی)", "کادر لغزنده ولوم رسیور در بالای پنل", Color.parseColor("#1D4ED8"), true),
-        ActionItem("mute", "🔇 بی‌صدا / باصدا (Mute)", "قطع یا وصل فوری صدای رسیور", Color.parseColor("#B45309"), true),
-        ActionItem("rec_stb_instant", "🔴 ضبط فوری روی فلش رسیور", "آغاز فوری ضبط شبکه در حال پخش روی فلش رسیور", Color.parseColor("#B91C1C"), true),
-        ActionItem("rec_stb_stop", "⏹ توقف ضبط فلش رسیور", "پایان دادن به ضبط فلش مموری رسیور", Color.parseColor("#374151"), true),
-        ActionItem("rec_phone_instant", "🎙 ضبط صوتی فوری روی گوشی", "آغاز ضبط صدای شبکه زنده روی حافظه گوشی", Color.parseColor("#7C3AED"), true),
-        ActionItem("rec_phone_stop", "⏹ توقف ضبط گوشی", "پایان ضبط و ذخیره‌سازی فایل صوتی روی گوشی", Color.parseColor("#374151"), true),
-        ActionItem("status", "📢 گزارش وضعیت و زمان ضبط", "خواندن صوتی وضعیت رسیور، شبکه فعلی و مدت ضبط", Color.parseColor("#0369A1"), true),
-        ActionItem("play_stream", "▶️ پخش زنده در پلیر گوشی", "پخش زنده تصویر شبکه فعلی در پلیر داخلی یا VLC", Color.parseColor("#0284C7"), true),
+        ActionItem("vol_slider", "🔊 لغزنده ولوم رسیور", "کادر لغزنده ولوم صدا در بالای پنل", Color.parseColor("#1D4ED8"), true),
+        ActionItem(
+            id = "rec_stb_toggle",
+            defaultTitle = "🔴 ضبط فوری فلش",
+            defaultDescription = "آغاز فوری ضبط شبکه در حال پخش روی فلش رسیور",
+            defaultBgTint = Color.parseColor("#B91C1C"),
+            isDefault = true,
+            dynamicTitle = {
+                if (repository.isStbRecording.value) "⏹ توقف ضبط فلش"
+                else "🔴 ضبط فوری فلش"
+            },
+            dynamicDescription = {
+                if (repository.isStbRecording.value) "توقف ضبط در حال انجام بر روی فلش مموری رسیور"
+                else "آغاز فوری ضبط شبکه در حال پخش روی فلش مموری رسیور"
+            },
+            dynamicBgTint = {
+                if (repository.isStbRecording.value) Color.parseColor("#991B1B")
+                else Color.parseColor("#B91C1C")
+            }
+        ),
+        ActionItem(
+            id = "rec_phone_toggle",
+            defaultTitle = "🎙 ضبط فوری گوشی",
+            defaultDescription = "آغاز ضبط صدای شبکه زنده روی حافظه گوشی",
+            defaultBgTint = Color.parseColor("#7C3AED"),
+            isDefault = true,
+            dynamicTitle = {
+                if (StreamRecorderManager.isRecording) "⏹ توقف ضبط گوشی"
+                else "🎙 ضبط فوری گوشی"
+            },
+            dynamicDescription = {
+                if (StreamRecorderManager.isRecording) "پایان ضبط و ذخیره‌سازی فایل صوتی روی گوشی"
+                else "آغاز ضبط صدای زنده شبکه فعلی روی حافظه گوشی"
+            },
+            dynamicBgTint = {
+                if (StreamRecorderManager.isRecording) Color.parseColor("#4B5563")
+                else Color.parseColor("#7C3AED")
+            }
+        ),
+        ActionItem("status", "📢 گزارش وضعیت", "خواندن صوتی وضعیت رسیور، شبکه فعلی و مدت ضبط", Color.parseColor("#0369A1"), true),
+        ActionItem("play_stream", "▶️ پخش زنده در گوشی", "پخش زنده تصویر شبکه در پلیر گوشی", Color.parseColor("#0284C7"), true),
+        ActionItem("find_channel", "🔍 جستجوی کانال‌ها", "انتقال به جستجوی کانال‌ها", Color.parseColor("#0284C7")),
         ActionItem("epg", "📅 جدول برنامه‌ها (EPG)", "باز کردن جدول برنامه‌های رسیور", Color.parseColor("#1F2937")),
-        ActionItem("info", "ℹ️ اطلاعات برنامه (INFO)", "نمایش توضیحات و اطلاعات برنامه فعلی", Color.parseColor("#1F2937")),
-        ActionItem("audio_track", "🎧 تغییر زبان صدا (AUDIO)", "تغییر ترک یا زبان صوتی شبکه", Color.parseColor("#1F2937")),
+        ActionItem("info", "ℹ️ اطلاعات برنامه (INFO)", "نمایش اطلاعات برنامه فعلی", Color.parseColor("#1F2937")),
+        ActionItem("audio_track", "🎧 تغییر صدا (AUDIO)", "تغییر ترک یا زبان صوتی شبکه", Color.parseColor("#1F2937")),
         ActionItem("subtitle", "💬 زیرنویس (SUB)", "تنظیمات زیرنویس رسیور", Color.parseColor("#1F2937")),
-        ActionItem("recall", "↩️ بازگشت به شبکه قبل (RECALL)", "پرش به آخرین شبکه مشاهده شده", Color.parseColor("#1F2937")),
-        ActionItem("find_channel", "🔍 جستجوی سریع شبکه‌ها", "انتقال به بخش جستجوی کانال‌ها", Color.parseColor("#0284C7")),
-        ActionItem("sat_list", "🛰 لیست ماهواره‌ها (SAT)", "باز کردن منوی لیست جهت‌های رسیور", Color.parseColor("#1F2937")),
+        ActionItem("recall", "↩️ بازگشت به شبکه قبل", "پرش به آخرین شبکه مشاهده شده", Color.parseColor("#1F2937")),
+        ActionItem("sat_list", "🛰 لیست ماهواره‌ها (SAT)", "باز کردن لیست جهت‌های رسیور", Color.parseColor("#1F2937")),
         ActionItem("fav_list", "⭐ کانال‌های برگزیده (FAV)", "باز کردن لیست شبکه‌های مورد علاقه", Color.parseColor("#B45309")),
-        ActionItem("restart_stb", "🔄 راه‌اندازی مجدد رسیور (Reboot)", "ری‌استارت کردن دستگاه رسیور از راه دور", Color.parseColor("#991B1B"))
+        ActionItem("restart_stb", "🔄 راه‌اندازی مجدد (Reboot)", "ری‌استارت دستگاه رسیور از راه دور", Color.parseColor("#991B1B"))
     )
 
     fun show(activity: Activity) {
         val context = activity
         val appConfig = AppConfig(context)
-        val repository = GMScreenApplication.instance.repository
         val dialogScope = CoroutineScope(Dispatchers.Main)
 
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_quick_access, null)
@@ -86,22 +129,23 @@ object QuickAccessDialog {
 
         lateinit var dialog: AlertDialog
 
-        // 1. Setup Volume Slider
+        // 1. Setup Volume Slider & Step Buttons
         var currentVol = appConfig.stbVolume.coerceIn(0, 100)
-        // round to nearest 5
         currentVol = ((currentVol + 2) / 5) * 5
+        var trackingStartVol = currentVol
 
-        fun updateVolumeDisplay(vol: Int, announce: Boolean = false) {
+        val showStepBtns = appConfig.showVolumeStepButtons
+        btnVolMinus5.visibility = if (showStepBtns) View.VISIBLE else View.GONE
+        btnVolPlus5.visibility = if (showStepBtns) View.VISIBLE else View.GONE
+
+        fun updateVolumeDisplay(vol: Int) {
             currentVol = vol.coerceIn(0, 100)
             txtVolumeBadge.text = "$currentVol٪"
             seekBarVolume.progress = currentVol
-            seekBarVolume.contentDescription = "ولوم صدای رسیور: $currentVol درصد. با کشیدن انگشت به بالا و پایین یا گام‌های پنج‌تایی تغییر می‌کند."
-            if (announce) {
-                AccessibilityHelper.announce(seekBarVolume, "صدای رسیور: $currentVol درصد")
-            }
+            seekBarVolume.contentDescription = "ولوم صدای رسیور: $currentVol درصد"
         }
 
-        updateVolumeDisplay(currentVol, announce = false)
+        updateVolumeDisplay(currentVol)
 
         val adjustVolumeBy = { delta: Int ->
             val oldVol = currentVol
@@ -109,14 +153,28 @@ object QuickAccessDialog {
             if (newVol != oldVol) {
                 currentVol = newVol
                 appConfig.stbVolume = newVol
-                updateVolumeDisplay(newVol, announce = true)
-                // Send RCU keys
+                updateVolumeDisplay(newVol)
+                val announceText = if (delta > 0) "افزایش صدا" else "کاهش صدا"
+                AccessibilityHelper.announce(seekBarVolume, announceText)
                 dialogScope.launch(Dispatchers.IO) {
                     if (repository.isConnected.value) {
-                        val steps = Math.abs(delta) / 5
-                        for (i in 0 until steps) {
-                            if (delta > 0) repository.sendRcuKey(RcuKey.VOL_UP)
-                            else repository.sendRcuKey(RcuKey.VOL_DOWN)
+                        if (newVol == 0) {
+                            for (i in 0 until 15) {
+                                repository.sendRcuKey(RcuKey.VOL_DOWN)
+                                delay(30)
+                            }
+                        } else if (newVol == 100) {
+                            for (i in 0 until 15) {
+                                repository.sendRcuKey(RcuKey.VOL_UP)
+                                delay(30)
+                            }
+                        } else {
+                            val steps = (Math.abs(delta) / 5).coerceAtLeast(1)
+                            for (i in 0 until steps) {
+                                if (delta > 0) repository.sendRcuKey(RcuKey.VOL_UP)
+                                else repository.sendRcuKey(RcuKey.VOL_DOWN)
+                                delay(35)
+                            }
                         }
                     }
                 }
@@ -124,66 +182,94 @@ object QuickAccessDialog {
         }
 
         seekBarVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onStartTrackingTouch(sb: SeekBar?) {
+                trackingStartVol = currentVol
+            }
+
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
                     val snapped = ((progress + 2) / 5) * 5
-                    if (snapped != currentVol) {
-                        val delta = snapped - currentVol
-                        currentVol = snapped
-                        appConfig.stbVolume = snapped
-                        updateVolumeDisplay(snapped, announce = false)
-                        dialogScope.launch(Dispatchers.IO) {
-                            if (repository.isConnected.value) {
-                                val steps = Math.abs(delta) / 5
+                    currentVol = snapped
+                    txtVolumeBadge.text = "$snapped٪"
+                    seekBarVolume.contentDescription = "ولوم صدای رسیور: $snapped درصد"
+                }
+            }
+
+            override fun onStopTrackingTouch(sb: SeekBar?) {
+                val finalVol = currentVol
+                appConfig.stbVolume = finalVol
+                val delta = finalVol - trackingStartVol
+                AccessibilityHelper.announce(seekBarVolume, "صدای رسیور: $finalVol درصد")
+                if (delta != 0 || finalVol == 0 || finalVol == 100) {
+                    dialogScope.launch(Dispatchers.IO) {
+                        if (repository.isConnected.value) {
+                            if (finalVol == 0) {
+                                for (i in 0 until 20) {
+                                    repository.sendRcuKey(RcuKey.VOL_DOWN)
+                                    delay(30)
+                                }
+                            } else if (finalVol == 100) {
+                                for (i in 0 until 20) {
+                                    repository.sendRcuKey(RcuKey.VOL_UP)
+                                    delay(30)
+                                }
+                            } else {
+                                val steps = (Math.abs(delta) / 5).coerceAtLeast(1)
                                 for (i in 0 until steps) {
                                     if (delta > 0) repository.sendRcuKey(RcuKey.VOL_UP)
                                     else repository.sendRcuKey(RcuKey.VOL_DOWN)
+                                    delay(35)
                                 }
                             }
                         }
                     }
                 }
             }
-
-            override fun onStartTrackingTouch(sb: SeekBar?) {}
-            override fun onStopTrackingTouch(sb: SeekBar?) {
-                AccessibilityHelper.announce(seekBarVolume, "صدای رسیور تنظیم شد: $currentVol درصد")
-            }
         })
 
-        btnVolMinus5.setOnClickListener {
-            adjustVolumeBy(-5)
-        }
-
-        btnVolPlus5.setOnClickListener {
-            adjustVolumeBy(5)
-        }
+        btnVolMinus5.setOnClickListener { adjustVolumeBy(-5) }
+        btnVolPlus5.setOnClickListener { adjustVolumeBy(5) }
 
         btnQuickMute.setOnClickListener {
             dialogScope.launch(Dispatchers.IO) {
                 repository.sendRcuKey(RcuKey.MUTE)
                 withContext(Dispatchers.Main) {
-                    val msg = "دستور قطع / وصل صدا (Mute) به رسیور ارسال شد"
-                    AccessibilityHelper.announce(btnQuickMute, msg)
-                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    AccessibilityHelper.announce(btnQuickMute, "قطع یا وصل صدا")
+                    Toast.makeText(context, "قطع / وصل صدا", Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
         // 2. Setup Action Buttons Pager (Carousel)
-        fun refreshActionButtons() {
+        lateinit var refreshActionButtons: () -> Unit
+
+        val removeAction = { item: ActionItem ->
+            MaterialAlertDialogBuilder(activity)
+                .setTitle("حذف از دسترسی سریع")
+                .setMessage("آیا می‌خواهید «${item.title}» از پنل دسترسی سریع حذف شود؟")
+                .setPositiveButton("حذف") { _, _ ->
+                    val cur = appConfig.quickAccessItems.toMutableSet()
+                    cur.remove(item.id)
+                    appConfig.quickAccessItems = cur
+                    refreshActionButtons()
+                    val msg = "${item.title} حذف شد"
+                    AccessibilityHelper.announce(dialogView, msg)
+                    Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("انصراف", null)
+                .show()
+        }
+
+        refreshActionButtons = {
             val selectedIds = appConfig.quickAccessItems
 
-            // Show/hide volume card based on user preference
             val showVolSlider = selectedIds.contains("vol_slider")
             cardVolume.visibility = if (showVolSlider) View.VISIBLE else View.GONE
 
-            // Filter actions for the pager (excluding vol_slider as it has its own dedicated card)
             val actionsToDisplay = ALL_AVAILABLE_ACTIONS.filter {
                 it.id != "vol_slider" && selectedIds.contains(it.id)
             }
 
-            // Split into pages (up to 6 items per page)
             val pageSize = 6
             val pages = if (actionsToDisplay.isEmpty()) {
                 listOf(emptyList())
@@ -191,21 +277,32 @@ object QuickAccessDialog {
                 actionsToDisplay.chunked(pageSize)
             }
 
-            pager.adapter = QuickActionPagerAdapter(pages) { action ->
-                handleQuickAction(activity, action)
-            }
+            pager.adapter = QuickActionPagerAdapter(
+                activity = activity,
+                pages = pages,
+                onActionClick = { action ->
+                    handleQuickAction(activity, action) {
+                        refreshActionButtons()
+                    }
+                },
+                onActionLongClick = { action ->
+                    removeAction(action)
+                }
+            )
 
             val totalPages = pages.size
             if (totalPages <= 1) {
                 rowNavigation.visibility = View.GONE
+                pager.isUserInputEnabled = false
             } else {
                 rowNavigation.visibility = View.VISIBLE
+                pager.isUserInputEnabled = true
                 val updateNavState = { pos: Int ->
                     txtPageIndicator.text = "صفحه ${pos + 1} از $totalPages (کشیدن با ۲ انگشت)"
                     btnPrevPage.isEnabled = pos > 0
                     btnNextPage.isEnabled = pos < totalPages - 1
                 }
-                updateNavState(0)
+                updateNavState(pager.currentItem.coerceIn(0, totalPages - 1))
 
                 pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                     override fun onPageSelected(position: Int) {
@@ -233,7 +330,7 @@ object QuickAccessDialog {
 
         // 3. Customize Button Click -> MultiChoice Dialog
         btnCustomize.setOnClickListener {
-            val allTitles = ALL_AVAILABLE_ACTIONS.map { it.title }.toTypedArray()
+            val allTitles = ALL_AVAILABLE_ACTIONS.map { it.defaultTitle }.toTypedArray()
             val currentSelected = appConfig.quickAccessItems
             val checkedStates = BooleanArray(ALL_AVAILABLE_ACTIONS.size) { i ->
                 currentSelected.contains(ALL_AVAILABLE_ACTIONS[i].id)
@@ -252,19 +349,18 @@ object QuickAccessDialog {
                         }
                     }
                     if (newSet.isEmpty()) {
-                        // At least keep one
                         newSet.add("status")
                     }
                     appConfig.quickAccessItems = newSet
                     refreshActionButtons()
-                    val saveMsg = "کلیدهای دسترسی سریع با موفقیت به‌روزرسانی شدند."
+                    val saveMsg = "کلیدهای دسترسی سریع به‌روزرسانی شد"
                     AccessibilityHelper.announce(dialogView, saveMsg)
                     Toast.makeText(context, saveMsg, Toast.LENGTH_SHORT).show()
                 }
-                .setNeutralButton("بازگردانی به پیش‌فرض") { _, _ ->
+                .setNeutralButton("پیش‌فرض") { _, _ ->
                     appConfig.quickAccessItems = appConfig.defaultQuickAccessItems
                     refreshActionButtons()
-                    val defMsg = "تنظیمات دسترسی سریع به حالت پیش‌فرض بازگشت."
+                    val defMsg = "تنظیمات به حالت پیش‌فرض بازگشت"
                     AccessibilityHelper.announce(dialogView, defMsg)
                     Toast.makeText(context, defMsg, Toast.LENGTH_SHORT).show()
                 }
@@ -282,56 +378,55 @@ object QuickAccessDialog {
         btnCloseBottom.setOnClickListener { dialog.dismiss() }
 
         dialog.show()
-        AccessibilityHelper.announce(dialogView, "پنل کنترل و دسترسی سریع رسیور باز شد")
+        AccessibilityHelper.announce(dialogView, "پنل دسترسی سریع")
     }
 
-    private fun handleQuickAction(activity: Activity, action: ActionItem) {
-        val repository = GMScreenApplication.instance.repository
+    private fun handleQuickAction(activity: Activity, action: ActionItem, onStateChanged: () -> Unit) {
         val isConnected = repository.isConnected.value
 
         when (action.id) {
             "power" -> {
-                sendRcuKeyAsync(RcuKey.POWER, "دستور پاور (روشن/خاموش)")
+                sendRcuKeyAsync(RcuKey.POWER, "روشن یا خاموش", "دستور پاور ارسال شد")
             }
             "ch_up" -> {
-                sendRcuKeyAsync(RcuKey.CH_UP, "کانال بعدی")
+                sendRcuKeyAsync(RcuKey.CH_UP, "کانال بعدی", "کانال بعدی")
             }
             "ch_down" -> {
-                sendRcuKeyAsync(RcuKey.CH_DOWN, "کانال قبلی")
+                sendRcuKeyAsync(RcuKey.CH_DOWN, "کانال قبلی", "کانال قبلی")
             }
             "mute" -> {
-                sendRcuKeyAsync(RcuKey.MUTE, "بی‌صدا / باصدا")
+                sendRcuKeyAsync(RcuKey.MUTE, "قطع و وصل صدا", "بی‌صدا یا با صدا")
             }
             "epg" -> {
-                sendRcuKeyAsync(RcuKey.EPG, "جدول راهنمای برنامه‌ها (EPG)")
+                sendRcuKeyAsync(RcuKey.EPG, "جدول برنامه‌ها", "جدول راهنمای برنامه‌ها")
             }
             "info" -> {
-                sendRcuKeyAsync(RcuKey.INFO, "اطلاعات برنامه (INFO)")
+                sendRcuKeyAsync(RcuKey.INFO, "اطلاعات برنامه", "اطلاعات برنامه")
             }
             "audio_track" -> {
-                sendRcuKeyAsync(RcuKey.AUDIO, "تغییر ترک صدا (AUDIO)")
+                sendRcuKeyAsync(RcuKey.AUDIO, "تغییر صدا", "تغییر صدا")
             }
             "subtitle" -> {
-                sendRcuKeyAsync(RcuKey.SUBTITLE, "زیرنویس (SUB)")
+                sendRcuKeyAsync(RcuKey.SUBTITLE, "زیرنویس", "زیرنویس")
             }
             "recall" -> {
-                sendRcuKeyAsync(RcuKey.RECALL, "بازگشت به کانال قبلی (RECALL)")
+                sendRcuKeyAsync(RcuKey.RECALL, "شبکه قبلی", "کانال قبلی")
             }
             "sat_list" -> {
-                sendRcuKeyAsync(RcuKey.SATELLITE, "لیست ماهواره‌ها (SAT)")
+                sendRcuKeyAsync(RcuKey.SATELLITE, "لیست ماهواره‌ها", "لیست ماهواره‌ها")
             }
             "fav_list" -> {
-                sendRcuKeyAsync(RcuKey.FAVORITE, "کانال‌های برگزیده (FAV)")
+                sendRcuKeyAsync(RcuKey.FAVORITE, "کانال‌های برگزیده", "کانال‌های برگزیده")
             }
             "restart_stb" -> {
                 MaterialAlertDialogBuilder(activity)
                     .setTitle("راه‌اندازی مجدد رسیور")
-                    .setMessage("آیا مطمئن هستید که می‌خواهید رسیور را مجدداً راه‌اندازی (Reboot) کنید؟")
-                    .setPositiveButton("بله، ری‌استارت شود") { _, _ ->
+                    .setMessage("آیا می‌خواهید رسیور را مجدداً راه‌اندازی (Reboot) کنید؟")
+                    .setPositiveButton("بله") { _, _ ->
                         CoroutineScope(Dispatchers.IO).launch {
                             repository.client.sendCmd(1011, expectReply = false)
                             withContext(Dispatchers.Main) {
-                                val msg = "دستور راه‌اندازی مجدد به رسیور ارسال شد."
+                                val msg = "رسیور راه‌اندازی مجدد شد"
                                 AccessibilityHelper.announce(activity.window.decorView, msg)
                                 Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
                             }
@@ -343,82 +438,78 @@ object QuickAccessDialog {
             "status" -> {
                 StatusHelper.announceStatus(activity, repository, activity.window.decorView)
             }
-            "rec_stb_instant" -> {
+            "rec_stb_toggle" -> {
                 if (!isConnected) {
                     Toast.makeText(activity, "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
                     return
                 }
-                CoroutineScope(Dispatchers.IO).launch {
-                    val curCh = repository.currentChannel.value?.serviceName ?: "شبکه جاری"
-                    repository.sendRcuKey(RcuKey.RECORD)
-                    repository.setStbRecording(true, curCh)
-                    withContext(Dispatchers.Main) {
-                        val msg = "فرمان آغاز ضبط فوری شبکه $curCh بر روی فلش رسیور ارسال شد"
-                        AccessibilityHelper.announce(activity.window.decorView, msg)
-                        Toast.makeText(activity, msg, Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-            "rec_stb_stop" -> {
-                if (!isConnected) {
-                    Toast.makeText(activity, "رسیور متصل نیست", Toast.LENGTH_SHORT).show()
-                    return
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    repository.sendRcuKey(RcuKey.STOP)
-                    delay(300)
-                    repository.sendRcuKey(RcuKey.OK)
-                    repository.setStbRecording(false, "")
-                    withContext(Dispatchers.Main) {
-                        val msg = "فرمان توقف ضبط فلش رسیور ارسال شد"
-                        AccessibilityHelper.announce(activity.window.decorView, msg)
-                        Toast.makeText(activity, msg, Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-            "rec_phone_instant" -> {
-                val ip = repository.connectedIp.value
-                val curCh = repository.currentChannel.value
-                if (ip.isBlank() || curCh == null) {
-                    Toast.makeText(activity, "شبکه یا اتصال برای ضبط صوتی روی گوشی فعال نیست", Toast.LENGTH_SHORT).show()
-                    return
-                }
-                if (com.gmscreen.accessible.player.StreamRecorderManager.isRecording) {
-                    Toast.makeText(activity, "ضبط صوتی در حال حاضر روی گوشی فعال است", Toast.LENGTH_SHORT).show()
-                    return
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    val file = com.gmscreen.accessible.player.StreamRecorderManager.startRecording(
-                        activity,
-                        repository.client,
-                        ip,
-                        curCh,
-                        isAudioOnly = true
-                    )
-                    withContext(Dispatchers.Main) {
-                        if (file != null) {
-                            val msg = "ضبط صوتی شبکه ${curCh.serviceName} روی گوشی آغاز شد"
+                if (repository.isStbRecording.value) {
+                    // Stop STB recording
+                    CoroutineScope(Dispatchers.IO).launch {
+                        repository.sendRcuKey(RcuKey.STOP)
+                        delay(300)
+                        repository.sendRcuKey(RcuKey.OK)
+                        repository.setStbRecording(false, "")
+                        withContext(Dispatchers.Main) {
+                            val msg = "ضبط روی فلش متوقف شد"
                             AccessibilityHelper.announce(activity.window.decorView, msg)
                             Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
-                        } else {
-                            val err = "خطا در شروع ضبط صوتی روی گوشی"
-                            AccessibilityHelper.announce(activity.window.decorView, err)
-                            Toast.makeText(activity, err, Toast.LENGTH_SHORT).show()
+                            onStateChanged()
+                        }
+                    }
+                } else {
+                    // Start STB recording
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val curCh = repository.currentChannel.value?.serviceName ?: "شبکه جاری"
+                        repository.sendRcuKey(RcuKey.RECORD)
+                        repository.setStbRecording(true, curCh)
+                        withContext(Dispatchers.Main) {
+                            val msg = "ضبط شروع شد روی فلش"
+                            AccessibilityHelper.announce(activity.window.decorView, msg)
+                            Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                            onStateChanged()
                         }
                     }
                 }
             }
-            "rec_phone_stop" -> {
-                if (!com.gmscreen.accessible.player.StreamRecorderManager.isRecording) {
-                    Toast.makeText(activity, "هیچ ضبط فعالی روی گوشی در حال اجرا نیست", Toast.LENGTH_SHORT).show()
-                    return
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    val saved = com.gmscreen.accessible.player.StreamRecorderManager.stopRecording()
-                    withContext(Dispatchers.Main) {
-                        val msg = "ضبط صوتی روی گوشی متوقف شد: ${saved?.name ?: ""}"
-                        AccessibilityHelper.announce(activity.window.decorView, msg)
-                        Toast.makeText(activity, msg, Toast.LENGTH_LONG).show()
+            "rec_phone_toggle" -> {
+                if (StreamRecorderManager.isRecording) {
+                    // Stop phone recording
+                    CoroutineScope(Dispatchers.IO).launch {
+                        StreamRecorderManager.stopRecording()
+                        withContext(Dispatchers.Main) {
+                            val msg = "ضبط روی گوشی متوقف شد"
+                            AccessibilityHelper.announce(activity.window.decorView, msg)
+                            Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                            onStateChanged()
+                        }
+                    }
+                } else {
+                    // Start phone recording
+                    val ip = repository.connectedIp.value
+                    val curCh = repository.currentChannel.value
+                    if (ip.isBlank() || curCh == null) {
+                        Toast.makeText(activity, "شبکه‌ای برای ضبط در دسترس نیست", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val file = StreamRecorderManager.startRecording(
+                            activity,
+                            repository.client,
+                            ip,
+                            curCh,
+                            isAudioOnly = true
+                        )
+                        withContext(Dispatchers.Main) {
+                            if (file != null) {
+                                val msg = "ضبط شروع شد روی گوشی"
+                                AccessibilityHelper.announce(activity.window.decorView, msg)
+                                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(activity, "خطا در شروع ضبط", Toast.LENGTH_SHORT).show()
+                            }
+                            onStateChanged()
+                        }
                     }
                 }
             }
@@ -432,7 +523,7 @@ object QuickAccessDialog {
                     }
                     activity.startActivity(intent)
                 } else {
-                    Toast.makeText(activity, "شبکه‌ای برای پخش انتخاب نشده است", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, "شبکه‌ای برای پخش یافت نشد", Toast.LENGTH_SHORT).show()
                 }
             }
             "find_channel" -> {
@@ -441,20 +532,22 @@ object QuickAccessDialog {
         }
     }
 
-    private fun sendRcuKeyAsync(keyCode: Int, actionName: String) {
-        val repository = GMScreenApplication.instance.repository
+    private fun sendRcuKeyAsync(keyCode: Int, toastText: String, announceText: String) {
         CoroutineScope(Dispatchers.IO).launch {
             repository.sendRcuKey(keyCode)
             withContext(Dispatchers.Main) {
-                Toast.makeText(GMScreenApplication.instance, actionName, Toast.LENGTH_SHORT).show()
+                AccessibilityHelper.announce(GMScreenApplication.instance, announceText)
+                Toast.makeText(GMScreenApplication.instance, toastText, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     // --- ViewPager2 Adapter for Paging Action Buttons ---
     private class QuickActionPagerAdapter(
+        private val activity: Activity,
         private val pages: List<List<ActionItem>>,
-        private val onActionClick: (ActionItem) -> Unit
+        private val onActionClick: (ActionItem) -> Unit,
+        private val onActionLongClick: (ActionItem) -> Unit
     ) : RecyclerView.Adapter<QuickActionPagerAdapter.PageViewHolder>() {
 
         class PageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -477,14 +570,16 @@ object QuickAccessDialog {
 
         override fun onBindViewHolder(holder: PageViewHolder, position: Int) {
             val itemsForPage = pages[position]
-            holder.recycler.adapter = QuickActionItemAdapter(itemsForPage, onActionClick)
+            holder.recycler.adapter = QuickActionItemAdapter(activity, itemsForPage, onActionClick, onActionLongClick)
         }
     }
 
     // --- Grid Adapter for Individual Buttons inside each page ---
     private class QuickActionItemAdapter(
+        private val activity: Activity,
         private val items: List<ActionItem>,
-        private val onClick: (ActionItem) -> Unit
+        private val onClick: (ActionItem) -> Unit,
+        private val onLongClick: (ActionItem) -> Unit
     ) : RecyclerView.Adapter<QuickActionItemAdapter.BtnViewHolder>() {
 
         class BtnViewHolder(val button: MaterialButton) : RecyclerView.ViewHolder(button)
@@ -501,9 +596,22 @@ object QuickAccessDialog {
             holder.button.text = item.title
             holder.button.contentDescription = "${item.title}. ${item.description}"
             holder.button.setBackgroundColor(item.bgTint)
+
             holder.button.setOnClickListener {
-                AccessibilityHelper.announce(holder.button, item.title)
                 onClick(item)
+            }
+
+            holder.button.setOnLongClickListener {
+                onLongClick(item)
+                true
+            }
+
+            androidx.core.view.ViewCompat.addAccessibilityAction(
+                holder.button,
+                "حذف این کلید از دسترسی سریع"
+            ) { _, _ ->
+                onLongClick(item)
+                true
             }
         }
     }

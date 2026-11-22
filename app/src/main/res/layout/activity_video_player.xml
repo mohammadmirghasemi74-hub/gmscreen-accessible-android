@@ -11,11 +11,12 @@
         android:id="@+id/playerViewFullscreen"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:importantForAccessibility="no"
         app:use_controller="false"
         app:resize_mode="fit"
         app:surface_type="surface_view" />
 
-    <!-- Top Floating Translucent Controls Bar (Subtle & Elegant) -->
+    <!-- Top Floating Translucent Controls Bar with only two subtle corner buttons -->
     <RelativeLayout
         android:id="@+id/topControlsOverlay"
         android:layout_width="match_parent"
@@ -24,7 +25,7 @@
         android:paddingTop="16dp"
         android:paddingBottom="8dp">
 
-        <!-- Close / Exit Button (Translucent circular Glassmorphism button) -->
+        <!-- Close / Exit Button (Translucent circular Glassmorphism button) Top-Start -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnClosePlayer"
             android:layout_width="44dp"
@@ -42,28 +43,12 @@
             android:textStyle="bold"
             android:contentDescription="بستن پخش‌کننده و بازگشت به لیست کانال‌ها"
             app:cornerRadius="22dp"
-            android:alpha="0.65"
-            app:backgroundTint="#66000000"
-            app:strokeColor="#44FFFFFF"
+            android:alpha="0.75"
+            app:backgroundTint="#88000000"
+            app:strokeColor="#55FFFFFF"
             app:strokeWidth="1dp" />
 
-        <!-- Center Live Channel Badge -->
-        <TextView
-            android:id="@+id/txtChannelBadge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="@drawable/search_box_bg"
-            android:backgroundTint="#66000000"
-            android:paddingHorizontal="14dp"
-            android:paddingVertical="6dp"
-            android:text="🔴 پخش زنده"
-            android:textColor="@color/white"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:alpha="0.75" />
-
-        <!-- Record Toggle Button (Translucent circular/pill Glassmorphism button) -->
+        <!-- Record Toggle Button (Translucent circular/pill Glassmorphism button) Top-End -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnToggleRecordInPlayer"
             android:layout_width="wrap_content"
@@ -75,16 +60,16 @@
             android:insetTop="0dp"
             android:insetRight="0dp"
             android:insetBottom="0dp"
-            android:paddingHorizontal="12dp"
+            android:paddingHorizontal="14dp"
             android:text="● ضبط"
             android:textColor="@color/white"
             android:textSize="13sp"
             android:textStyle="bold"
             android:contentDescription="شروع ضبط مستقیم روی حافظه گوشی"
             app:cornerRadius="22dp"
-            android:alpha="0.65"
-            app:backgroundTint="#66000000"
-            app:strokeColor="#44FFFFFF"
+            android:alpha="0.75"
+            app:backgroundTint="#88000000"
+            app:strokeColor="#55FFFFFF"
             app:strokeWidth="1dp" />
 
     </RelativeLayout>

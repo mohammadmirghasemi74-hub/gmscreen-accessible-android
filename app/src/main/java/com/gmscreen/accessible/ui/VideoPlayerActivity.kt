@@ -39,7 +39,6 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
     private lateinit var playerView: PlayerView
     private lateinit var btnClosePlayer: MaterialButton
-    private lateinit var txtChannelBadge: TextView
     private lateinit var btnToggleRecordInPlayer: MaterialButton
 
     private var exoPlayer: ExoPlayer? = null
@@ -74,52 +73,18 @@ class VideoPlayerActivity : AppCompatActivity(), Player.Listener {
 
         playerView = findViewById(R.id.playerViewFullscreen)
         btnClosePlayer = findViewById(R.id.btnClosePlayer)
-        txtChannelBadge = findViewById(R.id.txtChannelBadge)
         btnToggleRecordInPlayer = findViewById(R.id.btnToggleRecordInPlayer)
 
         channelName = intent.getStringExtra("EXTRA_CHANNEL_NAME") ?: "شبکه"
         serviceId = intent.getStringExtra("EXTRA_SERVICE_ID") ?: ""
-
-        txtChannelBadge.text = "🔴 $channelName"
 
         btnClosePlayer.setOnClickListener {
             AccessibilityHelper.announce(playerView, "بستن پخش‌کننده")
             finish()
         }
 
-        val welcomeMsg = "پخش ویدیویی تمام‌صفحه شبکه $channelName فعال شد. دکمه بستن و دکمه ضبط در بالای صفحه در دسترس است."
-        AccessibilityHelper.announce(playerView, welcomeMsg)
-
-        // Accessibility actions for TalkBack
-        androidx.core.view.ViewCompat.setAccessibilityDelegate(playerView, object : androidx.core.view.AccessibilityDelegateCompat() {
-            override fun onInitializeAccessibilityNodeInfo(host: android.view.View, info: androidx.core.view.accessibility.AccessibilityNodeInfoCompat) {
-                super.onInitializeAccessibilityNodeInfo(host, info)
-                info.addAction(
-                    androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat(
-                        androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK,
-                        "بستن پخش‌کننده و بازگشت"
-                    )
-                )
-                info.addAction(
-                    androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat(
-                        R.id.action_toggle_record,
-                        "شروع یا توقف ضبط گوشی"
-                    )
-                )
-            }
-
-            override fun performAccessibilityAction(host: android.view.View, action: Int, args: Bundle?): Boolean {
-                if (action == androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK) {
-                    finish()
-                    return true
-                }
-                if (action == R.id.action_toggle_record) {
-                    toggleRecording()
-                    return true
-                }
-                return super.performAccessibilityAction(host, action, args)
-            }
-        })
+        val welcomeMsg = "پخش ویدیویی تمام‌صفحه شبکه $channelName فعال شد"
+        AccessibilityHelper.announce(btnClosePlayer, welcomeMsg)
 
         setupRecordButton()
 
