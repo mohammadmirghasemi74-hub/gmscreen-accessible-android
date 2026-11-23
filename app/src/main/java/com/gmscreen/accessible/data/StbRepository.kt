@@ -282,9 +282,12 @@ class StbRepository(private val context: Context) {
             _currentState.value = state
             currentStbMode = if (state.curChannelType == 1) 1 else 0
 
-            // 2. Fetch Satellites for names
+            // 2. Fetch Satellites and Transponders for names and frequencies
             val sats = client.fetchSatellites()
             _satellites.value = sats
+            if (client.transponders.isEmpty()) {
+                client.fetchTransponders()
+            }
 
             // 3. Fetch Channels in 100-channel pages
             val toIdx = if (state.channelNum > 0) state.channelNum - 1 else 800
@@ -296,6 +299,10 @@ class StbRepository(private val context: Context) {
                 var radioCounter = 1
                 for (ch in chList) {
                     ch.satelliteName = satMap[ch.satIndex] ?: "ماهواره #${ch.satIndex}"
+                    if (ch.frequency <= 0) {
+                        val tp = client.transponders[ch.tpIndex]
+                        ch.frequency = tp?.get("Freq")?.toString()?.toIntOrNull() ?: 0
+                    }
                     if (ch.isRadio) {
                         ch.realChannelNum = radioCounter++
                     } else {
@@ -312,11 +319,6 @@ class StbRepository(private val context: Context) {
                 _currentChannel.value = matched
                 _channels.value = chList
                 com.gmscreen.accessible.voice.VoiceCustomizationManager.autoIndexChannels(context, chList)
-            }
-
-            // 5. Fetch transponders in background only if not cached yet (needed for stream playback)
-            if (client.transponders.isEmpty()) {
-                client.fetchTransponders()
             }
         } catch (e: Exception) {
             e.printStackTrace()

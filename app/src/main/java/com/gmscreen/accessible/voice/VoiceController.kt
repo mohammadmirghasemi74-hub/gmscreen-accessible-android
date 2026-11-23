@@ -104,7 +104,6 @@ class VoiceController(
                     putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                     putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fa-IR")
                     putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "fa-IR")
-                    putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, "fa-IR")
                     putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10)
                     putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
                     // High-accuracy speech thresholds: prevents early cutoffs

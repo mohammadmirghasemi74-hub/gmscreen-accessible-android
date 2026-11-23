@@ -1122,26 +1122,62 @@ class ChannelsFragment : Fragment() {
     }
 
     private fun showChannelInfoDialog(channel: Channel) {
-        val infoText = """
-            نام کانال: ${channel.serviceName}
-            شماره کانال در رسیور: ${channel.channelNumber}
-            ماهواره: ${channel.satelliteName}
-            فرکانس: ${channel.frequency} MHz
-            نوع سرویس: ${if (channel.isRadio) "رادیو" else "تلویزیون"}
-            کیفیت تصویر: ${if (channel.isHd) "HD با کیفیت بالا" else "SD معمولی"}
-            وضعیت رمزگذاری: ${if (channel.isScrambled) "شبکه کارتی (Scrambled $)" else "رایگان (FTA)"}
-            شناسه تصویر (Video PID): ${channel.videoPid}
-            شناسه صدا (Audio PID): ${channel.audioPid}
-            شناسه جدول (PMT PID): ${channel.pmtPid}
-        """.trimIndent()
+        val progName = channel.serviceName
+        val chNum = if (channel.realChannelNum > 0) channel.realChannelNum else channel.channelNumber
+        val satName = channel.satelliteName.ifBlank { "نامشخص" }
+
+        // Resolve frequency and transponder details
+        var freq = channel.frequency
+        var polarStr = ""
+        var symbStr = ""
+        val tp = repository.client.transponders[channel.tpIndex]
+        if (tp != null) {
+            val f = tp["Freq"]?.toString()?.toIntOrNull() ?: 0
+            if (f > 0) freq = f
+            val pol = tp["Polar"]?.toString()?.toIntOrNull()
+            polarStr = when (pol) {
+                0 -> "افقی (H)"
+                1 -> "عمودی (V)"
+                else -> ""
+            }
+            val symb = tp["Symb"]?.toString()?.toIntOrNull()
+            if (symb != null && symb > 0) {
+                symbStr = "$symb"
+            }
+        }
+
+        val freqText = if (freq > 0) {
+            val extra = listOfNotNull(polarStr.takeIf { it.isNotBlank() }, symbStr.takeIf { it.isNotBlank() }).joinToString(" - ")
+            if (extra.isNotBlank()) "$freq مگاهرتز ($extra)" else "$freq مگاهرتز"
+        } else {
+            "در دسترس نیست"
+        }
+
+        val typeText = if (channel.isRadio) "رادیویی" else "تلویزیونی"
+        val qualityText = if (channel.isHd) "کیفیت بالا (HD)" else "کیفیت استاندارد (SD)"
+        val lockText = if (channel.isLocked) "دارای قفل کودک" else "بدون قفل"
+        val cryptText = if (channel.isScrambled) "شبکه کارتی (رمزگذاری‌شده)" else "رایگان (FTA)"
+
+        val lines = listOf(
+            "نام شبکه: $progName",
+            "شماره شبکه: $chNum",
+            "ماهواره: $satName",
+            "فرکانس: $freqText",
+            "نوع شبکه: $typeText",
+            "کیفیت تصویر: $qualityText",
+            "وضعیت پخش: $cryptText",
+            "وضعیت قفل: $lockText"
+        )
+        val infoText = lines.joinToString("\n\n")
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("مشخصات فنی کانال: ${channel.serviceName}")
+            .setTitle("مشخصات شبکه $progName")
             .setMessage(infoText)
             .setPositiveButton("بستن", null)
             .show()
 
-        AccessibilityHelper.announce(txtChannelCount, "مشخصات شبکه ${channel.serviceName}: فرکانس ${channel.frequency}، ماهواره ${channel.satelliteName}")
+        val announceSummary = "مشخصات $progName: شماره $chNum، ماهواره $satName، فرکانس $freqText، $qualityText"
+        AccessibilityHelper.announce(recyclerViewChannels, announceSummary)
     }
 
     private fun startPhoneRecordingFromChannel(channel: Channel) {
@@ -1294,6 +1330,18 @@ class ChannelsFragment : Fragment() {
             }
             "status" -> {
                 com.gmscreen.accessible.util.StatusHelper.announceStatus(requireContext(), repository, btnBottomMic)
+                return
+            }
+            "restart", "restart_stb" -> {
+                val fullMsg = "دستور شنیده شد: در حال راه‌اندازی مجدد (ری‌استارت) رسیور..."
+                AccessibilityHelper.announce(btnBottomMic, fullMsg)
+                Toast.makeText(requireContext(), fullMsg, Toast.LENGTH_SHORT).show()
+                if (appConfig.hapticFeedbackEnabled) {
+                    AccessibilityHelper.vibrateClick(requireContext())
+                }
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    repository.restartStb()
+                }
                 return
             }
             else -> Pair(null, "")

@@ -48,7 +48,27 @@ object ChannelMatcher {
     )
 
     private val WORDS_MAP = listOf(
+        // Resolution & Format Suffixes
+        "اچ دی" to "hd", "اچ‌دی" to "hd", "اچدی" to "hd", "hd" to "hd",
+        "فول اچ دی" to "fhd hd", "فول اچ‌دی" to "fhd hd", "fhd" to "fhd hd",
+        "اس دی" to "sd", "اس‌دی" to "sd", "اسدی" to "sd", "sd" to "sd",
+        "فورکی" to "4k", "فور کی" to "4k", "فور کِی" to "4k", "4k" to "4k", "یو اچ دی" to "uhd 4k",
+
         // GEM Channels
+        "جم سریز" to "gem series", "جم سریس" to "gem series", "جم سریال" to "gem series",
+        "جم دراما" to "gem drama", "جم درام" to "gem drama",
+        "جم بالیوود" to "gem bollywood", "جم هندی" to "gem bollywood", "جم هند" to "gem bollywood",
+        "جم جونیور" to "gem junior kids", "جم کیدز" to "gem junior kids", "جم کودک" to "gem junior kids",
+        "جم کودکان" to "gem junior kids", "جم بچه ها" to "gem junior kids", "جم کارتون" to "gem junior kids",
+        "جم آشپزی" to "gem food", "جم غذا" to "gem food", "جم فود" to "gem food",
+        "جم سفر" to "gem travel", "جم تراول" to "gem travel", "جم طبیعت" to "gem nature",
+        "جم راز بقا" to "gem nature documentary doc", "جم مستند" to "gem documentary doc",
+        "جم طنز" to "gem comedy", "جم خنده" to "gem comedy", "جم کمدی" to "gem comedy",
+        "جم ورزش" to "gem sport sports", "جم اسپورت" to "gem sport sports",
+        "جم مووی" to "gem film", "جم فیلم" to "gem film",
+        "جم اکشن" to "gem action", "جم کلاسیک" to "gem classic", "جم لایف" to "gem life",
+        "جم روبیکس" to "gem rubix", "جم ریور" to "gem river", "جم اونیکس" to "gem onyx",
+        "جم انیکس" to "gem onyx", "جم میفا" to "gem mifa",
         "جم" to "gem", "دراما" to "drama", "سریز" to "series", "سریال" to "series",
         "کلاسیک" to "classic", "کمدی" to "comedy", "بالیوود" to "bollywood", "اکشن" to "action",
         "لایف" to "life", "جونیور" to "junior", "کیدز" to "kids", "کودک" to "junior kids",
@@ -62,21 +82,32 @@ object ChannelMatcher {
         "بی" to "b",
 
         // Persiana Channels
+        "پرشیانا فیلم" to "persiana cinema film", "پرشیانا سینما" to "persiana cinema",
         "پرشیانا ست میکس" to "persiana setmix", "پرشیانا ستمیکس" to "persiana setmix",
         "پرشیانا ست مکس" to "persiana setmix", "پرشیانا ست میک" to "persiana setmix",
         "پرشیانا میکس" to "persiana mix", "پرشیانا موزیک" to "persiana music",
-        "پرشیانا رپ" to "persiana rap", "پرشیانا سینما" to "persiana cinema",
-        "پرشیانا کمدی" to "persiana comedy", "پرشیانا کومدی" to "persiana comedy",
-        "پرشیانا فامیلی" to "persiana family", "پرشیانا فمیلی" to "persiana family",
-        "پرشیانا جونیور" to "persiana junior", "پرشیانا نوستالژی" to "persiana nostalgia",
+        "پرشیانا آهنگ" to "persiana music", "پرشیانا موسیقی" to "persiana music",
+        "پرشیانا رپ" to "persiana rap", "پرشیانا کمدی" to "persiana comedy",
+        "پرشیانا کومدی" to "persiana comedy", "پرشیانا طنز" to "persiana comedy",
+        "پرشیانا خنده" to "persiana comedy", "پرشیانا فامیلی" to "persiana family",
+        "پرشیانا فمیلی" to "persiana family", "پرشیانا خانواده" to "persiana family",
+        "پرشیانا جونیور" to "persiana junior kids", "پرشیانا کودک" to "persiana junior kids",
+        "پرشیانا کارتون" to "persiana junior kids", "پرشیانا بچه ها" to "persiana junior kids",
+        "پرشیانا نوستالژی" to "persiana nostalgia", "پرشیانا خاطره" to "persiana nostalgia",
         "پرشیانا ساینس" to "persiana science", "پرشیانا کره" to "persiana korea",
+        "پرشیانا علم" to "persiana science", "پرشیانا دانش" to "persiana science",
+        "پرشیانا علمی" to "persiana science",
         "پرشیانا بیلبورد" to "persiana billboard", "پرشیانا ایرانی" to "persiana iranian",
         "پرشیانا ایرانیان" to "persiana iranian", "پرشیانا ورزش" to "persiana sports",
         "پرشیانا اسپورت" to "persiana sports", "پرشیانا اسپورتس" to "persiana sports",
         "پرشیانا مستند" to "persiana documentary", "پرشیانا پادکست" to "persiana podcast",
-        "پرشیانا مدیکال" to "persiana medical", "پرشیانا چین" to "persiana china",
+        "پرشیانا مدیکال" to "persiana medical", "پرشیانا سلامت" to "persiana medical",
+        "پرشیانا پزشکی" to "persiana medical", "پرشیانا چین" to "persiana china",
         "پرشیانا ویاژ" to "persiana voyage", "پرشیانا تین" to "persiana teen",
-        "پرشیانا فولک" to "persiana folk", "پرشیانا فایت" to "persiana fight",
+        "پرشیانا نوجوان" to "persiana teen",
+        "پرشیانا فولک" to "persiana folk", "پرشیانا سنتی" to "persiana folk",
+        "پرشیانا فایت" to "persiana fight", "پرشیانا کشتی کج" to "persiana fight",
+        "پرشیانا رزمی" to "persiana fight",
         "پرشیانا" to "persiana", "سینما" to "cinema", "رپ" to "rap", "میکس" to "mix",
         "ست میکس" to "setmix", "ستمیکس" to "setmix", "ست مکس" to "setmix",
         "ستمکس" to "setmix", "ست میک" to "setmix", "ست مک" to "setmix",
@@ -171,7 +202,15 @@ object ChannelMatcher {
         val norm = normalizePersian(query)
         if (norm.isBlank()) return null
 
-        // Power
+        // Power & Restart
+        if (norm.contains("ری استارت") || norm.contains("ری‌استارت") || norm.contains("ریاستارت") ||
+            norm.contains("ریستارت") || norm.contains("ریست رسیور") || norm.contains("ریبوت") ||
+            norm.contains("راه اندازی مجدد") || norm.contains("راه‌اندازی مجدد") ||
+            norm.contains("راه اندازی دوباره") || norm.contains("راه‌اندازی دوباره") ||
+            norm.contains("روشن خاموش کن") || norm.contains("خاموش روشن کن")
+        ) {
+            return "restart_stb"
+        }
         if (norm.contains("خاموش") || norm.contains("روشن") || norm.contains("پاور") || norm.contains("استندبای") ||
             norm.contains("دستگاه رو خاموش") || norm.contains("دستگاه رو روشن") || norm.contains("به خواب برو")
         ) {
@@ -274,6 +313,10 @@ object ChannelMatcher {
         if (qTokens.isEmpty()) return Pair(null, -10000)
 
         val hasPlus = qTokens.contains("plus") || qClean.contains("+")
+        val hasHd = qTokens.contains("hd")
+        val hasSd = qTokens.contains("sd")
+        val has4k = qTokens.contains("4k")
+        val hasIranian = qTokens.contains("iranian")
         val queryGemSubs = qTokens.filter { it in GEM_SUBBRANDS }.toSet()
         val queryPersianaSubs = qTokens.filter { it in PERSIANA_SUBBRANDS }.toSet()
         val hasGem = qTokens.contains("gem")
@@ -427,6 +470,33 @@ object ChannelMatcher {
             if (hasIntl) {
                 if (nTokens.any { it in listOf("intl", "international") }) score += 1500
                 if (nTokens.contains("iran")) score += 500
+            }
+
+            // Resolution / Quality (HD / SD / 4K) Disambiguation
+            val chHasHd = nTokens.contains("hd") || sName.contains("HD", ignoreCase = true)
+            val chHasSd = nTokens.contains("sd") || sName.contains("SD", ignoreCase = true)
+            if (hasHd) {
+                if (chHasHd) score += 3500 else score -= 2500
+            } else if (hasSd) {
+                if (chHasSd) score += 3500 else score -= 2500
+            }
+
+            // Iranian Disambiguation (e.g. Radio Javan Iranian vs Radio Javan HD / SD)
+            val chHasIranian = nTokens.contains("iranian")
+            if (hasIranian) {
+                if (chHasIranian) score += 3500 else score -= 3000
+            } else {
+                if (chHasIranian) score -= 3000
+            }
+
+            // Distinctive extra words penalty
+            // If the channel name contains distinctive words that were NOT mentioned in query, penalize it
+            val nonGenericTokens = nTokens.filter { it !in listOf("hd", "sd", "tv", "fhd", "4k") }
+            val unmatchedDistinctive = nonGenericTokens.filter { nt ->
+                !qTokens.contains(nt) && !qTokens.any { qt -> nt.contains(qt) || qt.contains(nt) }
+            }
+            if (unmatchedDistinctive.isNotEmpty()) {
+                score -= unmatchedDistinctive.size * 350
             }
 
             // Channel position tie breaker

@@ -371,6 +371,18 @@ class VoiceFragment : Fragment(), VoiceController.VoiceListener {
                 AccessibilityHelper.announce(txtExecutionResult, msg)
                 return
             }
+            "restart", "restart_stb" -> {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    val ok = repository.restartStb()
+                    withContext(Dispatchers.Main) {
+                        val msg = if (ok) "دستور راه‌اندازی مجدد (ری‌استارت) به رسیور ارسال شد" else "خطا در ارسال دستور ری‌استارت"
+                        txtExecutionResult.visibility = View.VISIBLE
+                        txtExecutionResult.text = msg
+                        AccessibilityHelper.announce(txtExecutionResult, msg)
+                    }
+                }
+                return
+            }
         }
 
         val (keyCode, desc) = when (action) {
